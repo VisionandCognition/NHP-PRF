@@ -6,11 +6,6 @@ setup;
 
 %% Load and analyze the data (this follows the example1.m script)
 
-% Start parallel MATLAB to speed up execution.
-%if matlabpool('size')==0
-%  matlabpool open;
-%end
-
 % new parallel processing method [CK]
 if ~exist('mypool','var')
     mypool=parpool();
