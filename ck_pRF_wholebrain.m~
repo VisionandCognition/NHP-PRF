@@ -1,7 +1,7 @@
 %% WHICH DATA =============================================================
 Danny_pRF_goodruns;
 do_Resave = true;
-do_FitPRF_perSession = false;
+do_FitPRF_perSession = true;
 
 TR=2.5;
 
@@ -72,7 +72,7 @@ for s=1:length(sessions)
     runs = unique(DATA(strcmp(DATA(:,1),sessions{s}),2));
     for r=1:length(runs)
         if ispc % the ls command works differently in windows
-            a=ls( fullfile(sess_path_nii{s},['*run-' runs{r} '*.nii.gz']));
+            a=ls( fullfile(sess_path_nii{s},['*run-' runs{r} '*']));
             run_path_nii{s,r} = fullfile(sess_path_nii{s},a);
             b = ls( fullfile(sess_path_stim{s}, ...
                 ['*run-' runs{r} '*model*']));
