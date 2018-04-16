@@ -15,6 +15,7 @@ else
     eval(SessionList);
 end
 
+%% 
 TR=2.5;
 
 % This is the 'pure' sweep to volume map
@@ -156,7 +157,7 @@ end
 if do_FitPRF_perSession
     % outputfolder
     result_folder = ['FitResult_sub-' MONKEY];
-    warning of; mkdir(result_folder); warning on;
+    warning off; mkdir(result_folder); warning on;
     
     % get the brain mask
     fprintf('Unpacking BrainMask');
@@ -175,13 +176,17 @@ if do_FitPRF_perSession
         
         % concatenate -----
         stimulus={};fmri_data={};
+        fprintf('Concatenating stimuli and volumes...\n');
         for r=1:length(s_run)
-            stimulus = [stimulus s_run(r).stim]; %#ok<*AGROW>
-            fmri_data = [fmri_data s_run(r).vol];
+            stimulus{r}=[]; fmri_data{r}=[];
+            for voln = 1:size(s_run(r).vol,2)
+                stimulus{r} = cat(3, stimulus{r}, s_run(r).stim{voln}); %#ok<*AGROW>
+                fmri_data{r} = cat(4, fmri_data{r}, s_run(r).vol{voln});
+            end
         end
         
         % fit pRF -----
-        options.vxs = mask_nii.img > 0;
+        options.vxs = find(mask_nii.img>0);
         Sess(s).result = analyzePRF(stimulus,fmri_data,TR,options);
         
         % save the result ----
