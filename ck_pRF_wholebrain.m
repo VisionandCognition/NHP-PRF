@@ -192,7 +192,7 @@ if do_FitPRF_perSession
         % save the result ----
         fprintf('Saving the result: ');
         save(fullfile(result_folder,['pRF_Sess-' sessions{s}]),...
-            'Sess','-v7.3');
+            'result','-v7.3');
         % also save as nifti files
         % angle ---
         fprintf('Angles ');

@@ -1,8 +1,21 @@
-%% WHICH DATA =============================================================
-Danny_pRF_goodruns;
-do_Resave = true;
-do_FitPRF_perSession = true;
+function ck_pRF_LISA(SessionList, do_Resave, do_FitPRF_perSession)
+% collects data, concatenates, downsamples stimulus and resaves
+% fits the prf model to voxels
 
+%% WHICH DATA =============================================================
+%clear all; clc;
+if nargin <3
+    fprintf('Not enough arguments specified, will use defaults:\n');
+    fprintf('SessionList: Danny_pRF_goodruns\n');
+    fprintf('do_Resave = false; doFitPRF_perSession = false\n');
+    Danny_pRF_goodruns;
+    do_Resave = false;
+    do_FitPRF_perSession = false;
+else
+    eval(SessionList);
+end
+
+%% 
 TR=2.5;
 
 % This is the 'pure' sweep to volume map
@@ -27,12 +40,17 @@ SwVolMap_old = {    1 , 6:25    ;...
 
 %% INITIALIZE =============================================================
 % Platform specific basepath
-if ispc
+isLisa = true;
+if isLisa
+    tool_basepath = 'XXXXX';
+    BIDS_basepath = 'XXXXX';
+elseif ispc
     tool_basepath = 'D:\CK\code\MATLAB';
     BIDS_basepath = '\\vcnin\NHP_MRI\NHP-BIDS';
 else
    tool_basepath = '/Users/chris/Documents/MATLAB/TOOLBOX';
    BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
+   addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/analyzePRF'));
 end
 % Add nifti reading toolbox
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
@@ -42,7 +60,7 @@ addpath(genpath(fullfile(tool_basepath, 'analyzePRF')));
 % Link to the brain mask
 if strcmp(MONKEY, 'danny')
     BrainMask_file = fullfile(BIDS_basepath, 'manual-masks','sub-danny',...
-        'ses-20180117','func','T1_to_func_brainmask_zcrop.nii.gz');
+        'ses-20180117','func','T1_to_func_brainmask_zcrop.nii');
 else
     error('Unknown monkey name or no mask available')
 end
@@ -72,13 +90,14 @@ for s=1:length(sessions)
     runs = unique(DATA(strcmp(DATA(:,1),sessions{s}),2));
     for r=1:length(runs)
         if ispc % the ls command works differently in windows
-            a=ls( fullfile(sess_path_nii{s},['*run-' runs{r} '*']));
-            run_path_nii{s,r} = fullfile(sess_path_nii{s},a);
+            a=ls( fullfile(sess_path_nii{s},['*run-' runs{r} '*.nii.gz']));
+            run_path_nii{s,r} = fullfile(sess_path_nii{s},a(1:end-3));
             b = ls( fullfile(sess_path_stim{s}, ...
                 ['*run-' runs{r} '*model*']));
             run_path_stim{s,r}= fullfile(sess_path_stim{s},b,'StimMask.mat');
         else
-            run_path_nii{s,r} = ls( fullfile(sess_path_nii{s},['*run-' runs{r} '*']));
+            a = ls( fullfile(sess_path_nii{s},['*run-' runs{r} '*.nii.gz']));
+            run_path_nii{s,r} = a(1:end-3);
             run_path_stim{s,r} = ls( fullfile(sess_path_stim{s}, ...
                 ['*run-' runs{r} '*model*'],'StimMask.mat'));
             run_path_nii{s,r} = run_path_nii{s,r}(1:end-1);
@@ -93,7 +112,13 @@ end
 if do_Resave
     for s=1:size(run_path_stim,1)
         fprintf(['Processing session ' sessions{s} '\n']);
-        for r=1:size(run_path_stim,2)
+        rps = [];
+        for i=1:size(run_path_stim,2) 
+            if ~isempty(run_path_stim{s,i}) 
+                rps=[rps i]; 
+            end 
+        end
+        for r=rps 
             % stimulus mask -----
             load(run_path_stim{s,r}(1:end-4));
             % loads variable called stimulus (x,y,t) in volumes
@@ -110,18 +135,19 @@ if do_Resave
             vinc=firstvol:lastvol;
             % volumes ------
             fprintf('Unpacking nii.gz');
-            uz_nii=gunzip(run_path_nii{s,r});
-            temp_nii=load_nii(uz_nii{1});
-            delete(uz_nii{1});
+            %uz_nii=gunzip(run_path_nii{s,r});
+            temp_nii=load_nii(run_path_nii{s,r});%load_nii(uz_nii{1});
+            %delete(uz_nii{1});
             fprintf(' ...done\n');
             % save the session-based stims & vols -----
             for v=1:length(vinc)
-                s_run(r).stim{v} = stimulus(:,:,vinc(v));
+                % resample image (160x160 pix gives 10 pix/deg)
+                s_run(r).stim{v} = imresize(stimulus(:,:,vinc(v)),[160 160]);
                 s_run(r).vol{v} = temp_nii.img(:,:,:,vinc(v));
             end
             clear stimulus temp_nii
         end
-        fprintf(['Saving ses-' sessions{s}]);
+        fprintf(['Saving ses-' sessions{s} '\n']);
         save(fullfile(out_folder, ['ses-' sessions{s}]),'s_run','-v7.3');
         clear s_run
     end
@@ -135,17 +161,17 @@ end
 if do_FitPRF_perSession
     % outputfolder
     result_folder = ['FitResult_sub-' MONKEY];
-    warning of; mkdir(resultfolder); warning on;
+    warning off; mkdir(result_folder); warning on;
     
     % get the brain mask
     fprintf('Unpacking BrainMask');
-    uz_nii=gunzip(BrainMask_file);
-    mask_nii=load_nii(uz_nii{1});
-    delete(uz_nii{1});
+    %uz_nii=gunzip(BrainMask_file);
+    mask_nii=load_nii(BrainMask_file);%load_nii(uz_nii{1});
+    %delete(uz_nii{1});
     fprintf(' ...done\n');
     
     % run the model-fits
-    for s=1:length(sessions)
+    for s=length(sessions):-1:1
         fprintf(['=== Fitting pRF model for ses-' sessions{s} ' ===\n']);
         
         % load data -----
@@ -154,19 +180,23 @@ if do_FitPRF_perSession
         
         % concatenate -----
         stimulus={};fmri_data={};
+        fprintf('Concatenating stimuli and volumes...\n');
         for r=1:length(s_run)
-            stimulus = [stimulus s_run(r).stim]; %#ok<*AGROW>
-            fmri_data = [fmri_data s_run(r).vol];
+            stimulus{r}=[]; fmri_data{r}=[];
+            for voln = 1:size(s_run(r).vol,2)
+                stimulus{r} = cat(3, stimulus{r}, s_run(r).stim{voln}); %#ok<*AGROW>
+                fmri_data{r} = cat(4, fmri_data{r}, s_run(r).vol{voln});
+            end
         end
         
         % fit pRF -----
-        options.vxs = mask_nii.img > 0;
+        options.vxs = find(mask_nii.img>0);
         Sess(s).result = analyzePRF(stimulus,fmri_data,TR,options);
         
         % save the result ----
         fprintf('Saving the result: ');
         save(fullfile(result_folder,['pRF_Sess-' sessions{s}]),...
-            'Sess','-v7.3');
+            'result','-v7.3');
         % also save as nifti files
         % angle ---
         fprintf('Angles ');
