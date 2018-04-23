@@ -2,6 +2,8 @@ function ck_pRF_wholebrain(SessionList, do_Resave, do_FitPRF_perSession)
 % collects data, concatenates, downsamples stimulus and resaves
 % fits the prf model to voxels
 
+doUpsample = true; % upsamples to twice TR, so 1.25s
+
 %% WHICH DATA =============================================================
 %clear all; clc;
 if nargin <3
@@ -20,7 +22,8 @@ TR=2.5;
 
 % This is the 'pure' sweep to volume map
 % For the 230 volume version (15 vol blanks)
-SwVolMap_new = {    1 , 6:25    ;...
+SwVolMap_new = { ...
+    1 , 6:25    ;...
     2 , 41:60   ;...
     3 , 61:80   ;...
     4 , 96:115  ;...
@@ -29,7 +32,8 @@ SwVolMap_new = {    1 , 6:25    ;...
     7 , 171:190 ;...
     8 , 206:225 };
 % For the 210 volume version (10 vol blanks)
-SwVolMap_old = {    1 , 6:25    ;...
+SwVolMap_old = { ...
+    1 , 6:25    ;...
     2 , 36:55   ;...
     3 , 56:75   ;...
     4 , 86:105  ;...
@@ -62,7 +66,11 @@ else
 end
 
 % create a folder to save outputs in
-out_folder = ['pRF_sub-' MONKEY];
+if doUpsample
+    out_folder = ['pRF_sub-' MONKEY '_us'];
+else
+    out_folder = ['pRF_sub-' MONKEY];
+end
 warning off %#ok<*WNOFF>
 mkdir(out_folder);
 warning on %#ok<*WNON>
@@ -142,6 +150,28 @@ if do_Resave
                 s_run(r).vol{v} = temp_nii.img(:,:,:,vinc(v));
             end
             clear stimulus temp_nii
+            
+            % if requested, upsample temporal resolution
+            if doUpsample
+                % stim
+                tempstim = s_run(r).stim;
+                ups_stim = cell(1,2*length(tempstim));
+                ups_stim(1:2:end) = tempstim; 
+                ups_stim(2:2:end) = tempstim;
+                s_run(r).stim = ups_stim;
+                clear tempstim ups_stim
+                % bold
+                us_nii=[];
+                for v=1:length(s_run(r).vol)
+                    us_nii=cat(4,us_nii,s_run(r).vol{v});
+                end
+                fprintf('Upsampling BOLD data...\n');
+                us_nii = tseriesinterp(us_nii,TR,TR/2,4);
+                for v=1:size(us_nii,4)
+                    s_run(r).vol{v} = us_nii(:,:,:,v);
+                end
+                clear us_nii
+            end
         end
         fprintf(['Saving ses-' sessions{s} '\n']);
         save(fullfile(out_folder, ['ses-' sessions{s}]),'s_run','-v7.3');
@@ -187,7 +217,12 @@ if do_FitPRF_perSession
         
         % fit pRF -----
         options.vxs = find(mask_nii.img>0);
-        Sess(s).result = analyzePRF(stimulus,fmri_data,TR,options);
+        if doUpsample
+            Sess(s).result = analyzePRF(stimulus,fmri_data,TR/2,options);
+        else
+            Sess(s).result = analyzePRF(stimulus,fmri_data,TR,options);
+
+        end
         
         % save the result ----
         fprintf('Saving the result: ');
