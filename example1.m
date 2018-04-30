@@ -88,6 +88,7 @@ data = tseriesinterp(data,2,1,2);
 % to just use the two generic initial seeds.  We suppress command-window output by 
 % setting 'display' to 'off'.
 results = analyzePRF(stimulus,data,1,struct('seedmode',[0 1],'display','off'));
+
 %%
 
 % Note that because of the use of parfor, the command-window output for different

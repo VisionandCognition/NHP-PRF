@@ -3,6 +3,7 @@ function ck_pRF_wholebrain(SessionList, do_Resave, do_FitPRF_perSession)
 % fits the prf model to voxels
 
 doUpsample = true; % upsamples to twice TR, so 1.25s
+doExtraRegression = true; % include motion information as regressor
 
 %% WHICH DATA =============================================================
 %clear all; clc;
@@ -88,9 +89,17 @@ sessions = unique(DATA(:,1));
 monkey_path_nii = fullfile(BIDS_basepath, 'derivatives',...
     'featpreproc','highpassed_files',['sub-' MONKEY]);
 monkey_path_stim = fullfile(BIDS_basepath,['sub-' MONKEY]);
+
+monkey_path_motion.regress = fullfile(BIDS_basepath, 'derivatives',...
+    'featpreproc','motion_corrected',['sub-' MONKEY]);
+monkey_path_motion.outlier = fullfile(BIDS_basepath, 'derivatives',...
+    'featpreproc','motion_outliers',['sub-' MONKEY]);
+
 for s=1:length(sessions)
     sess_path_nii{s} = fullfile(monkey_path_nii, ['ses-' sessions{s}], 'func'); %#ok<*SAGROW>
     sess_path_stim{s} = fullfile(monkey_path_stim, ['ses-' sessions{s}], 'func');
+    sess_path_motreg{s} = fullfile(monkey_path_motion.regress, ['ses-' sessions{s}], 'func');
+    sess_path_motout{s} = fullfile(monkey_path_motion.outlier, ['ses-' sessions{s}], 'func');
     runs = unique(DATA(strcmp(DATA(:,1),sessions{s}),2));
     for r=1:length(runs)
         if ispc % the ls command works differently in windows
@@ -99,6 +108,13 @@ for s=1:length(sessions)
             b = ls( fullfile(sess_path_stim{s}, ...
                 ['*run-' runs{r} '*model*']));
             run_path_stim{s,r}= fullfile(sess_path_stim{s},b,'StimMask.mat');
+            c=ls( fullfile(sess_path_motreg{s},['*run-' runs{r} '*.param.1D']));
+            run_path_motreg{s,r} = fullfile(sess_path_motion.regress{s},c);
+            d=ls( fullfile(sess_path_motout{s},['*run-' runs{r} '*.outliers.txt']));
+            run_path_motout{s,r} = fullfile(sess_path_motion.outlier{s},d);
+            e = ls( fullfile(sess_path_stim{s}, ...
+                ['*run-' runs{r} '*model*']));
+            run_path_rew{s,r}= fullfile(sess_path_stim{s},e,'RewardEvents.txt');
         else
             a = ls( fullfile(sess_path_nii{s},['*run-' runs{r} '*.nii.gz']));
             run_path_nii{s,r} = a(1:end-3);
@@ -106,6 +122,12 @@ for s=1:length(sessions)
                 ['*run-' runs{r} '*model*'],'StimMask.mat'));
             run_path_nii{s,r} = run_path_nii{s,r}(1:end-1);
             run_path_stim{s,r} = run_path_stim{s,r}(1:end-1);
+            run_path_motreg{s,r} = ls( fullfile(sess_path_motion.regress{s}, ...
+                ['*run-' runs{r} '*.param.1D']));
+            run_path_motout{s,r} = ls( fullfile(sess_path_motion.outlier{s}, ...
+                ['*run-' runs{r} '*.outliers.txt']));
+            run_path_rew{s,r} = ls( fullfile(sess_path_stim{s}, ...
+                ['*run-' runs{r} '*model*'],'RewardEvents.txt'));
         end
         sweepinc{s,r} = DATA( ...
             (strcmp(DATA(:,1),sessions{s}) & strcmp(DATA(:,2),runs{r})),3);
@@ -114,7 +136,7 @@ end
 
 %% LOAD & RE-SAVE STIMULUS MASKS & NIFTI ==================================
 if do_Resave
-    for s=1:size(run_path_stim,1)
+    for s=1:size(run_path_stim,1) % sessions
         fprintf(['Processing session ' sessions{s} '\n']);
         rps = [];
         for i=1:size(run_path_stim,2) 
@@ -122,7 +144,7 @@ if do_Resave
                 rps=[rps i]; 
             end 
         end
-        for r=rps 
+        for r=rps % runs
             % stimulus mask -----
             load(run_path_stim{s,r}(1:end-4));
             % loads variable called stimulus (x,y,t) in volumes
@@ -137,12 +159,60 @@ if do_Resave
             firstvol = SwVolMap{min(sinc),2}(1) - 5;
             lastvol = SwVolMap{max(sinc),2}(end) + 5;
             vinc=firstvol:lastvol;
+            
             % volumes ------
             fprintf('Unpacking nii.gz');
             %uz_nii=gunzip(run_path_nii{s,r});
             temp_nii=load_nii(run_path_nii{s,r});%load_nii(uz_nii{1});
             %delete(uz_nii{1});
             fprintf(' ...done\n');
+            
+            % motion regressors
+            if doExtraRegression
+                fprintf('Processing motion regressors\n');
+                
+                % outliers ---
+                sss=dir(run_path_motout{s,r}); fsz=sss.bytes;
+                if fsz>0 % file not empty
+                    s_run(r).motion.outliers = dlmread(run_path_motout{s,r});
+                    % these volumes can potentially be removed 
+                else
+                    s_run(r).motion.outliers = []; % no outliers
+                end
+
+                % translation/rotation ---
+                % 1) x-shift  2) y-shift  
+                % 3) z-shift  4) z-angle  
+                % 5) x-angle  6) y-angle  
+                % 7) x-scale  8) y-scale  
+                % 9) z-scale  10) y/x-shear  
+                % 11) z/x-shear  12) z/y-shear 
+                motion.estimates=dlmread(run_path_motreg{s,r},'',2,0);
+                motion.estimates=motion.estimates(vinc,:);
+                s_run(r).motion.estimates=motion.estimates-motion.estimates(1,:);
+                
+                % reward events ---
+                sss=dir(run_path_rew{s,r}); fsz=sss.bytes;
+                if fsz>0 % file not empty
+                    rew_ev = dlmread(run_path_rew{s,r});
+                else
+                    rew_ev = []; % no outliers
+                end
+                % convert to reward per volume (based on TR)
+                rew_reg =[];
+                rew_ev(:,4) = rew_ev(:,1)+rew_ev(:,2); % reward end moment
+                for vv=vinc
+                    tw = [(vv*TR)-TR vv*TR];
+                    ind=rew_ev(:,1)>tw(1) & rew_ev(:,1)<tw(2);
+                    if sum(ind)>0
+                        rew_reg = [rew_reg; sum(rew_ev(ind,2))];
+                    else
+                        rew_reg = [rew_reg; 0];
+                    end
+                end
+                s_run(r).rew = rew_reg;
+            end
+            
             % save the session-based stims & vols -----
             for v=1:length(vinc)
                 % resample image (160x160 pix gives 10 pix/deg)
@@ -150,17 +220,19 @@ if do_Resave
                 s_run(r).vol{v} = temp_nii.img(:,:,:,vinc(v));
             end
             clear stimulus temp_nii
+
             
             % if requested, upsample temporal resolution
             if doUpsample
-                % stim
+                % stim ---
                 tempstim = s_run(r).stim;
                 ups_stim = cell(1,2*length(tempstim));
                 ups_stim(1:2:end) = tempstim; 
                 ups_stim(2:2:end) = tempstim;
                 s_run(r).stim = ups_stim;
                 clear tempstim ups_stim
-                % bold
+                
+                % bold ---
                 us_nii=[];
                 for v=1:length(s_run(r).vol)
                     us_nii=cat(4,us_nii,s_run(r).vol{v});
@@ -171,6 +243,23 @@ if do_Resave
                     s_run(r).vol{v} = us_nii(:,:,:,v);
                 end
                 clear us_nii
+                
+                % motion regressors ---
+                if doExtraRegression
+                    tempmot = s_run(r).motion.estimates;
+                    ups_mot = nan(size(tempmot,1)*2,size(tempmot,2));
+                    ups_mot(1:2:end,:) = tempmot; 
+                    ups_mot(2:2:end,:) = tempmot;
+                    s_run(r).motion.estimates = ups_mot;
+                    clear tempstim ups_mot
+                    
+                    temprew = s_run(r).rew;
+                    ups_rew = nan(size(temprew,1)*2,size(temprew,2));
+                    ups_rew(1:2:end,:) = temprew; 
+                    ups_rew(2:2:end,:) = temprew;
+                    s_run(r).rew = ups_rew;
+                    clear tempstim ups_mot
+                end
             end
         end
         fprintf(['Saving ses-' sessions{s} '\n']);
@@ -186,7 +275,11 @@ end
 % Modeling everything together may be overkill (size wise)
 if do_FitPRF_perSession
     % outputfolder
-    result_folder = ['FitResult_sub-' MONKEY];
+    if doUpsample
+        result_folder = ['FitResult_denoised_sub-' MONKEY];
+    else
+        result_folder = ['FitResult_sub-' MONKEY];
+    end
     warning off; mkdir(result_folder); warning on;
     
     % get the brain mask
@@ -197,7 +290,20 @@ if do_FitPRF_perSession
     fprintf(' ...done\n');
     
     % run the model-fits
-    for s=length(sessions):-1:1
+    
+    % 1 - ses-20171116.mat
+    % 2 - ses-20171129.mat
+    % 3 - ses-20171207.mat
+    % 4 - ses-20171214.mat
+    % 5 - ses-20171220.mat
+    % 6 - ses-20180117.mat
+    % 7 - ses-20180124.mat
+    % 8 - ses-20180125.mat
+    % 9 - ses-20180131.mat
+    % 10 - ses-20180201.mat
+    
+    session_order = [2 4:10]; 
+    for s=session_order %length(sessions):-1:1
         fprintf(['=== Fitting pRF model for ses-' sessions{s} ' ===\n']);
         
         % load data -----
@@ -217,6 +323,7 @@ if do_FitPRF_perSession
         
         % fit pRF -----
         options.vxs = find(mask_nii.img>0);
+        options.wantglmdenoise = 1;
         if doUpsample
             Sess(s).result = analyzePRF(stimulus,fmri_data,TR/2,options);
         else
