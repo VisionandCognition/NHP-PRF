@@ -4,6 +4,7 @@ function ck_pRF_wholebrain(SessionList, do_Resave, do_FitPRF_perSession)
 
 doUpsample = true; % upsamples to twice TR, so 1.25s
 doExtraRegression = true; % include motion information as regressor
+fitOnlyPosterior = true; % mask out anterior part of the brain to speed things up
 
 %% WHICH DATA =============================================================
 %clear all; clc;
@@ -18,7 +19,7 @@ else
     eval(SessionList);
 end
 
-%% 
+%% Volume map
 TR=2.5;
 
 % This is the 'pure' sweep to volume map
@@ -109,25 +110,28 @@ for s=1:length(sessions)
                 ['*run-' runs{r} '*model*']));
             run_path_stim{s,r}= fullfile(sess_path_stim{s},b,'StimMask.mat');
             c=ls( fullfile(sess_path_motreg{s},['*run-' runs{r} '*.param.1D']));
-            run_path_motreg{s,r} = fullfile(sess_path_motion.regress{s},c);
+            run_path_motreg{s,r} = fullfile(sess_path_motreg{s},c);
             d=ls( fullfile(sess_path_motout{s},['*run-' runs{r} '*.outliers.txt']));
-            run_path_motout{s,r} = fullfile(sess_path_motion.outlier{s},d);
+            run_path_motout{s,r} = fullfile(sess_path_motout{s},d);
             e = ls( fullfile(sess_path_stim{s}, ...
                 ['*run-' runs{r} '*model*']));
             run_path_rew{s,r}= fullfile(sess_path_stim{s},e,'RewardEvents.txt');
         else
             a = ls( fullfile(sess_path_nii{s},['*run-' runs{r} '*.nii.gz']));
             run_path_nii{s,r} = a(1:end-3);
+            run_path_nii{s,r} = run_path_nii{s,r}(1:end-1);
             run_path_stim{s,r} = ls( fullfile(sess_path_stim{s}, ...
                 ['*run-' runs{r} '*model*'],'StimMask.mat'));
-            run_path_nii{s,r} = run_path_nii{s,r}(1:end-1);
             run_path_stim{s,r} = run_path_stim{s,r}(1:end-1);
-            run_path_motreg{s,r} = ls( fullfile(sess_path_motion.regress{s}, ...
+            run_path_motreg{s,r} = ls( fullfile(sess_path_motreg{s}, ...
                 ['*run-' runs{r} '*.param.1D']));
-            run_path_motout{s,r} = ls( fullfile(sess_path_motion.outlier{s}, ...
-                ['*run-' runs{r} '*.outliers.txt']));
+            run_path_motreg{s,r}=run_path_motreg{s,r}(1:end-1);
+            run_path_motout{s,r} = ls( fullfile(sess_path_motout{s}, ...
+                ['*run-' runs{r} '*_outliers.txt']));
+            run_path_motout{s,r}=run_path_motout{s,r}(1:end-1);
             run_path_rew{s,r} = ls( fullfile(sess_path_stim{s}, ...
                 ['*run-' runs{r} '*model*'],'RewardEvents.txt'));
+            run_path_rew{s,r}=run_path_rew{s,r}(1:end-1);
         end
         sweepinc{s,r} = DATA( ...
             (strcmp(DATA(:,1),sessions{s}) & strcmp(DATA(:,2),runs{r})),3);
@@ -276,7 +280,7 @@ end
 if do_FitPRF_perSession
     % outputfolder
     if doUpsample
-        result_folder = ['FitResult_denoised_sub-' MONKEY];
+        result_folder = ['FitResult_motregr_sub-' MONKEY];
     else
         result_folder = ['FitResult_sub-' MONKEY];
     end
@@ -286,6 +290,10 @@ if do_FitPRF_perSession
     fprintf('Unpacking BrainMask');
     %uz_nii=gunzip(BrainMask_file);
     mask_nii=load_nii(BrainMask_file);%load_nii(uz_nii{1});
+    if fitOnlyPosterior
+        mask_nii.img(:,50:end,:)=0;
+    end
+    
     %delete(uz_nii{1});
     fprintf(' ...done\n');
     
