@@ -280,7 +280,11 @@ end
 if do_FitPRF_perSession
     % outputfolder
     if doUpsample
-        result_folder = ['FitResult_motregr_sub-' MONKEY];
+        if doExtraRegression
+            result_folder = ['FitResult_motregr_sub-' MONKEY];
+        else
+            result_folder = ['FitResult_us_sub-' MONKEY];
+        end
     else
         result_folder = ['FitResult_sub-' MONKEY];
     end
@@ -291,7 +295,7 @@ if do_FitPRF_perSession
     %uz_nii=gunzip(BrainMask_file);
     mask_nii=load_nii(BrainMask_file);%load_nii(uz_nii{1});
     if fitOnlyPosterior
-        mask_nii.img(:,50:end,:)=0;
+        mask_nii.img(:,50:end,:)=0; % mask out anterior part (speed up fits)
     end
     
     %delete(uz_nii{1});
@@ -310,7 +314,7 @@ if do_FitPRF_perSession
     % 9 - ses-20180131.mat
     % 10 - ses-20180201.mat
     
-    session_order = [2 4:10]; 
+    session_order = [2 4:10]; % you can do the bad ones later (or not)
     for s=session_order %length(sessions):-1:1
         fprintf(['=== Fitting pRF model for ses-' sessions{s} ' ===\n']);
         
@@ -327,16 +331,24 @@ if do_FitPRF_perSession
                 stimulus{r} = cat(3, stimulus{r}, s_run(r).stim{voln}); %#ok<*AGROW>
                 fmri_data{r} = cat(4, fmri_data{r}, s_run(r).vol{voln});
             end
+            if doExtraRegression
+                extraregr{r} = cat(2,s_run(r).motion.estimates,s_run(r).rew); 
+                % 12 motion correction parameters + reward events
+            end
         end
         
         % fit pRF -----
+        % get indices to mask voxels > 0
         options.vxs = find(mask_nii.img>0);
-        options.wantglmdenoise = 1;
-        if doUpsample
+        % add regressors when wanted
+        if doExtraRegression
+            options.wantglmdenoise = extraregr;
+        end
+        
+        if doUpsample % tr = TR/2
             Sess(s).result = analyzePRF(stimulus,fmri_data,TR/2,options);
         else
             Sess(s).result = analyzePRF(stimulus,fmri_data,TR,options);
-
         end
         
         % save the result ----
