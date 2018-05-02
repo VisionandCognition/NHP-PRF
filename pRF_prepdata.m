@@ -1,13 +1,13 @@
 function pRF_prepdata(SessionList,doUpsample,doExtraRegression)
 % collects data, concatenates, downsamples stimulus and resaves
-
+% NB: won't run on macbook unless there's a USB-drive with all data 
 %% WHICH DATA =============================================================
 %clear all; clc;
 if nargin <2
     fprintf('Not enough arguments specified, will use defaults:\n');
     fprintf('SessionList: Danny_pRF_goodruns\n');
     fprintf('doUpsample = true; doExtraRegression = true\n');
-    Danny_pRF_goodruns;
+    pRF_PrepDatalist_Danny;
     doUpsample = true;
     doExtraRegression = true;
 else
@@ -46,9 +46,9 @@ if ispc
     tool_basepath = 'D:\CK\code\MATLAB';
     BIDS_basepath = '\\vcnin\NHP_MRI\NHP-BIDS';
 else
-   tool_basepath = '/Users/chris/Documents/MATLAB/TOOLBOX';
-   BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
-   addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/analyzePRF'));
+    tool_basepath = '/Users/chris/Documents/MATLAB/TOOLBOX';
+    BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
+    addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/analyzePRF'));
 end
 % Add nifti reading toolbox
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
@@ -135,137 +135,133 @@ for s=1:length(sessions)
 end
 
 %% LOAD & RE-SAVE STIMULUS MASKS & NIFTI ==================================
-if do_Resave
-    for s=1:size(run_path_stim,1) % sessions
-        fprintf(['Processing session ' sessions{s} '\n']);
-        rps = [];
-        for i=1:size(run_path_stim,2) 
-            if ~isempty(run_path_stim{s,i}) 
-                rps=[rps i]; 
-            end 
+for s=1:size(run_path_stim,1) % sessions
+    fprintf(['Processing session ' sessions{s} '\n']);
+    rps = [];
+    for i=1:size(run_path_stim,2)
+        if ~isempty(run_path_stim{s,i})
+            rps=[rps i];
         end
-        for r=rps % runs
-            % stimulus mask -----
-            load(run_path_stim{s,r}(1:end-4));
-            % loads variable called stimulus (x,y,t) in volumes
-            sinc = cell2mat(sweepinc{s,r});
-            if size(stimulus,3) == 230
-                SwVolMap = SwVolMap_new;
-            elseif size(stimulus,3) == 210
-                SwVolMap = SwVolMap_old;
-            else
-                error('weird number of stimulus frames');
-            end
-            firstvol = SwVolMap{min(sinc),2}(1) - 5;
-            lastvol = SwVolMap{max(sinc),2}(end) + 5;
-            vinc=firstvol:lastvol;
-            
-            % volumes ------
-            fprintf('Unpacking nii.gz');
-            %uz_nii=gunzip(run_path_nii{s,r});
-            temp_nii=load_nii(run_path_nii{s,r});%load_nii(uz_nii{1});
-            %delete(uz_nii{1});
-            fprintf(' ...done\n');
-            
-            % motion regressors
-            if doExtraRegression
-                fprintf('Processing motion regressors\n');
-                
-                % outliers ---
-                sss=dir(run_path_motout{s,r}); fsz=sss.bytes;
-                if fsz>0 % file not empty
-                    s_run(r).motion.outliers = dlmread(run_path_motout{s,r});
-                    % these volumes can potentially be removed 
-                else
-                    s_run(r).motion.outliers = []; % no outliers
-                end
-
-                % translation/rotation ---
-                % 1) x-shift  2) y-shift  
-                % 3) z-shift  4) z-angle  
-                % 5) x-angle  6) y-angle  
-                % 7) x-scale  8) y-scale  
-                % 9) z-scale  10) y/x-shear  
-                % 11) z/x-shear  12) z/y-shear 
-                motion.estimates=dlmread(run_path_motreg{s,r},'',2,0);
-                motion.estimates=motion.estimates(vinc,:);
-                s_run(r).motion.estimates=motion.estimates-motion.estimates(1,:);
-                
-                % reward events ---
-                sss=dir(run_path_rew{s,r}); fsz=sss.bytes;
-                if fsz>0 % file not empty
-                    rew_ev = dlmread(run_path_rew{s,r});
-                else
-                    rew_ev = []; % no outliers
-                end
-                % convert to reward per volume (based on TR)
-                rew_reg =[];
-                rew_ev(:,4) = rew_ev(:,1)+rew_ev(:,2); % reward end moment
-                for vv=vinc
-                    tw = [(vv*TR)-TR vv*TR];
-                    ind=rew_ev(:,1)>tw(1) & rew_ev(:,1)<tw(2);
-                    if sum(ind)>0
-                        rew_reg = [rew_reg; sum(rew_ev(ind,2))];
-                    else
-                        rew_reg = [rew_reg; 0];
-                    end
-                end
-                s_run(r).rew = rew_reg;
-            end
-            
-            % save the session-based stims & vols -----
-            for v=1:length(vinc)
-                % resample image (160x160 pix gives 10 pix/deg)
-                s_run(r).stim{v} = imresize(stimulus(:,:,vinc(v)),[160 160]);
-                s_run(r).vol{v} = temp_nii.img(:,:,:,vinc(v));
-            end
-            clear stimulus temp_nii
-
-            
-            % if requested, upsample temporal resolution
-            if doUpsample
-                % stim ---
-                tempstim = s_run(r).stim;
-                ups_stim = cell(1,2*length(tempstim));
-                ups_stim(1:2:end) = tempstim; 
-                ups_stim(2:2:end) = tempstim;
-                s_run(r).stim = ups_stim;
-                clear tempstim ups_stim
-                
-                % bold ---
-                us_nii=[];
-                for v=1:length(s_run(r).vol)
-                    us_nii=cat(4,us_nii,s_run(r).vol{v});
-                end
-                fprintf('Upsampling BOLD data...\n');
-                us_nii = tseriesinterp(us_nii,TR,TR/2,4);
-                for v=1:size(us_nii,4)
-                    s_run(r).vol{v} = us_nii(:,:,:,v);
-                end
-                clear us_nii
-                
-                % motion regressors ---
-                if doExtraRegression
-                    tempmot = s_run(r).motion.estimates;
-                    ups_mot = nan(size(tempmot,1)*2,size(tempmot,2));
-                    ups_mot(1:2:end,:) = tempmot; 
-                    ups_mot(2:2:end,:) = tempmot;
-                    s_run(r).motion.estimates = ups_mot;
-                    clear tempstim ups_mot
-                    
-                    temprew = s_run(r).rew;
-                    ups_rew = nan(size(temprew,1)*2,size(temprew,2));
-                    ups_rew(1:2:end,:) = temprew; 
-                    ups_rew(2:2:end,:) = temprew;
-                    s_run(r).rew = ups_rew;
-                    clear tempstim ups_mot
-                end
-            end
-        end
-        fprintf(['Saving ses-' sessions{s} '\n']);
-        save(fullfile(out_folder, ['ses-' sessions{s}]),'s_run','-v7.3');
-        clear s_run
     end
-else
-    fprintf('Not doing the resave (assuming this has already been done)\n');
+    for r=rps % runs
+        % stimulus mask -----
+        load(run_path_stim{s,r}(1:end-4));
+        % loads variable called stimulus (x,y,t) in volumes
+        sinc = cell2mat(sweepinc{s,r});
+        if size(stimulus,3) == 230
+            SwVolMap = SwVolMap_new;
+        elseif size(stimulus,3) == 210
+            SwVolMap = SwVolMap_old;
+        else
+            error('weird number of stimulus frames');
+        end
+        firstvol = SwVolMap{min(sinc),2}(1) - 5;
+        lastvol = SwVolMap{max(sinc),2}(end) + 5;
+        vinc=firstvol:lastvol;
+        
+        % volumes ------
+        fprintf('Unpacking nii.gz');
+        %uz_nii=gunzip(run_path_nii{s,r});
+        temp_nii=load_nii(run_path_nii{s,r});%load_nii(uz_nii{1});
+        %delete(uz_nii{1});
+        fprintf(' ...done\n');
+        
+        % motion regressors
+        if doExtraRegression
+            fprintf('Processing motion regressors\n');
+            
+            % outliers ---
+            sss=dir(run_path_motout{s,r}); fsz=sss.bytes;
+            if fsz>0 % file not empty
+                s_run(r).motion.outliers = dlmread(run_path_motout{s,r});
+                % these volumes can potentially be removed
+            else
+                s_run(r).motion.outliers = []; % no outliers
+            end
+            
+            % translation/rotation ---
+            % 1) x-shift  2) y-shift
+            % 3) z-shift  4) z-angle
+            % 5) x-angle  6) y-angle
+            % 7) x-scale  8) y-scale
+            % 9) z-scale  10) y/x-shear
+            % 11) z/x-shear  12) z/y-shear
+            motion.estimates=dlmread(run_path_motreg{s,r},'',2,0);
+            motion.estimates=motion.estimates(vinc,:);
+            s_run(r).motion.estimates=motion.estimates-motion.estimates(1,:);
+            
+            % reward events ---
+            sss=dir(run_path_rew{s,r}); fsz=sss.bytes;
+            if fsz>0 % file not empty
+                rew_ev = dlmread(run_path_rew{s,r});
+            else
+                rew_ev = []; % no outliers
+            end
+            % convert to reward per volume (based on TR)
+            rew_reg =[];
+            rew_ev(:,4) = rew_ev(:,1)+rew_ev(:,2); % reward end moment
+            for vv=vinc
+                tw = [(vv*TR)-TR vv*TR];
+                ind=rew_ev(:,1)>tw(1) & rew_ev(:,1)<tw(2);
+                if sum(ind)>0
+                    rew_reg = [rew_reg; sum(rew_ev(ind,2))];
+                else
+                    rew_reg = [rew_reg; 0];
+                end
+            end
+            s_run(r).rew = rew_reg;
+        end
+        
+        % save the session-based stims & vols -----
+        for v=1:length(vinc)
+            % resample image (160x160 pix gives 10 pix/deg)
+            s_run(r).stim{v} = imresize(stimulus(:,:,vinc(v)),[160 160]);
+            s_run(r).vol{v} = temp_nii.img(:,:,:,vinc(v));
+        end
+        clear stimulus temp_nii
+        
+        
+        % if requested, upsample temporal resolution
+        if doUpsample
+            % stim ---
+            tempstim = s_run(r).stim;
+            ups_stim = cell(1,2*length(tempstim));
+            ups_stim(1:2:end) = tempstim;
+            ups_stim(2:2:end) = tempstim;
+            s_run(r).stim = ups_stim;
+            clear tempstim ups_stim
+            
+            % bold ---
+            us_nii=[];
+            for v=1:length(s_run(r).vol)
+                us_nii=cat(4,us_nii,s_run(r).vol{v});
+            end
+            fprintf('Upsampling BOLD data...\n');
+            us_nii = tseriesinterp(us_nii,TR,TR/2,4);
+            for v=1:size(us_nii,4)
+                s_run(r).vol{v} = us_nii(:,:,:,v);
+            end
+            clear us_nii
+            
+            % motion regressors ---
+            if doExtraRegression
+                tempmot = s_run(r).motion.estimates;
+                ups_mot = nan(size(tempmot,1)*2,size(tempmot,2));
+                ups_mot(1:2:end,:) = tempmot;
+                ups_mot(2:2:end,:) = tempmot;
+                s_run(r).motion.estimates = ups_mot;
+                clear tempstim ups_mot
+                
+                temprew = s_run(r).rew;
+                ups_rew = nan(size(temprew,1)*2,size(temprew,2));
+                ups_rew(1:2:end,:) = temprew;
+                ups_rew(2:2:end,:) = temprew;
+                s_run(r).rew = ups_rew;
+                clear tempstim ups_mot
+            end
+        end
+    end
+    fprintf(['Saving ses-' sessions{s} '\n']);
+    save(fullfile(out_folder, ['ses-' sessions{s}]),'s_run','-v7.3');
+    clear s_run
 end

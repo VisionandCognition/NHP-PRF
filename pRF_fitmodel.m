@@ -12,6 +12,7 @@ numWorkers = [];
 % sometimes you'd want less because of memory limitations
 
 %% INITIALIZE =============================================================
+TR=2.5;
 if nargin <4
     error('Not enough input arguments supplied')
 else
@@ -24,8 +25,13 @@ if ispc
     BIDS_basepath = '\\vcnin\NHP_MRI\NHP-BIDS';
 else
     tool_basepath = '/Users/chris/Documents/MATLAB/TOOLBOX';
-    BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
-    addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/analyzePRF'));
+    if ismac
+        BIDS_basepath = '/Users/chris/Documents/MRI_ANALYSIS/NHP-BIDS/';
+        addpath(genpath('/Users/chris/Documents/MRI_ANALYSIS/analyzePRF'));
+    else
+        BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
+        addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/analyzePRF'));
+    end
 end
 % Add nifti reading toolbox
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
