@@ -5,6 +5,9 @@ function ck_pRF_wholebrain(SessionList, do_Resave, do_FitPRF_perSession)
 doUpsample = true; % upsamples to twice TR, so 1.25s
 doExtraRegression = true; % include motion information as regressor
 fitOnlyPosterior = true; % mask out anterior part of the brain to speed things up
+numWorkers = [];    % set the number of parallel processes
+                    % [] is default max number available
+                    % sometimes you'd want less because of memory limitations
 
 %% WHICH DATA =============================================================
 %clear all; clc;
@@ -345,6 +348,14 @@ if do_FitPRF_perSession
             options.wantglmdenoise = extraregr;
         end
         
+        % start a parallel pool of workers
+        if ~isempty(numWorkers)
+            parpool(numWorkers)
+        else
+            % don't predefine the number of workers
+            % let it take the max available when running
+        end
+
         if doUpsample % tr = TR/2
             result = analyzePRF(stimulus,fmri_data,TR/2,options);
         else
