@@ -71,7 +71,7 @@ end
 if doUpsample
     out_folder = ['pRF_sub-' MONKEY '_us'];
 else
-    out_folder = ['pRF_sub-' MONKEY];
+    out_folder = ['pRF_sub-' MONKEY]; %#ok<*UNRCH>
 end
 warning off %#ok<*WNOFF>
 mkdir(out_folder);
@@ -85,7 +85,7 @@ warning on %#ok<*WNON>
 % (so they're already in a common space)
 % do the analysis in this functional space than we can register to hi-res
 % anatomical data and/or the NMT template later
-sessions = unique(DATA(:,1));
+sessions = unique(DATA(:,1)); %#ok<*NODEF>
 
 monkey_path_nii = fullfile(BIDS_basepath, 'derivatives',...
     'featpreproc','highpassed_files',['sub-' MONKEY]);
@@ -314,7 +314,7 @@ if do_FitPRF_perSession
     % 9 - ses-20180131.mat
     % 10 - ses-20180201.mat
     
-    session_order = [2 4:10]; % you can do the bad ones later (or not)
+    session_order = 1;%[2 4:10]; % you can do the bad ones later (or not)
     for s=session_order %length(sessions):-1:1
         fprintf(['=== Fitting pRF model for ses-' sessions{s} ' ===\n']);
         
@@ -346,9 +346,9 @@ if do_FitPRF_perSession
         end
         
         if doUpsample % tr = TR/2
-            Sess(s).result = analyzePRF(stimulus,fmri_data,TR/2,options);
+            result = analyzePRF(stimulus,fmri_data,TR/2,options);
         else
-            Sess(s).result = analyzePRF(stimulus,fmri_data,TR,options);
+            result = analyzePRF(stimulus,fmri_data,TR,options);
         end
         
         % save the result ----
@@ -358,28 +358,28 @@ if do_FitPRF_perSession
         % also save as nifti files
         % angle ---
         fprintf('Angles ');
-        nii = make_nii(Sess(s).result.ang,[1 1 1],[],[],...
+        nii = make_nii(result.ang,[1 1 1],[],[],...
             'pRF fit: Angles (deg)');
         save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s}' '_ang.nii']));
         gzip(fullfile(result_folder, ['Sess-' sessions{s}' '_ang.nii']));
         delete(fullfile(result_folder, ['Sess-' sessions{s}' '_ang.nii']));
         % ecc ---
         fprintf('Ecc ');
-        nii = make_nii(Sess(s).result.ecc,[1 1 1],[],[],...
+        nii = make_nii(result.ecc,[1 1 1],[],[],...
             'pRF fit: Eccentricity (pix)');
         save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s}' '_ecc.nii']));
         gzip(fullfile(result_folder, ['Sess-' sessions{s}' '_ecc.nii']));
         delete(fullfile(result_folder, ['Sess-' sessions{s}' '_ecc.nii']));
         % size ---
         fprintf('Size ');
-        nii = make_nii(Sess(s).result.rfsize,[1 1 1],[],[],...
+        nii = make_nii(result.rfsize,[1 1 1],[],[],...
             'pRF fit: RF size (pix)');
         save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s}' '_rfsize.nii']));
         gzip(fullfile(result_folder, ['Sess-' sessions{s}' '_rfsize.nii']));
         delete(fullfile(result_folder, ['Sess-' sessions{s}' '_rfsize.nii']));
         % R^2 Goodness of fit ---
         fprintf('R2 ');
-        nii = make_nii(Sess(s).result.R2,[1 1 1],[],[],...
+        nii = make_nii(result.R2,[1 1 1],[],[],...
             'pRF fit: R2 Goodnes off fit');
         save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s}' '_R2.nii']));
         gzip(fullfile(result_folder, ['Sess-' sessions{s}' '_R2.nii']));
