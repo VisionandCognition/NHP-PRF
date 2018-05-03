@@ -60,7 +60,7 @@ log_file_dir = [project_dir '/' job_name '/logs/']; % add jobname
 %% location of scripts ----------------------------------------------------
 % set location of execute_matlab_process.sh
 execute_matlab_process_sh = ['"$TMPDIR"/PRF/BashScripts/'...
-    'execute_Compiledmatlab_process_SARA.sh']; % must be ABSOLUTE path
+    'run_compiled_matlab_on_LISA.sh']; % must be ABSOLUTE path
 % set location of execute_matlab_process_sh
 generate_submit = '"$TMDPIR"/PRF/BashScripts/SubmitterOfAll.sh';
 
@@ -156,6 +156,7 @@ for job_ind = 1:length(joblist.sessions)
     
     fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
     fprintf(fid_single, '#\n');
+    % fprintf(fid_single, 'module load mcr\n\n');
     
     fprintf(fid_single,['cp -r $HOME/PRF/Data/us_reg/ses-' joblist.sessions{job_ind} '* "$TMPDIR"\n']);
     fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts "$TMPDIR"\n');
@@ -180,4 +181,5 @@ for job_ind = 1:length(joblist.sessions)
     fprintf(fid_commit_all, '%s\n\n', line);
 end
 fclose(fid_commit_all);
+system(['chmod +x ' fullfilename_all]);
 end

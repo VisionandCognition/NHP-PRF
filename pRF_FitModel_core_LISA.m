@@ -1,10 +1,14 @@
-function pRF_fitmodel_LISA(Monkey,Sessions,doUpsample,doExtraRegression,fitOnlyPosterior)
+function pRF_FitModel_core_LISA(Monkey,Sessions)
 % fits the prf model to voxels
 % Monkey: string, no caps
 % Sessions: cell array with YYYYMMDD
 % doUpsample: uses the data that is upsampled to twice TR, so 1.25s
 % doExtraRegression: includes motion information as regressor
 % fitOnlyPosterior: masks out anterior part of the brain to speed things up
+
+doUpsample=true;
+doExtraRegression=true;
+fitOnlyPosterior=false;
 
 numWorkers = [];
 % set the number of parallel processes.

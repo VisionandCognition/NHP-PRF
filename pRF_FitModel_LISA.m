@@ -1,4 +1,4 @@
-function parallelFun_LISA(job_nr1,job_nr2,job_nr3,job_nr4)
+function pRF_FitModel_LISA(job_nr1,job_nr2,job_nr3,job_nr4)
 
 %% set path to your m-files
 disp(['Starting script for job nr ' num2str(job_nr1) '_' num2str(job_nr2) '_' num2str(job_nr3) '_' num2str(job_nr4)])
@@ -11,15 +11,12 @@ addpath(curr_path)  % adds path only for this session
 % spm_dir = '\analysis\share\spm8'
 % addpath(genpath(spm_dir))
 
-if ~exist('"$TMPDIR"/TMPResults')
+if ~exist('"$TMPDIR"/TMPResults','dir')
     mkdir('"$TMPDIR"/TMPResults')
 end
 addpath(genpath('"$TMPDIR"/TMPData')) % Set path
 addpath(genpath('"$TMPDIR"/TMPResults')) % Set path
 addpath(genpath('"$TMPDIR"/MVPA_Scripts')) %Set path
-% cd('"$TMPDIR"/MVPA_Scripts')
-
-% !!! check on Cartesius, that path is set correct
 
 %% copy your data from the server to the local machine
 %% run your script
@@ -38,11 +35,11 @@ try
     if ischar(job_nr4)
         job_nr4 = str2num(job_nr4);
     end
-        display(['Running script for job nr ' num2str(job_nr1) '_' num2str(job_nr2) '_' num2str(job_nr3) '_' num2str(job_nr4)])
-        % call your script here, e.g.
-        %         RunModel(job_nr, loadfile, X, T, nfolds)
-        SVM_StimDecoder_AcrossTimeWindows(job_nr1,job_nr2,job_nr3,job_nr4)
-    
+    display(['Running script for job nr ' num2str(job_nr1) '_' num2str(job_nr2) '_' num2str(job_nr3) '_' num2str(job_nr4)])
+    % call your script here, e.g.
+    %         RunModel(job_nr, loadfile, X, T, nfolds)
+    SVM_StimDecoder_AcrossTimeWindows(job_nr1,job_nr2,job_nr3,job_nr4)
+    %%pRF_FitModel_core_LISA(Monkey,Sessions,doUpsample,doExtraRegression,fitOnlyPosterior)
 catch my_error
     % display error and stack, and continue with the rest of the script
     display_error_info(my_error)
