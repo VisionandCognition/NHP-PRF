@@ -23,7 +23,7 @@ function create_parallel_LISA(parallel_fun, joblist, parallel_fun_dir, job_name)
 %                the other passed to the function parallel_fun.]
 %
 %   parallel_fun_dir: path to parallel_fun, will be used to add to the
-%               matlab path on the remote machines (the nathans)
+%               matlab path on the remote machines
 %
 % OPTIONAL
 %   job_name: string to identify your job. Subdirectories with this name will
@@ -47,10 +47,10 @@ end
 
 % set directory where the sh-files should be created
 % will be created, if it does not exist
-project_dir = '/home/pcklink/PRF'; % must be the ABSOLUT path
+%project_dir = '/home/pcklink/PRF'; % must be the ABSOLUTE path
+project_dir = '/Users/chris/PRF'; % << to test on local
 
 % batch files will be written to job_name/batchdirs
-% batch_dir = '~/condor/batch_dir/'  % must be the ABSOLUT path
 batch_dir = [project_dir '/' job_name '/batch_dir']; % add jobname
 
 % set log folder
@@ -59,9 +59,10 @@ log_file_dir = [project_dir '/' job_name '/logs/']; % add jobname
 
 %% location of scripts ----------------------------------------------------
 % set location of execute_matlab_process.sh
-execute_matlab_process_sh = '"$TMPDIR"/BashScripts/execute_Compiledmatlab_process_SARA.sh'; % must be the ABSOLUTE path
+execute_matlab_process_sh = ['"$TMPDIR"/PRF/BashScripts/'...
+    'execute_Compiledmatlab_process_SARA.sh']; % must be ABSOLUTE path
 % set location of execute_matlab_process_sh
-generate_submit = '"$TMDPIR"/BashScripts/SubmitterOfAll.sh'; % must be the ABSOLUT path
+generate_submit = '"$TMDPIR"/PRF/BashScripts/SubmitterOfAll.sh';
 
 %% PROCESSING STARTS FROM HERE (no more parameters to check) ==============
 %% create batch & log folder ----------------------------------------------
@@ -72,7 +73,7 @@ if ~success
 end
 
 if ispc
-    error('Windows will not work due to paths. Please run from a Linux machine')
+    error('Windows will not work due to path definitions. Run on Linux')
 else
     [success, message] = mkdir(log_file_dir);
     if ~success
@@ -86,28 +87,17 @@ overwrite_file = 'ask';
 disp('Creating batch files')
 
 % check if main sh-file to start all jobs exists
-filename_all = sprintf('send_all_bootstrap_jobs.sh');
+filename_all = sprintf('send_all_prf-fitting_jobs.sh'); 
 fullfilename_all = [batch_dir '/' filename_all];
 if exist(fullfilename_all, 'file')
     disp(' ')
     disp(['File ' fullfilename_all ' already exist.'])
     overwrite_file = input('Should it be overwritten? [y, n, a (all)]: ', 's');
     if ~(strcmpi(overwrite_file, 'y') || strcmpi(overwrite_file, 'a'))
-        error(['File ' filename_all ' already exists and should not be overwritten. Solve problem and start again.'])
+        error(['File ' filename_all ' already exists and should not be '...
+            'overwritten. Solve problem and start again.'])
     end
     delete(fullfilename_all)
-end
-
-filename_ori = sprintf('send_all_ori_jobs.sh');
-fullfilename_ori = [batch_dir '/' filename_ori];
-if exist(fullfilename_ori, 'file')
-    disp(' ')
-    disp(['File ' fullfilename_ori ' already exist.'])
-    overwrite_file = input('Should it be overwritten? [y, n, a (all)]: ', 's');
-    if ~(strcmpi(overwrite_file, 'y') || strcmpi(overwrite_file, 'a'))
-        error(['File ' filename_ori ' already exists and should not be overwritten. Solve problem and start again.'])
-    end
-    delete(fullfilename_ori)
 end
 
 %% Create the batch files -------------------------------------------------
@@ -125,23 +115,12 @@ fprintf(fid_commit_all, ['# If you want to submit only some jobs to the server, 
     '#the ones you like to ommit and execute the script then.\n']);
 fprintf(fid_commit_all, '#\n');
 
-% [CK] Don't think I need this... ======
-% fid_commit_ori = fopen(fullfilename_ori, 'w');
-% fprintf(fid_commit_ori, '#!/bin/bash\n');
-% % add comment that THIS file submits the stuff to condor
-% fprintf(fid_commit_ori, '#\n');
-% fprintf(fid_commit_ori, '# This bash-script submits all jobs to the server, instead of running them locally.\n');
-% fprintf(fid_commit_ori, ['# If you want to submit only some jobs to the server, simply add a "#" in front of \n' ...
-%     '# the ones you like to ommit and execute the script then.\n']);
-% fprintf(fid_commit_ori, '#\n');
-% ======================================
-
 % create all single job batchfiles, and add for each a call in the main
 % batch file
 for job_ind = 1:length(joblist.sessions)
     %% create batchfile for current job -----------------------------------
     % create/overwrite file
-    filename = sprintf('run_job_Ses-%s_%s.sh', joblist.session{job_ind}, job_name);
+    filename = sprintf('run_job_Ses-%s_%s.sh', joblist.sessions{job_ind}, job_name);
     fullfilename = [batch_dir '/' filename];
     
     disp(['Creating Batch file for Job ' num2str(job_ind) ': ' fullfilename])
@@ -151,7 +130,8 @@ for job_ind = 1:length(joblist.sessions)
             disp(['File ' fullfilename ' already exist.'])
             overwrite_file = input('Should it be overwritten? [y, n, a (all)]: ', 's');
             if ~(strcmpi(overwrite_file, 'y') || strcmpi(overwrite_file, 'a'))
-                error(['File ' filename ' already exists and should not be overwritten. Solve problem and start again.'])
+                error(['File ' filename ' already exists and should not be '...
+                    'overwritten. Solve problem and start again.'])
             end
         end
         delete(fullfilename)
@@ -177,7 +157,7 @@ for job_ind = 1:length(joblist.sessions)
     fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
     fprintf(fid_single, '#\n');
     
-    fprintf(fid_single,['cp -r $HOME/PRF/Data/ses-' joblist.session{job_ind} '* "$TMPDIR"\n']);
+    fprintf(fid_single,['cp -r $HOME/PRF/Data/ses-' joblist.sessions{job_ind} '* "$TMPDIR"\n']);
     fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts "$TMPDIR"\n');
     fprintf(fid_single, 'cp -r $HOME/PRF/Code/analyzePRF "$TMPDIR"\n');
     fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI "$TMPDIR"\n');
@@ -186,46 +166,18 @@ for job_ind = 1:length(joblist.sessions)
     
     fprintf(fid_single,'cd "$TMPDIR"\n');
     fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n']);
-    line = sprintf('%s %s %s %s %s', execute_matlab_process_sh, parallel_fun, ...
-        joblist.session{job_ind}, log_file_dir, parallel_fun_dir);
+    line = sprintf('%s %s ses-%s %s %s', execute_matlab_process_sh, parallel_fun, ...
+        joblist.sessions{job_ind}, log_file_dir, parallel_fun_dir);
     fprintf(fid_single, '%s\n', line);
     
     % finally: pass exit status of execute_matlab_process.sh to LISA
     fprintf(fid_single, 'exit $?\n');
     fclose(fid_single);
     
-    % [CK] Don't think I need this... ======
-    % maxcounter = 0; nrbashscr = 1;
-    
-    disp(['Adding ' fullfilename ' to original batch file.'])
-    % add this script to the list off all scripts
-    % be careful to use the linux path
-    fprintf(fid_commit_ori, '# Job %s\n', joblist.session{job_ind});
-    
-    % [CK] Don't think I need this... ======
-    %waittime = job_ind*job_ind2*job_ind3*job_ind4; %Waiting time in seconds
-    %fprintf(fid_commit_ori,'echo "Waiting for %d seconds to avoid race condition..."\n',waittime);
-    %fprintf(fid_commit_ori,'sleep %ds\n',waittime);
-    %fprintf(fid_commit_ori,'echo "Waiting done, starting process..."');
+    disp(['Adding ' fullfilename ' to original batch file.']);
     
     line = sprintf('%s %s', 'qsub ', fullfilename);
-    fprintf(fid_commit_ori, '%s\n\n', line);
-    
-    % [CK] Don't think I need this... ======
-    %         %% add the produced single job batch file to the main batch file
-    %         disp(['Adding ' fullfilename ' to boot batch file.'])
-    %         % add this script to the list off all scripts
-    %         % be careful to use the linux path
-    %         fprintf(fid_commit_all, '# Job %s\n', joblist.session{job_ind});
-    %         %waittime = job_ind*job_ind2*job_ind3*job_ind4; %Waiting time in seconds
-    %         %fprintf(fid_commit_ori,'echo "Waiting for %d seconds to avoid race condition..."\n',waittime);
-    %         %fprintf(fid_commit_ori,'sleep %ds\n',waittime);
-    %         %fprintf(fid_commit_ori,'echo "Waiting done, starting process..."');
-    %
-    %         line = sprintf('%s %s', 'qsub ', fullfilename);
-    %         fprintf(fid_commit_all, '%s\n\n', line);
-    % =======================================
+    fprintf(fid_commit_all, '%s\n\n', line);
 end
 fclose(fid_commit_all);
-fclose(fid_commit_ori);
 end
