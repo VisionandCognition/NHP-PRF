@@ -157,18 +157,18 @@ for job_ind = 1:length(joblist.sessions)
     fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
     fprintf(fid_single, '#\n');
     
-    fprintf(fid_single,['cp -r $HOME/PRF/Data/ses-' joblist.sessions{job_ind} '* "$TMPDIR"\n']);
+    fprintf(fid_single,['cp -r $HOME/PRF/Data/us_reg/ses-' joblist.sessions{job_ind} '* "$TMPDIR"\n']);
     fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts "$TMPDIR"\n');
     fprintf(fid_single, 'cp -r $HOME/PRF/Code/analyzePRF "$TMPDIR"\n');
-    fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI "$TMPDIR"\n');
+    fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI "$TMPDIR"\n\n');
     % get the command to start the job
     % this command will be saved in the job script
     
-    fprintf(fid_single,'cd "$TMPDIR"\n');
-    fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n']);
+    fprintf(fid_single,'cd "$TMPDIR"\n\n');
+    fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n\n']);
     line = sprintf('%s %s ses-%s %s %s', execute_matlab_process_sh, parallel_fun, ...
         joblist.sessions{job_ind}, log_file_dir, parallel_fun_dir);
-    fprintf(fid_single, '%s\n', line);
+    fprintf(fid_single, '%s\n\n', line);
     
     % finally: pass exit status of execute_matlab_process.sh to LISA
     fprintf(fid_single, 'exit $?\n');

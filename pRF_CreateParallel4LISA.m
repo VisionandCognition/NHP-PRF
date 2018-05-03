@@ -14,9 +14,10 @@ joblist.sessions = {...
     };%[1:10]; % SESSION
 joblist.sessinc = 1:10; 
 
-parallel_fun_dir = '"$TMPDIR"/PRF/'; %$TMPDIR is fast 'scratch' space
-parallel_fun = 'parallelFun_LISA';
-job_name = 'FitPRF_PerSession';
+parallel_fun_dir    = '"$TMPDIR"/PRF/'; %$TMPDIR is fast 'scratch' space
+parallel_fun        = 'parallelFun_LISA';
+job_name            = 'FitPRF_PerSession';
 
 disp('== Running create_parallel_LISA ==')
+
 create_parallel_LISA(parallel_fun, joblist, parallel_fun_dir, job_name)

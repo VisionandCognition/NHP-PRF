@@ -136,30 +136,30 @@ for s=1:length(sessions)
     fprintf('Angles ');
     nii = make_nii(result.ang,[1 1 1],[],[],...
         'pRF fit: Angles (deg)');
-    save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s}' '_ang.nii']));
-    gzip(fullfile(result_folder, ['Sess-' sessions{s}' '_ang.nii']));
-    delete(fullfile(result_folder, ['Sess-' sessions{s}' '_ang.nii']));
+    save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_ang.nii']));
+    gzip(fullfile(result_folder, ['Sess-' sessions{s} '_ang.nii']));
+    delete(fullfile(result_folder, ['Sess-' sessions{s} '_ang.nii']));
     % ecc ---
     fprintf('Ecc ');
     nii = make_nii(result.ecc,[1 1 1],[],[],...
         'pRF fit: Eccentricity (pix)');
-    save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s}' '_ecc.nii']));
-    gzip(fullfile(result_folder, ['Sess-' sessions{s}' '_ecc.nii']));
-    delete(fullfile(result_folder, ['Sess-' sessions{s}' '_ecc.nii']));
+    save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_ecc.nii']));
+    gzip(fullfile(result_folder, ['Sess-' sessions{s} '_ecc.nii']));
+    delete(fullfile(result_folder, ['Sess-' sessions{s} '_ecc.nii']));
     % size ---
     fprintf('Size ');
     nii = make_nii(result.rfsize,[1 1 1],[],[],...
         'pRF fit: RF size (pix)');
-    save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s}' '_rfsize.nii']));
-    gzip(fullfile(result_folder, ['Sess-' sessions{s}' '_rfsize.nii']));
-    delete(fullfile(result_folder, ['Sess-' sessions{s}' '_rfsize.nii']));
+    save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_rfsize.nii']));
+    gzip(fullfile(result_folder, ['Sess-' sessions{s} '_rfsize.nii']));
+    delete(fullfile(result_folder, ['Sess-' sessions{s} '_rfsize.nii']));
     % R^2 Goodness of fit ---
     fprintf('R2 ');
     nii = make_nii(result.R2,[1 1 1],[],[],...
         'pRF fit: R2 Goodnes off fit');
-    save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s}' '_R2.nii']));
-    gzip(fullfile(result_folder, ['Sess-' sessions{s}' '_R2.nii']));
-    delete(fullfile(result_folder, ['Sess-' sessions{s}' '_R2.nii']));
+    save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_R2.nii']));
+    gzip(fullfile(result_folder, ['Sess-' sessions{s} '_R2.nii']));
+    delete(fullfile(result_folder, ['Sess-' sessions{s} '_R2.nii']));
     
     fprintf('>> Done!\n');
 end
