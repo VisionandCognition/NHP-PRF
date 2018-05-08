@@ -1,7 +1,7 @@
-function pRF_FitModel_core_LISA(Monkey,Sessions)
+function pRF_FitModel_core_LISA(Monkey,Session)
 % fits the prf model to voxels
 % Monkey: string, no caps
-% Sessions: cell array with YYYYMMDD
+% Session: cell array with YYYYMMDD
 % doUpsample: uses the data that is upsampled to twice TR, so 1.25s
 % doExtraRegression: includes motion information as regressor
 % fitOnlyPosterior: masks out anterior part of the brain to speed things up

@@ -25,4 +25,4 @@ job_name            = 'FitPRF_PerSession';
 
 disp('== Running create_parallel_LISA ==')
 
-create_parallel_LISA(parallel_fun, joblist, parallel_fun_dir, job_name)
+pRF_CreateParallel4LISA_worker(parallel_fun, joblist, parallel_fun_dir, job_name)
