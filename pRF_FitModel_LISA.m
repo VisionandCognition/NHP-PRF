@@ -7,11 +7,7 @@ disp(['Starting script for job nr ' num2str(job_nr1) '_' num2str(job_nr2) '_' nu
 curr_path = pwd;
 addpath(curr_path)  % adds path only for this session
 
-% example 2: adding a folder with all it's subfolders, e.g. to add SPM
-% spm_dir = '\analysis\share\spm8'
-% addpath(genpath(spm_dir))
-
-if ~exist('"$TMPDIR"/TMPResults','dir')
+if ~exist('"$TMPDIR"/PRF/TMPResults','dir')
     mkdir('"$TMPDIR"/TMPResults')
 end
 addpath(genpath('"$TMPDIR"/TMPData')) % Set path
