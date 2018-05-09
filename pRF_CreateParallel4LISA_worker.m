@@ -1,4 +1,4 @@
-function create_parallel_LISA(parallel_fun, joblist, parallel_fun_dir, job_name)
+function pRF_CreateParallel4LISA_worker(parallel_fun, joblist, parallel_fun_dir, job_name)
 % This function serves to create parallel Jobs for a given script
 % to parallalise it for a given list of jobs.
 %
@@ -47,7 +47,7 @@ end
 
 % set directory where the sh-files should be created
 % will be created, if it does not exist
-if ~ismac
+if ~joblist.debug
     project_dir = '/home/pcklink/PRF'; % must be the ABSOLUTE path
 else
     project_dir = '/Users/chris/PRF'; % << to test on local
@@ -63,9 +63,9 @@ log_file_dir = [project_dir '/' job_name '/logs/']; % add jobname
 %% location of scripts ----------------------------------------------------
 % set location of execute_matlab_process.sh
 execute_matlab_process_sh = ['"$TMPDIR"/PRF/BashScripts/'...
-    'run_compiled_matlab_on_LISA.sh']; % must be ABSOLUTE path
+    'run_CompiledMatlab_LISA.sh']; % must be ABSOLUTE path
 % set location of execute_matlab_process_sh
-generate_submit = '"$TMDPIR"/PRF/BashScripts/SubmitterOfAll.sh';
+generate_submit = '"$TMDPIR"/PRF/BashScripts/pRF_SubmitterOfAll_LISA.sh';
 
 %% PROCESSING STARTS FROM HERE (no more parameters to check) ==============
 %% create batch & log folder ----------------------------------------------
@@ -164,16 +164,16 @@ for job_ind = 1:length(joblist.sessinc)
     fprintf(fid_single, '#\n');
     
     fprintf(fid_single,['cp -r $HOME/PRF/Data/us_reg/ses-' ...
-        joblist.sessions{joblist.sessinc(job_ind)} '* "$TMPDIR"\n']);
-    fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts "$TMPDIR"\n');
-    fprintf(fid_single, 'cp -r $HOME/PRF/Code/analyzePRF "$TMPDIR"\n');
-    fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI "$TMPDIR"\n\n');
+        joblist.sessions{joblist.sessinc(job_ind)} '* "$TMPDIR"/PRF\n']);
+    fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts "$TMPDIR"/PRF\n');
+    fprintf(fid_single, 'cp -r $HOME/PRF/Code/analyzePRF "$TMPDIR"/PRF\n');
+    fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI "$TMPDIR"/PRF\n\n');
     % get the command to start the job
     % this command will be saved in the job script
     
-    fprintf(fid_single,'cd "$TMPDIR"\n\n');
+    fprintf(fid_single,'cd "$TMPDIR"/PRF\n\n');
     fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n\n']);
-    line = sprintf('%s %s %s %s %s %s', execute_matlab_process_sh, parallel_fun, ...
+    line = sprintf('%s \\\n\t%s %s %s \\\n\t%s \\\n\t%s', execute_matlab_process_sh, parallel_fun, ...
         joblist.monkey, joblist.sessions{joblist.sessinc(job_ind)}, log_file_dir, parallel_fun_dir);
     fprintf(fid_single, '%s\n\n', line);
     

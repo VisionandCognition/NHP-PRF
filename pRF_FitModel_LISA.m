@@ -1,8 +1,23 @@
 function pRF_FitModel_LISA(Monkey,Session)
+% This is the script that runs the pRF fit
+% it should be compiled and called from run_CompiledMatlab_LISA.sh
+% This means it cannot use 'addpath', instead toolboxes or required
+% function should be added when it is compiled usin -a /toolbox etc.
+
+% The uncompiled version of this function should be in
+% $HOME/PRF/Code
+
+% this compiled function will be running from:
+% "$TMPDIR"/PRF
+
+% MAKE SURE TO:
+% save results in "$TMPDIR"/PRF/Results/%MONKEY/$SESS
+
+
 % fits the prf model to voxels
 % Monkey: string, no caps
-% Session: cell array with YYYYMMDD
-% NB inputs are generated in other script
+% Session: string YYYYMMDD
+
 TR=2.5;
 
 
