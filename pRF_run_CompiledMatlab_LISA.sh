@@ -28,7 +28,7 @@ if [ $# -ne $NARG ];then
 fi
 
 LOC=`pwd`
-cd "$HOME" 
+cd $HOME 
 # ensure that you are in your home directory, to avoid matlab path problems 
 # (by default, the path information is saved in the home directory, so starting 
 # matlab from there uses the normal path of the user)
@@ -37,7 +37,7 @@ HOSTNAME=`hostname`
 MYSELF=`whoami`
 DATE=`date`
 
-LOGFILE=$LOGFILE_DIR/log_job_$MONKEY$SESS
+LOGFILE=$LOGFILE_DIR/log_job_$MONKEY_$SESS
 
 echo
 echo "Running job as $MYSELF on $HOSTNAME, $DATE" 2>&1
@@ -51,13 +51,13 @@ echo
 echo
 
 # go to the scratch PRF folder
-cd "$TMPDIR"/PRF
+cd $TMPDIR/PRF
 # copy the matlab script that needs to be compiled from Code/BashScripts to scratch/PRF
-cp $HOME/PRF/Code/$MATLAB_SCRIPT "$TMPDIR"/PRF 
+cp $HOME/PRF/Code/$MATLAB_SCRIPT $TMPDIR/PRF 
 
 # compile the matlab script
 module load matlab
-mcc -m "$TMPDIR"/PRF/$MATLAB_SCRIPT.m -a "$TMPDIR"/PRF/analyzePRF -a "$TMPDIR"/PRF/NIfTI
+mcc -m $TMPDIR/PRF/$MATLAB_SCRIPT.m -a $TMPDIR/PRF/analyzePRF -a $TMPDIR/PRF/NIfTI
 module unload matlab
 
 # make it executable
@@ -79,7 +79,7 @@ echo "Job finished with Exit code $EXIT, returning"
 echo
 
 mkdir $HOME/PRF/Results/$MONKEY
-cp -r "$TMPDIR"/PRF/Results/%MONKEY/$SESS $HOME/PRF/Results/$MONKEY
+cp -r $TMPDIR/PRF/Results/$MONKEY/$SESS $HOME/PRF/Results/$MONKEY
 
 
 if [ $EXIT -ne 0 ] ; then

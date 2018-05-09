@@ -45,24 +45,21 @@ if ~exist('job_name', 'var')
     job_name = [parallel_fun '_' datestr(now, 'yyyymmddTHHMMSS')];
 end
 
-% set directory where the sh-files should be created
-% will be created, if it does not exist
-if ~joblist.debug
-    project_dir = '/home/pcklink/PRF'; % must be the ABSOLUTE path
-else
-    project_dir = '/Users/chris/PRF'; % << to test on local
-end
+% project_dir on LISA
+project_dir = '/home/pcklink/PRF'; % must be the ABSOLUTE path
+% log dir on LISA
+log_file_dir = [project_dir '/Logs/']; % add jobname
 
-% batch files will be written to job_name/batchdirs
-batch_dir = [project_dir '/' job_name '/batch_dir']; % add jobname
 
-% set log folder
-% will be created, if it does not exist
-log_file_dir = [project_dir '/' job_name '/logs/']; % add jobname
+% set local log folder
+log_file_dir_local = [pwd '/Logs/']; % add jobname
+
+% job files will be locally written to:
+batch_dir = [pwd '/JOBS_' job_name]; % add jobname
 
 %% location of scripts ----------------------------------------------------
 % set location of execute_matlab_process.sh
-execute_matlab_process_sh = ['"$TMPDIR"/PRF/BashScripts/'...
+execute_matlab_process_sh = ['$TMPDIR/PRF/BashScripts/'...
     'pRF_run_CompiledMatlab_LISA.sh']; % must be ABSOLUTE path
 
 %% PROCESSING STARTS FROM HERE (no more parameters to check) ==============
@@ -76,9 +73,9 @@ end
 if ispc
     error('Windows will not work due to path definitions. Run on Linux')
 else
-    [success, message] = mkdir(log_file_dir);
+    [success, message] = mkdir(log_file_dir_local);
     if ~success
-        error(['Could not create directory for log_file_dir: ' message])
+        error(['Could not create directory for log_file_dir_local: ' message])
     end
 end
 
@@ -161,16 +158,16 @@ for job_ind = 1:length(joblist.sessinc)
     fprintf(fid_single, '#\n');
     
     fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...
-        joblist.sessions{joblist.sessinc(job_ind)} '* "$TMPDIR"/PRF\n']);
-    fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* "$TMPDIR"/PRF\n']);
-    fprintf(fid_single, 'cp -r $HOME/PRF/Code/* "$TMPDIR"/PRF\n');
-    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts "$TMPDIR"/PRF\n');
-    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/analyzePRF "$TMPDIR"/PRF\n');
-    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI "$TMPDIR"/PRF\n\n');
+        joblist.sessions{joblist.sessinc(job_ind)} '* $TMPDIR/PRF\n']);
+    fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* $TMPDIR/PRF\n']);
+    fprintf(fid_single, 'cp -r $HOME/PRF/Code/* $TMPDIR/PRF\n');
+    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts $TMPDIR/PRF\n');
+    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/analyzePRF $TMPDIR/PRF\n');
+    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI $TMPDIR/PRF\n\n');
     % get the command to start the job
     % this command will be saved in the job script
     
-    fprintf(fid_single,'cd "$TMPDIR"/PRF\n\n');
+    fprintf(fid_single,'cd $TMPDIR/PRF\n\n');
     fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n\n']);
     line = sprintf('%s \\\n\t%s %s %s \\\n\t%s \\\n\t%s', execute_matlab_process_sh, parallel_fun, ...
         joblist.monkey, joblist.sessions{joblist.sessinc(job_ind)}, log_file_dir, parallel_fun_dir);
@@ -182,7 +179,8 @@ for job_ind = 1:length(joblist.sessinc)
     
     disp(['Adding ' fullfilename ' to original batch file.']);
     
-    line = sprintf('%s %s', 'qsub ', fullfilename);
+    fullfilename2 = ['$HOME/PRF/Code/Jobs/' filename];
+    line = sprintf('%s %s', 'qsub ', fullfilename2);
     fprintf(fid_commit_all, '%s\n\n', line);
 end
 fclose(fid_commit_all);

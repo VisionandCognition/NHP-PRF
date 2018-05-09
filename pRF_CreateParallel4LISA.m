@@ -1,5 +1,4 @@
 % CreateParallel Bash scripts for pRF fitting on LISA
-joblist.debug=true;
 joblist.monkey = 'danny';
 joblist.sessions = {...
     '20171116',... 1
@@ -16,11 +15,7 @@ joblist.sessions = {...
 joblist.sessinc = 1:10; 
 joblist.type = 'us_reg';
 
-if joblist.debug
-    parallel_fun_dir    = [pwd '/scratch/PRF/']; %$TMPDIR is fast 'scratch' space
-else
-    parallel_fun_dir    = '"$TMPDIR"/PRF/'; %$TMPDIR is fast 'scratch' space
-end
+parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
 parallel_fun        = 'pRF_FitModel_LISA';
 job_name            = 'FitPRF_PerSession';
 
