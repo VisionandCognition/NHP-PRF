@@ -78,7 +78,8 @@ echo "Job finished with Exit code $EXIT, returning"
   echo "Copy data from scratch back to home " 2>&1
 echo
 
-cp -r "$TMPDIR"/PRF/Results/%MONKEY/$SESS $HOME/PRF/Results
+mkdir $HOME/PRF/Results/$MONKEY
+cp -r "$TMPDIR"/PRF/Results/%MONKEY/$SESS $HOME/PRF/Results/$MONKEY
 
 
 if [ $EXIT -ne 0 ] ; then

@@ -63,9 +63,7 @@ log_file_dir = [project_dir '/' job_name '/logs/']; % add jobname
 %% location of scripts ----------------------------------------------------
 % set location of execute_matlab_process.sh
 execute_matlab_process_sh = ['"$TMPDIR"/PRF/BashScripts/'...
-    'run_CompiledMatlab_LISA.sh']; % must be ABSOLUTE path
-% set location of execute_matlab_process_sh
-generate_submit = '"$TMDPIR"/PRF/BashScripts/pRF_SubmitterOfAll_LISA.sh';
+    'pRF_run_CompiledMatlab_LISA.sh']; % must be ABSOLUTE path
 
 %% PROCESSING STARTS FROM HERE (no more parameters to check) ==============
 %% create batch & log folder ----------------------------------------------
@@ -105,7 +103,6 @@ end
 
 %% Create the batch files -------------------------------------------------
 % The main batch file handles passing the single job batch files to the
-% cluster (using lisa_generate_submit.sh)
 display(['Creating main batch file: ' fullfilename_all])
 fid_commit_all = fopen(fullfilename_all, 'w');
 
@@ -163,11 +160,13 @@ for job_ind = 1:length(joblist.sessinc)
     fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
     fprintf(fid_single, '#\n');
     
-    fprintf(fid_single,['cp -r $HOME/PRF/Data/us_reg/ses-' ...
+    fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...
         joblist.sessions{joblist.sessinc(job_ind)} '* "$TMPDIR"/PRF\n']);
-    fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts "$TMPDIR"/PRF\n');
-    fprintf(fid_single, 'cp -r $HOME/PRF/Code/analyzePRF "$TMPDIR"/PRF\n');
-    fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI "$TMPDIR"/PRF\n\n');
+    fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* "$TMPDIR"/PRF\n']);
+    fprintf(fid_single, 'cp -r $HOME/PRF/Code/* "$TMPDIR"/PRF\n');
+    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts "$TMPDIR"/PRF\n');
+    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/analyzePRF "$TMPDIR"/PRF\n');
+    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI "$TMPDIR"/PRF\n\n');
     % get the command to start the job
     % this command will be saved in the job script
     

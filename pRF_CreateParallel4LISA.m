@@ -14,6 +14,7 @@ joblist.sessions = {...
     '20180201'...  10
     };%[1:10]; % SESSION
 joblist.sessinc = 1:10; 
+joblist.type = 'us_reg';
 
 if joblist.debug
     parallel_fun_dir    = [pwd '/scratch/PRF/']; %$TMPDIR is fast 'scratch' space
