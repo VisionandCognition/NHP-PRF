@@ -157,6 +157,7 @@ for job_ind = 1:length(joblist.sessinc)
     fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
     fprintf(fid_single, '#\n');
     
+    fprintf(fid_single,['mkdir $TMPDIR/PRF\n']);
     fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...
         joblist.sessions{joblist.sessinc(job_ind)} '* $TMPDIR/PRF\n']);
     fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* $TMPDIR/PRF\n']);
