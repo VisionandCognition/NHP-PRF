@@ -53,15 +53,15 @@ echo
 # go to the scratch PRF folder
 cd $TMPDIR/PRF
 # copy the matlab script that needs to be compiled from Code/BashScripts to scratch/PRF
-cp $HOME/PRF/Code/$MATLAB_SCRIPT $TMPDIR/PRF 
+cp $HOME/PRF/Code/$MATLAB_SCRIPT* $TMPDIR/PRF 
 
 # compile the matlab script
-module load matlab
-mcc -m $TMPDIR/PRF/$MATLAB_SCRIPT.m -a $TMPDIR/PRF/analyzePRF -a $TMPDIR/PRF/NIfTI
-module unload matlab
+#module load matlab
+#echo "mcc -m $TMPDIR/PRF/$MATLAB_SCRIPT.m -a $TMPDIR/PRF/analyzePRF -a $TMPDIR/PRF/NIfTI" | matlab -nodisplay
+#module unload matlab
 
 # make it executable
-chmod +x $MATLAB_SCRIPT
+chmod +x $MATLAB_SCRIPT*
 
 # load the mcr module (runtime environment)
 module load mcr
