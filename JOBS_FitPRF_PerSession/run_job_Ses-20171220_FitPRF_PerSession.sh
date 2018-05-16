@@ -5,6 +5,8 @@
 #PBS -lwalltime=48:00:00
 #PBS -o $HOME/PRF/Logs/
 #
+rm -r $TMPDIR/PRF
+mkdir $TMPDIR/PRF
 cp -r $HOME/PRF/Data/us_reg/danny/ses-20171220* $TMPDIR/PRF
 cp -r $HOME/PRF/Data/mask/danny/* $TMPDIR/PRF
 cp -r $HOME/PRF/Code/* $TMPDIR/PRF

@@ -32,15 +32,15 @@ numWorkers =[];
 % Notification of the fact that we're starting
 disp(['Starting script for job ' Monkey ',Ses-' Session])
 
-if ~exist(['"$TMPDIR"/PRF/Results/' Monkey '/' Session],'dir')
-    mkdir(['"$TMPDIR"/PRF/Results/' Monkey '/' Session])
+if ~exist(['$TMPDIR/PRF/Results/' Monkey '/' Session],'dir')
+    mkdir(['$TMPDIR/PRF/Results/' Monkey '/' Session])
 end
 
 % Link to the brain mask
-BrainMask_file = '"$TMPDIR"/PRF/T1_to_func_brainmask_zcrop.nii';
+BrainMask_file = '$TMPDIR/PRF/T1_to_func_brainmask_zcrop.nii';
 
 % make outputfolder
-result_folder = ['"$TMPDIR"/PRF/Results/' Monkey '/' Session];
+result_folder = ['$TMPDIR/PRF/Results/' Monkey '/' Session];
 if ~exist(result_folder,'dir')
     mkdir(result_folder);
 end
