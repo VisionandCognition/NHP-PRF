@@ -152,7 +152,8 @@ for job_ind = 1:length(joblist.sessinc)
     
     fprintf(fid_single, '#PBS -j oe\n');
     fprintf(fid_single, '#PBS -lnodes=1:ppn=16\n');
-    fprintf(fid_single, '#PBS -lwalltime=48:00:00\n');
+    fprintf(fid_single, '#PBS -lnodes=1:mem64gb\n');
+    fprintf(fid_single, '#PBS -lwalltime=72:00:00\n');
     
     fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
     fprintf(fid_single, '#\n');
