@@ -2,7 +2,8 @@
 #PBS -N FitPRF_PerSession
 #PBS -j oe
 #PBS -lnodes=1:ppn=16
-#PBS -lwalltime=48:00:00
+#PBS -lnodes=1:mem64gb
+#PBS -lwalltime=72:00:00
 #PBS -o $HOME/PRF/Logs/
 #
 rm -r $TMPDIR/PRF
