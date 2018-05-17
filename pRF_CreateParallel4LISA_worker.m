@@ -120,7 +120,7 @@ for job_ind = 1:length(joblist.sessinc)
     %% create batchfile for current job -----------------------------------
     % create/overwrite file
     filename = sprintf('run_job_Ses-%s_%s.sh', joblist.sessions{...
-        joblist.sessinc(job_ind)}, job_name);
+        joblist.sessinc(job_ind),1}, job_name);
     fullfilename = [batch_dir '/' filename];
     
     disp(['Creating Batch file for Job ' num2str(job_ind) ': ' fullfilename])
@@ -151,7 +151,12 @@ for job_ind = 1:length(joblist.sessinc)
     end
     
     fprintf(fid_single, '#PBS -j oe\n');
-    fprintf(fid_single, '#PBS -lnodes=1:ppn=16\n');
+    if isempty(joblist.sessions{joblist.sessinc(job_ind),2})
+        fprintf(fid_single, '#PBS -lnodes=1:ppn=16\n');
+    else
+        fprintf(fid_single, ['#PBS -lnodes=1:ppn=' num2str(...
+            joblist.sessions{joblist.sessinc(job_ind),2}) '\n']);
+    end
     fprintf(fid_single, '#PBS -lnodes=1:mem64gb\n');
     fprintf(fid_single, '#PBS -lwalltime=72:00:00\n');
     
@@ -161,7 +166,7 @@ for job_ind = 1:length(joblist.sessinc)
     fprintf(fid_single,['rm -r $TMPDIR/PRF\n']);
     fprintf(fid_single,['mkdir $TMPDIR/PRF\n']);
     fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...
-        joblist.sessions{joblist.sessinc(job_ind)} '* $TMPDIR/PRF\n']);
+        joblist.sessions{joblist.sessinc(job_ind),1} '* $TMPDIR/PRF\n']);
     fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* $TMPDIR/PRF\n']);
     fprintf(fid_single, 'cp -r $HOME/PRF/Code/* $TMPDIR/PRF\n');
     %fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts $TMPDIR/PRF\n');
@@ -173,7 +178,7 @@ for job_ind = 1:length(joblist.sessinc)
     fprintf(fid_single,'cd $TMPDIR/PRF\n\n');
     fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n\n']);
     line = sprintf('%s \\\n\t%s %s %s \\\n\t%s \\\n\t%s', execute_matlab_process_sh, parallel_fun, ...
-        joblist.monkey, joblist.sessions{joblist.sessinc(job_ind)}, log_file_dir, parallel_fun_dir);
+        joblist.monkey, joblist.sessions{joblist.sessinc(job_ind),1}, log_file_dir, parallel_fun_dir);
     fprintf(fid_single, '%s\n\n', line);
     
     % finally: pass exit status of execute_matlab_process.sh to LISA
