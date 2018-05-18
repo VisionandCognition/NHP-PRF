@@ -18,9 +18,10 @@ function pRF_CreateParallel4LISA_worker(parallel_fun, joblist, parallel_fun_dir,
 %               function must take exactly 1 argument as input. For an
 %               example, see parallel_example_fun.m;
 %
-%   joblist: a structure with information on what jobs to create
-%               [this was a 1xn vector of elements which will be one after
-%                the other passed to the function parallel_fun.]
+%   joblist: a structure with information on what jobs to create, with how
+%               many parallel processes, and how to split volumes in
+%               slice-chunks
+%
 %
 %   parallel_fun_dir: path to parallel_fun, will be used to add to the
 %               matlab path on the remote machines
@@ -49,7 +50,6 @@ end
 project_dir = '/home/pcklink/PRF'; % must be the ABSOLUTE path
 % log dir on LISA
 log_file_dir = [project_dir '/Logs/']; % add jobname
-
 
 % set local log folder
 log_file_dir_local = [pwd '/Logs/']; % add jobname
@@ -85,7 +85,7 @@ overwrite_file = 'ask';
 disp('Creating batch files')
 
 % check if main sh-file to start all jobs exists
-filename_all = sprintf('send_all_prf-fitting_jobs.sh'); 
+filename_all = sprintf('send_all_prf-fitting_jobs.sh');
 fullfilename_all = [batch_dir '/' filename_all];
 if exist(fullfilename_all, 'file')
     disp(' ')
@@ -117,79 +117,77 @@ fprintf(fid_commit_all, '#\n');
 % create all single job batchfiles, and add for each a call in the main
 % batch file
 for job_ind = 1:length(joblist.sessinc)
-    %% create batchfile for current job -----------------------------------
-    % create/overwrite file
-    filename = sprintf('run_job_Ses-%s_%s.sh', joblist.sessions{...
-        joblist.sessinc(job_ind),1}, job_name);
-    fullfilename = [batch_dir '/' filename];
-    
-    disp(['Creating Batch file for Job ' num2str(job_ind) ': ' fullfilename])
-    if exist(fullfilename, 'file')
-        if ~strcmpi(overwrite_file, 'a')
-            disp(' ')
-            disp(['File ' fullfilename ' already exist.'])
-            overwrite_file = input('Should it be overwritten? [y, n, a (all)]: ', 's');
-            if ~(strcmpi(overwrite_file, 'y') || strcmpi(overwrite_file, 'a'))
-                error(['File ' filename ' already exists and should not be '...
-                    'overwritten. Solve problem and start again.'])
+    for job_ind2 = 1:length(joblist.slicechunks)
+        %% create batchfile for current job -------------------------------
+        % create/overwrite file
+        filename = sprintf('run_job_Ses-%s_%s_%s.sh', joblist.sessions{...
+            joblist.sessinc(job_ind),1},num2str(job_ind2),job_name);
+        fullfilename = [batch_dir '/' filename];
+        
+        disp(['Creating Batch file for Job ' num2str(job_ind) '_' num2str(job_ind2) ': ' fullfilename])
+        if exist(fullfilename, 'file')
+            if ~strcmpi(overwrite_file, 'a')
+                disp(' ')
+                disp(['File ' fullfilename ' already exist.'])
+                overwrite_file = input('Should it be overwritten? [y, n, a (all)]: ', 's');
+                if ~(strcmpi(overwrite_file, 'y') || strcmpi(overwrite_file, 'a'))
+                    error(['File ' filename ' already exists and should not be '...
+                        'overwritten. Solve problem and start again.'])
+                end
             end
+            delete(fullfilename)
         end
-        delete(fullfilename)
+        
+        % open single subject file
+        fid_single = fopen(fullfilename , 'w');
+        
+        % ensure that the right shell is used !#/bin/bash
+        fprintf(fid_single, '#PBS -S /bin/bash\n');
+        % add a comment what this script does
+        jobnameline = ['#PBS -N ' job_name '\n'];
+        try
+            fprintf(fid_single, jobnameline);
+        catch ME
+            disp(ME);
+        end
+        
+        fprintf(fid_single, '#PBS -j oe\n');
+        if isempty(joblist.sessions{joblist.sessinc(job_ind),2})
+            fprintf(fid_single, '#PBS -lnodes=1:ppn=16\n');
+        else
+            fprintf(fid_single, ['#PBS -lnodes=1:ppn=' num2str(...
+                joblist.sessions{joblist.sessinc(job_ind),2}) '\n']);
+        end
+        fprintf(fid_single, '#PBS -lnodes=1:mem64gb\n');
+        fprintf(fid_single, '#PBS -lwalltime=48:00:00\n');
+        
+        fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
+        fprintf(fid_single, '#\n');
+        
+        fprintf(fid_single,'mkdir $TMPDIR/PRF\n');
+        fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...
+            joblist.sessions{joblist.sessinc(job_ind),1} '* $TMPDIR/PRF\n']);
+        fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* $TMPDIR/PRF\n']);
+        fprintf(fid_single, 'cp -r $HOME/PRF/Code/* $TMPDIR/PRF\n');
+        
+        fprintf(fid_single,'cd $TMPDIR/PRF\n\n');
+        fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n\n']);
+        line = sprintf('%s \\\n\t%s %s %s %s \\\n\t%s \\\n\t%s', execute_matlab_process_sh, parallel_fun, ...
+            joblist.monkey, joblist.sessions{joblist.sessinc(job_ind),1}, ...
+            joblist.slicechunks{job_ind2}, log_file_dir, parallel_fun_dir);
+        fprintf(fid_single, '%s\n\n', line);
+        
+        % finally: pass exit status of execute_matlab_process.sh to LISA
+        fprintf(fid_single, 'exit $?\n');
+        fclose(fid_single);
+        
+        disp(['Adding ' fullfilename ' to original batch file.']);
+        
+        fullfilename2 = ['$HOME/PRF/Code/Jobs/' filename];
+        line = sprintf('%s %s', 'qsub ', fullfilename2);
+        fprintf(fid_commit_all, '%s\n', line);
     end
-    
-    % open single subject file
-    fid_single = fopen(fullfilename , 'w');
-    
-    % ensure that the right shell is used !#/bin/bash
-    fprintf(fid_single, '#PBS -S /bin/bash\n');
-    % add a comment what this script does
-    jobnameline = ['#PBS -N ' job_name '\n'];
-    try
-        fprintf(fid_single, jobnameline);
-    catch ME
-        display(ME)
-    end
-    
-    fprintf(fid_single, '#PBS -j oe\n');
-    if isempty(joblist.sessions{joblist.sessinc(job_ind),2})
-        fprintf(fid_single, '#PBS -lnodes=1:ppn=16\n');
-    else
-        fprintf(fid_single, ['#PBS -lnodes=1:ppn=' num2str(...
-            joblist.sessions{joblist.sessinc(job_ind),2}) '\n']);
-    end
-    fprintf(fid_single, '#PBS -lnodes=1:mem64gb\n');
-    fprintf(fid_single, '#PBS -lwalltime=72:00:00\n');
-    
-    fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
-    fprintf(fid_single, '#\n');
-    
-    fprintf(fid_single,['rm -r $TMPDIR/PRF\n']);
-    fprintf(fid_single,['mkdir $TMPDIR/PRF\n']);
-    fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...
-        joblist.sessions{joblist.sessinc(job_ind),1} '* $TMPDIR/PRF\n']);
-    fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* $TMPDIR/PRF\n']);
-    fprintf(fid_single, 'cp -r $HOME/PRF/Code/* $TMPDIR/PRF\n');
-    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/BashScripts $TMPDIR/PRF\n');
-    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/analyzePRF $TMPDIR/PRF\n');
-    %fprintf(fid_single, 'cp -r $HOME/PRF/Code/NIfTI $TMPDIR/PRF\n\n');
-    % get the command to start the job
-    % this command will be saved in the job script
-    
-    fprintf(fid_single,'cd $TMPDIR/PRF\n\n');
-    fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n\n']);
-    line = sprintf('%s \\\n\t%s %s %s \\\n\t%s \\\n\t%s', execute_matlab_process_sh, parallel_fun, ...
-        joblist.monkey, joblist.sessions{joblist.sessinc(job_ind),1}, log_file_dir, parallel_fun_dir);
-    fprintf(fid_single, '%s\n\n', line);
-    
-    % finally: pass exit status of execute_matlab_process.sh to LISA
-    fprintf(fid_single, 'exit $?\n');
-    fclose(fid_single);
-    
-    disp(['Adding ' fullfilename ' to original batch file.']);
-    
-    fullfilename2 = ['$HOME/PRF/Code/Jobs/' filename];
-    line = sprintf('%s %s', 'qsub ', fullfilename2);
-    fprintf(fid_commit_all, '%s\n\n', line);
+    fprintf(fid_commit_all, '\n');
 end
 fclose(fid_commit_all);
 system(['chmod +x ' fullfilename_all]);

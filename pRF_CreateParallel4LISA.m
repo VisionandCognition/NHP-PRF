@@ -11,8 +11,9 @@ joblist.sessions = {...
     '20180125',[];... 8
     '20180131',[];... 9
     '20180201',[]...  10
-    };%[1:10]; % SESSION
+    };%[1:10]; % SESSION nWorkers
 joblist.sessinc = 1:10; 
+joblist.slicechunks = {'1:14','15:28','29:42','43:56'};
 joblist.type = 'us_reg';
 
 parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
