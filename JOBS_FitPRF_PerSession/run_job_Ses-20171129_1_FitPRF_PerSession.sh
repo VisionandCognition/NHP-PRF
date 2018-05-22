@@ -1,7 +1,7 @@
 #PBS -S /bin/bash
 #PBS -N FitPRF_PerSession_20171129_01:14
 #PBS -j oe
-#PBS -lnodes=1:ppn=16
+#PBS -lnodes=1:ppn=8
 #PBS -lnodes=1:mem64gb
 #PBS -lwalltime=48:00:00
 #PBS -o $HOME/PRF/Logs/
