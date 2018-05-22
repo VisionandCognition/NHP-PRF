@@ -144,7 +144,9 @@ for job_ind = 1:length(joblist.sessinc)
         % ensure that the right shell is used !#/bin/bash
         fprintf(fid_single, '#PBS -S /bin/bash\n');
         % add a comment what this script does
-        jobnameline = ['#PBS -N ' job_name '\n'];
+        jobnameline = ['#PBS -N ' job_name '_' joblist.sessions{...
+            joblist.sessinc(job_ind),1} '_' ...
+            joblist.slicechunks{job_ind2} '\n'];
         try
             fprintf(fid_single, jobnameline);
         catch ME

@@ -1,5 +1,5 @@
 #PBS -S /bin/bash
-#PBS -N FitPRF_PerSession
+#PBS -N FitPRF_PerSession_20180201_01:14
 #PBS -j oe
 #PBS -lnodes=1:ppn=16
 #PBS -lnodes=1:mem64gb
@@ -15,7 +15,7 @@ cd $TMPDIR/PRF
 chmod +x $TMPDIR/PRF/BashScripts/pRF_run_CompiledMatlab_LISA.sh
 
 $TMPDIR/PRF/BashScripts/pRF_run_CompiledMatlab_LISA.sh \
-	pRF_FitModel_LISA danny 20180201 1:14 \
+	pRF_FitModel_LISA danny 20180201 01:14 \
 	/home/pcklink/PRF/Logs/ \
 	$TMPDIR/PRF/
 
