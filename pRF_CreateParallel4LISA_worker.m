@@ -165,6 +165,9 @@ for job_ind = 1:length(joblist.sessinc)
         
         fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
         fprintf(fid_single, '#\n');
+
+        fprintf(fid_single, ['\necho "Job $PBS_JOBID started at `date`" | '...
+            'mail $USER -s "Job $PBS_JOBID"\n\n']);
         
         fprintf(fid_single,'mkdir $TMPDIR/PRF\n');
         fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...

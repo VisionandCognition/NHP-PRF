@@ -4,10 +4,10 @@
 # If you want to submit only some jobs to the server,simply add a "#" in front of 
 #the ones you like to ommit and execute the script then.
 #
-qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171116_1_FitPRF_PerSession.sh
-qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171116_2_FitPRF_PerSession.sh
-qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171116_3_FitPRF_PerSession.sh
-qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171116_4_FitPRF_PerSession.sh
+#qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171116_1_FitPRF_PerSession.sh
+#qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171116_2_FitPRF_PerSession.sh
+#qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171116_3_FitPRF_PerSession.sh
+#qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171116_4_FitPRF_PerSession.sh
 
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_1_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_2_FitPRF_PerSession.sh
@@ -34,10 +34,10 @@ qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_2_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_3_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_4_FitPRF_PerSession.sh
 
-qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_1_FitPRF_PerSession.sh
-qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_2_FitPRF_PerSession.sh
-qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_3_FitPRF_PerSession.sh
-qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_4_FitPRF_PerSession.sh
+#qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_1_FitPRF_PerSession.sh
+#qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_2_FitPRF_PerSession.sh
+#qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_3_FitPRF_PerSession.sh
+#qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_4_FitPRF_PerSession.sh
 
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_1_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_2_FitPRF_PerSession.sh

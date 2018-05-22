@@ -6,6 +6,9 @@
 #PBS -lwalltime=48:00:00
 #PBS -o $HOME/PRF/Logs/
 #
+
+echo "Job $PBS_JOBID started at `date`" | mail $USER -s "Job $PBS_JOBID"
+
 mkdir $TMPDIR/PRF
 cp -r $HOME/PRF/Data/us_reg/danny/ses-20180124* $TMPDIR/PRF
 cp -r $HOME/PRF/Data/mask/danny/* $TMPDIR/PRF
