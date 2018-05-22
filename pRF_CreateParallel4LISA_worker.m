@@ -155,19 +155,23 @@ for job_ind = 1:length(joblist.sessinc)
         
         fprintf(fid_single, '#PBS -j oe\n');
         if isempty(joblist.sessions{joblist.sessinc(job_ind),2})
-            fprintf(fid_single, '#PBS -lnodes=1:ppn=16\n');
+            fprintf(fid_single, '#PBS -lnodes=1:ppn=16:mem64gb\n');
         else
             fprintf(fid_single, ['#PBS -lnodes=1:ppn=' num2str(...
-                joblist.sessions{joblist.sessinc(job_ind),2}) '\n']);
+                joblist.sessions{joblist.sessinc(job_ind),2}) ':mem64gb\n']);
         end
-        fprintf(fid_single, '#PBS -lnodes=1:mem64gb\n');
+        %fprintf(fid_single, '#PBS -lnodes=1:mem64gb\n');
         fprintf(fid_single, '#PBS -lwalltime=48:00:00\n');
         
         fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
         fprintf(fid_single, '#\n');
-
-        fprintf(fid_single, ['\necho "Job $PBS_JOBID started at `date`" | '...
-            'mail $USER -s "Job $PBS_JOBID"\n\n']);
+        
+        % send email when job starts
+        fprintf(fid_single, ['\necho "Job $PBS_JOBID started at `date`.\\n'...
+            'Subject: ' joblist.monkey '\\n'...
+            'Session: ' joblist.sessions{joblist.sessinc(job_ind),1} '\\n'...
+            'Slices: ' joblist.slicechunks{job_ind2} ... 
+            '" | mail $USER -s "Job $PBS_JOBID"\n\n']);
         
         fprintf(fid_single,'mkdir $TMPDIR/PRF\n');
         fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...
@@ -181,6 +185,13 @@ for job_ind = 1:length(joblist.sessinc)
             joblist.monkey, joblist.sessions{joblist.sessinc(job_ind),1}, ...
             joblist.slicechunks{job_ind2}, log_file_dir, parallel_fun_dir);
         fprintf(fid_single, '%s\n\n', line);
+        
+        % send email when job ends
+        fprintf(fid_single, ['\necho "Job $PBS_JOBID ended at `date`.\\n'...
+            'Subject: ' joblist.monkey '\\n'...
+            'Session: ' joblist.sessions{joblist.sessinc(job_ind),1} '\\n'...
+            'Slices: ' joblist.slicechunks{job_ind2} ... 
+            '" | mail $USER -s "Job $PBS_JOBID"\n\n']);
         
         % finally: pass exit status of execute_matlab_process.sh to LISA
         fprintf(fid_single, 'exit $?\n');
