@@ -14,6 +14,16 @@ qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_2_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_3_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_4_FitPRF_PerSession.sh
 
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_1_1_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_1_2_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_1_3_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_1_4_FitPRF_PerSession.sh
+
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_2_1_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_2_2_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_2_3_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171129_2_4_FitPRF_PerSession.sh
+
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171207_1_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171207_2_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171207_3_FitPRF_PerSession.sh
@@ -23,6 +33,16 @@ qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_1_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_2_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_3_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_4_FitPRF_PerSession.sh
+
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_1_1_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_1_2_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_1_3_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_1_4_FitPRF_PerSession.sh
+
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_2_1_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_2_2_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_2_3_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171214_2_4_FitPRF_PerSession.sh
 
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171220_1_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20171220_2_FitPRF_PerSession.sh
@@ -34,6 +54,16 @@ qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_2_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_3_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_4_FitPRF_PerSession.sh
 
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_1_1_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_1_2_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_1_3_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_1_4_FitPRF_PerSession.sh
+
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_2_1_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_2_2_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_2_3_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180117_2_4_FitPRF_PerSession.sh
+
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_1_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_2_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180124_3_FitPRF_PerSession.sh
@@ -43,6 +73,16 @@ qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_1_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_2_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_3_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_4_FitPRF_PerSession.sh
+
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_1_1_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_1_2_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_1_3_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_1_4_FitPRF_PerSession.sh
+
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_2_1_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_2_2_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_2_3_FitPRF_PerSession.sh
+qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180125_2_4_FitPRF_PerSession.sh
 
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180131_1_FitPRF_PerSession.sh
 qsub  $HOME/PRF/Code/Jobs/run_job_Ses-20180131_2_FitPRF_PerSession.sh
