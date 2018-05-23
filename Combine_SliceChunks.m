@@ -67,4 +67,4 @@ gzip(fullfile(ResFld, ['Sess-' Session '_R2.nii']));
 delete(fullfile(ResFld, ['Sess-' Session '_R2.nii']));
 
 fprintf('>> Done!\n');
-
+cd(homefld)
