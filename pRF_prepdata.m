@@ -93,10 +93,13 @@ monkey_path_motion.outlier = fullfile(BIDS_basepath, 'derivatives',...
     'featpreproc','motion_outliers',['sub-' MONKEY]);
 
 for s=1:length(sessions)
-    sess_path_nii{s} = fullfile(monkey_path_nii, ['ses-' sessions{s}], 'func'); %#ok<*SAGROW>
-    sess_path_stim{s} = fullfile(monkey_path_stim, ['ses-' sessions{s}], 'func');
-    sess_path_motreg{s} = fullfile(monkey_path_motion.regress, ['ses-' sessions{s}], 'func');
-    sess_path_motout{s} = fullfile(monkey_path_motion.outlier, ['ses-' sessions{s}], 'func');
+    
+    sessname = sessions{s}(1:8);
+    
+    sess_path_nii{s} = fullfile(monkey_path_nii, ['ses-' sessions{s}(1:8)], 'func'); %#ok<*SAGROW>
+    sess_path_stim{s} = fullfile(monkey_path_stim, ['ses-' sessions{s}(1:8)], 'func');
+    sess_path_motreg{s} = fullfile(monkey_path_motion.regress, ['ses-' sessions{s}(1:8)], 'func');
+    sess_path_motout{s} = fullfile(monkey_path_motion.outlier, ['ses-' sessions{s}(1:8)], 'func');
     runs = unique(DATA(strcmp(DATA(:,1),sessions{s}),2));
     for r=1:length(runs)
         if ispc % the ls command works differently in windows
