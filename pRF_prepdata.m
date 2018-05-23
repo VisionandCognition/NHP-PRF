@@ -92,10 +92,7 @@ monkey_path_motion.regress = fullfile(BIDS_basepath, 'derivatives',...
 monkey_path_motion.outlier = fullfile(BIDS_basepath, 'derivatives',...
     'featpreproc','motion_outliers',['sub-' MONKEY]);
 
-for s=1:length(sessions)
-    
-    sessname = sessions{s}(1:8);
-    
+for s=1:length(sessions)    
     sess_path_nii{s} = fullfile(monkey_path_nii, ['ses-' sessions{s}(1:8)], 'func'); %#ok<*SAGROW>
     sess_path_stim{s} = fullfile(monkey_path_stim, ['ses-' sessions{s}(1:8)], 'func');
     sess_path_motreg{s} = fullfile(monkey_path_motion.regress, ['ses-' sessions{s}(1:8)], 'func');
