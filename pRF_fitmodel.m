@@ -39,12 +39,15 @@ addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
 addpath(genpath(fullfile(tool_basepath, 'analyzePRF')));
 
 % Link to the brain mask
-if strcmp(MONKEY, 'danny')
-    BrainMask_file = fullfile(BIDS_basepath, 'manual-masks','sub-danny',...
-        'ses-20180117','func','T1_to_func_brainmask_zcrop.nii');
-else
-    error('Unknown monkey name or no mask available')
-end
+if strcmp(MONKEY, 'danny') 
+    BrainMask_file = fullfile(BIDS_basepath, 'manual-masks','sub-danny',... 
+        'ses-20180117','func','T1_to_func_brainmask_zcrop.nii'); 
+elseif strcmp(MONKEY, 'eddy') 
+    BrainMask_file = fullfile(BIDS_basepath, 'manual-masks','sub-eddy',... 
+        'ses-20170607b','anat','HiRes_to_T1_mean.nii_shadowreg_Eddy_brainmask.nii'); 
+else 
+    error('Unknown monkey name or no mask available') 
+end 
 
 % create a folder to save outputs in
 if doUpsample
