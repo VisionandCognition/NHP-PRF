@@ -73,7 +73,7 @@ if ispc
     tool_basepath = 'D:\CK\code\MATLAB';
     BIDS_basepath = '\\vcnin\NHP_MRI\NHP-BIDS';
 else
-    tool_basepath = '/Users/chris/Documents/MATLAB/TOOLBOX';
+    tool_basepath = '~/Dropbox/MATLAB_NONGIT/TOOLBOX';
     BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
     addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/analyzePRF'));
 end

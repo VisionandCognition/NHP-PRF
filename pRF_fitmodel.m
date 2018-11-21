@@ -138,7 +138,7 @@ for s=1:length(sessions)
     % also save as nifti files
     % angle ---
     fprintf('Angles ');
-    nii = make_nii(result.ang,[1 1 1],[],[],...
+    nii = make_nii(result.ang,[1 1 1],[],32,...
         'pRF fit: Angles (deg)');
     nii.hdr.hist = result.hdr_ref.hist;
     save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_ang.nii']));
@@ -146,7 +146,7 @@ for s=1:length(sessions)
     delete(fullfile(result_folder, ['Sess-' sessions{s} '_ang.nii']));
     % ecc ---
     fprintf('Ecc ');
-    nii = make_nii(result.ecc,[1 1 1],[],[],...
+    nii = make_nii(result.ecc,[1 1 1],[],32,...
         'pRF fit: Eccentricity (pix)');
     nii.hdr.hist = result.hdr_ref.hist;
     save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_ecc.nii']));
@@ -154,7 +154,7 @@ for s=1:length(sessions)
     delete(fullfile(result_folder, ['Sess-' sessions{s} '_ecc.nii']));
     % size ---
     fprintf('Size ');
-    nii = make_nii(result.rfsize,[1 1 1],[],[],...
+    nii = make_nii(result.rfsize,[1 1 1],[],32,...
         'pRF fit: RF size (pix)');
     nii.hdr.hist = result.hdr_ref.hist;
     save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_rfsize.nii']));
@@ -162,7 +162,7 @@ for s=1:length(sessions)
     delete(fullfile(result_folder, ['Sess-' sessions{s} '_rfsize.nii']));
     % R^2 Goodness of fit ---
     fprintf('R2 ');
-    nii = make_nii(result.R2,[1 1 1],[],[],...
+    nii = make_nii(result.R2,[1 1 1],[],32,...
         'pRF fit: R2 Goodnes off fit');
     nii.hdr.hist = result.hdr_ref.hist;
     save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_R2.nii']));
