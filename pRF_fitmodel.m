@@ -129,6 +129,7 @@ for s=1:length(sessions)
     else
         result = analyzePRF(stimulus,fmri_data,TR,options);
     end
+    result.hdr_ref = s_run(1).hdr;
     
     % save the result ----
     fprintf('Saving the result: ');
@@ -139,6 +140,7 @@ for s=1:length(sessions)
     fprintf('Angles ');
     nii = make_nii(result.ang,[1 1 1],[],[],...
         'pRF fit: Angles (deg)');
+    nii.hdr.hist = result.hdr_ref.hist;
     save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_ang.nii']));
     gzip(fullfile(result_folder, ['Sess-' sessions{s} '_ang.nii']));
     delete(fullfile(result_folder, ['Sess-' sessions{s} '_ang.nii']));
@@ -146,6 +148,7 @@ for s=1:length(sessions)
     fprintf('Ecc ');
     nii = make_nii(result.ecc,[1 1 1],[],[],...
         'pRF fit: Eccentricity (pix)');
+    nii.hdr.hist = result.hdr_ref.hist;
     save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_ecc.nii']));
     gzip(fullfile(result_folder, ['Sess-' sessions{s} '_ecc.nii']));
     delete(fullfile(result_folder, ['Sess-' sessions{s} '_ecc.nii']));
@@ -153,6 +156,7 @@ for s=1:length(sessions)
     fprintf('Size ');
     nii = make_nii(result.rfsize,[1 1 1],[],[],...
         'pRF fit: RF size (pix)');
+    nii.hdr.hist = result.hdr_ref.hist;
     save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_rfsize.nii']));
     gzip(fullfile(result_folder, ['Sess-' sessions{s} '_rfsize.nii']));
     delete(fullfile(result_folder, ['Sess-' sessions{s} '_rfsize.nii']));
@@ -160,6 +164,7 @@ for s=1:length(sessions)
     fprintf('R2 ');
     nii = make_nii(result.R2,[1 1 1],[],[],...
         'pRF fit: R2 Goodnes off fit');
+    nii.hdr.hist = result.hdr_ref.hist;
     save_nii(nii, fullfile(result_folder, ['Sess-' sessions{s} '_R2.nii']));
     gzip(fullfile(result_folder, ['Sess-' sessions{s} '_R2.nii']));
     delete(fullfile(result_folder, ['Sess-' sessions{s} '_R2.nii']));

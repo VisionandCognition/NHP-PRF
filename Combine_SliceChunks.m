@@ -41,6 +41,7 @@ save(fullfile(ResFld,['pRF_Sess-' Session]),'result','-v7.3');
 fprintf('Angles, ');
 nii = make_nii(result.ang,[1 1 1],[],[],...
     'pRF fit: Angles (deg)');
+nii.hdr.hist = result.hdr_ref.hist;
 save_nii(nii, fullfile(ResFld, ['Sess-' Session '_ang.nii']));
 gzip(fullfile(ResFld, ['Sess-' Session '_ang.nii']));
 delete(fullfile(ResFld, ['Sess-' Session '_ang.nii']));
@@ -48,6 +49,7 @@ delete(fullfile(ResFld, ['Sess-' Session '_ang.nii']));
 fprintf('Ecc, ');
 nii = make_nii(result.ecc,[1 1 1],[],[],...
     'pRF fit: Eccentricity (pix)');
+nii.hdr.hist = result.hdr_ref.hist;
 save_nii(nii, fullfile(ResFld, ['Sess-' Session '_ecc.nii']));
 gzip(fullfile(ResFld, ['Sess-' Session '_ecc.nii']));
 delete(fullfile(ResFld, ['Sess-' Session '_ecc.nii']));
@@ -55,6 +57,7 @@ delete(fullfile(ResFld, ['Sess-' Session '_ecc.nii']));
 fprintf('Size, ');
 nii = make_nii(result.rfsize,[1 1 1],[],[],...
     'pRF fit: RF size (pix)');
+nii.hdr.hist = result.hdr_ref.hist;
 save_nii(nii, fullfile(ResFld, ['Sess-' Session '_rfsize.nii']));
 gzip(fullfile(ResFld, ['Sess-' Session '_rfsize.nii']));
 delete(fullfile(ResFld, ['Sess-' Session '_rfsize.nii']));
@@ -62,6 +65,7 @@ delete(fullfile(ResFld, ['Sess-' Session '_rfsize.nii']));
 fprintf('R2 ');
 nii = make_nii(result.R2,[1 1 1],[],[],...
     'pRF fit: R2 Goodnes off fit');
+nii.hdr.hist = result.hdr_ref.hist;
 save_nii(nii, fullfile(ResFld, ['Sess-' Session '_R2.nii']));
 gzip(fullfile(ResFld, ['Sess-' Session '_R2.nii']));
 delete(fullfile(ResFld, ['Sess-' Session '_R2.nii']));

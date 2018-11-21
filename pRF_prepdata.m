@@ -255,6 +255,9 @@ for s=1:size(run_path_stim,1) % sessions
             % resample image (160x160 pix gives 10 pix/deg)
             s_run(r).stim{v} = imresize(stimulus(:,:,vinc(v)),[160 160]);
             s_run(r).vol{v} = temp_nii.img(:,:,:,vinc(v));
+            if v==1
+                s_run(r).hdr = temp_nii.hdr;
+            end
         end
         clear stimulus temp_nii
         
