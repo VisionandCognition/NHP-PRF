@@ -9,3 +9,9 @@ pRF_sub-eddy_us/
 *.m~
 
 FitResult_motregr_sub-danny/
+
+pRF_sub-danny_us-avg/
+
+pRF_sub-eddy_us-avg/
+
+medianBOLD_test\.mat
