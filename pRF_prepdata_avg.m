@@ -11,6 +11,7 @@ if nargin <2
     fprintf('Not enough arguments specified, will use defaults:\n');
     fprintf('SessionList: pRF_PrepDatalist_Danny\n');
     pRF_PrepDatalist_Danny;
+    pRF_PrepDatalist_Eddy;
     doUpsample = true;
 else
     eval(SessionList);
@@ -181,8 +182,9 @@ for s=1:size(run_path_stim,1) % sessions
     
     for r=rps % runs
         % stimulus mask -----
-        load(run_path_stim{s,r}(1:end-4));
         % loads variable called stimulus (x,y,t) in volumes
+        load(run_path_stim{s,r}(1:end-4));
+        
         sinc = cell2mat(sweepinc{s,r});
         if size(stimulus,3) == 210 || size(stimulus,3) == 215
             SwVolMap = SwVolMap_210;
@@ -197,8 +199,8 @@ for s=1:size(run_path_stim,1) % sessions
         end
         firstvol = SwVolMap{min(sinc),2}(1) - 5;
         lastvol = SwVolMap{max(sinc),2}(end) + 5;
-        vinc=firstvol:lastvol;
-        vols=1:size(stimulus,3);
+        v_inc=firstvol:lastvol;
+        v_all=1:size(stimulus,3);
         
         bin_vinc = zeros(1,size(stimulus,3));
         bin_vinc(vinc) = 1;
@@ -212,17 +214,71 @@ for s=1:size(run_path_stim,1) % sessions
         %delete(uz_nii{1});
         fprintf(' ...done\n');
               
+        
+        
+        
+        
+        
+        
         % save the session-based stims & vols -----
         for v=1:size(stimulus,3)
             % resample image (160x160 pix gives 10 pix/deg)
-            s_run(r).stim{v} = imresize(stimulus(:,:,vinc(v)),[160 160]);
-            s_run(r).vol{v} = temp_nii.img(:,:,:,vinc(v));
+            s_run(r).stim{v} = imresize(stimulus(:,:,v_all(v)),[160 160]);
+            s_run(r).vol{v} = temp_nii.img(:,:,:,v_all(v));
             if v==1
                 s_run(r).hdr = temp_nii.hdr;
             end
         end
         
+        
+        
+        nanVol=nan(size(temp_nii.img(:,:,:,1)));
+        nanStim=nan(160);
+        
+        % 1-5
+        
+        if size(stimulus,3) <= 215 % 210/215
+            idx=[inf 2; 2 4; 4 6; 6 8; 8 inf];
+            if isinf(idx(i,1))
+                vn=SwVolMap{idx(i,2)-1,2}(1)-5
+            
+            % add 5 blanks
+        elseif size(stimulus,3) == 218
+            idx=[inf 2; 2 4; 4 6; 6 8; 8 inf];
+            % add 3 blanks
+        elseif size(stimulus,3) == 230
+            % as is
+        elseif size(stimulus,3) == 436
+            idx=[inf 2; 2 4; 4 6; 6 8; 8 inf;...
+                inf 10; 10 12; 12 14; 14 16; 16 inf;...];
+            % split and add 3 blanks
+            
+        end
+        
+        % last 5
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         clear stimulus temp_nii
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         % if requested, upsample temporal resolution
