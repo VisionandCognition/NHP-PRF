@@ -97,9 +97,9 @@ end
 
 % create a folder to save outputs in
 if doUpsample
-    out_folder = ['pRF_sub-' MONKEY '_us'];
+    out_folder = ['pRF_sub-' MONKEY '_us-padded'];
 else
-    out_folder = ['pRF_sub-' MONKEY]; %#ok<*UNRCH>
+    out_folder = ['pRF_sub-' MONKEY '-padded']; %#ok<*UNRCH>
 end
 warning off %#ok<*WNOFF>
 mkdir(out_folder);
@@ -208,7 +208,7 @@ for s=1:size(run_path_stim,1) % sessions
         % volumes ------
         %fprintf('Unpacking nii.gz');
         %uz_nii=gunzip(run_path_nii{s,r});
-        % >>> Unpacking is slow from within matlab. Do this in the stystem
+        % >>> Unpacking is slow from within matlab. Do this in the system
         
         temp_nii=load_nii(run_path_nii{s,r});%load_nii(uz_nii{1});
         %delete(uz_nii{1});
@@ -238,19 +238,15 @@ for s=1:size(run_path_stim,1) % sessions
         % 1-5
         
         if size(stimulus,3) <= 215 % 210/215
-            idx=[inf 2; 2 4; 4 6; 6 8; 8 inf];
-            if isinf(idx(i,1))
-                vn=SwVolMap{idx(i,2)-1,2}(1)-5
+
             
             % add 5 blanks
         elseif size(stimulus,3) == 218
-            idx=[inf 2; 2 4; 4 6; 6 8; 8 inf];
             % add 3 blanks
         elseif size(stimulus,3) == 230
             % as is
         elseif size(stimulus,3) == 436
-            idx=[inf 2; 2 4; 4 6; 6 8; 8 inf;...
-                inf 10; 10 12; 12 14; 14 16; 16 inf;...];
+
             % split and add 3 blanks
             
         end
@@ -305,6 +301,6 @@ for s=1:size(run_path_stim,1) % sessions
         end
     end
     fprintf(['Saving ses-' sessions{s} '\n']);
-    save(fullfile(out_folder, ['ses-' sessions{s}]),'s_run','-v7.3');
+    save(fullfile(out_folder, ['ses-' sessions{s} '-230vols']),'s_run','-v7.3');
     clear s_run
 end
