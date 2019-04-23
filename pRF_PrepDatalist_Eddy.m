@@ -1,6 +1,7 @@
 MONKEY = 'eddy';
 DATA = {... % session, run, barsweeps to include
-     '20160721', '05', 1:7   ;...   % 210 vol
+     %'20160721', '05', 1:7   ;...   % 210 vol >> TR=3 do not use in
+     % averaging approach
      '20160728', '01', 1:7   ;...   % 218 >>> only run 13 in derivatives?
      '20160728', '02', 1:8   ;...
      '20160728', '04', 1:8   ;...
