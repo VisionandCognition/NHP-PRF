@@ -192,10 +192,13 @@ for s=1:size(run_path_stim,1) % sessions
         sinc = cell2mat(sweepinc{s,r});
         if size(stimulus,3) == 210 || size(stimulus,3) == 215
             SwVolMap = SwVolMap_210;
+            Is436 = false;
         elseif size(stimulus,3) == 218
             SwVolMap = SwVolMap_218;
+            Is436 = false;
         elseif size(stimulus,3) == 230
             SwVolMap = SwVolMap_230;
+            Is436 = false;
         elseif size(stimulus,3) == 436
             SwVolMap = SwVolMap_436;  
             Is436 = true;
