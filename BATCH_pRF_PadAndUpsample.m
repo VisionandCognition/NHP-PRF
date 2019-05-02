@@ -4,7 +4,7 @@ fprintf('=================================================\n');
 fprintf('Padding & upsampling for Danny \n');
 fprintf('=================================================\n');
 
-pRF_prepdata_avg('pRF_PrepDatalist_Danny',1)
+%pRF_prepdata_avg('pRF_PrepDatalist_Danny',1)
 
 fprintf('\n=================================================\n');
 fprintf('Padding & upsampling for Eddy \n');

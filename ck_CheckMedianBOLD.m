@@ -14,7 +14,7 @@ hold on;
 plot(B1);
 plot(B1-median(B1));
 %plot(B2-median(B2));
-set(gca,'xlim',[0 410]);
+set(gca,'xlim',[0 460]);
 
 
 

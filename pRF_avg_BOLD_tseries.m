@@ -4,6 +4,7 @@ function pRF_avg_BOLD_tseries(monkey,sess)
 % manual for now
 cd(['pRF_sub-' monkey '_us-padded']);
 load(['ses-' sess '-230vols']); %#ok<*LOAD>
+fprintf(['Processing ses-' sess '-230vols\n']); %#ok<*LOAD>
 
 %% average
 % stim normal of inverted?
@@ -38,9 +39,20 @@ for r=r_fw
     fprintf(['Processing r = ' num2str(r) '\n']);
     nanvol = nan(size(p_run(r).vol{1}));
     vol = p_run(r).vol;
-    vol(p_run(r).excvol) = {nanvol};
+    %vol(p_run(r).excvol) = {nanvol};
     for t=1:length(vol)
         run_fw(:,:,:,t,r) = vol{t};
+    end
+    % convert to percentage BOLD change
+    mSig=nanmean(run_fw(:,:,:,:,r),4);
+    for d4=1:size(run_fw,4)
+        NormVol=100.*((run_fw(:,:,:,d4,r)-mSig)./mSig);
+        NormVol(isnan(NormVol))=0;
+        run_fw(:,:,:,d4,r)=NormVol;
+    end
+    % select timepoints to include
+    for v=find(p_run(r).inc==0)
+        run_fw(:,:,:,v,r)=nanvol;
     end
 end
 fprintf('Getting the median BOLD signal for all voxels\n');
@@ -58,9 +70,20 @@ if ~isempty(r_inv)
         fprintf(['Processing r = ' num2str(r) '\n']);
         nanvol = nan(size(p_run(r).vol{1}));
         vol = p_run(r).vol;
-        vol(p_run(r).excvol) = {nanvol};
+        %vol(p_run(r).excvol) = {nanvol};
         for t=1:length(vol)
             run_inv(:,:,:,t,r) = vol{t};
+        end
+        % convert to percentage BOLD change
+        mSig=nanmean(run_inv(:,:,:,:,r),4);
+        for d4=1:size(run_inv,4)
+            NormVol=100.*((run_inv(:,:,:,d4,r)-mSig)./mSig);
+            NormVol(isnan(NormVol))=0;
+            run_inv(:,:,:,d4,r)=NormVol;
+        end
+        % select timepoints to include
+        for v=find(p_run(r).inc==0)
+            run_inv(:,:,:,v,r)=nanvol;
         end
     end
     fprintf('Getting the median BOLD signal for all voxels\n');
@@ -72,6 +95,7 @@ else
 end
 
 %% save
+fprintf('Saving the result\n');
 if ~isempty(r_inv)
     save(['medianBOLD_sess-' sess],'medianBOLD','medianBOLD_inv','stim','stim_inv','-v7.3');
 else
