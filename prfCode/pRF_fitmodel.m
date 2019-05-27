@@ -27,10 +27,10 @@ else
     tool_basepath = '/Users/chris/Documents/MATLAB/TOOLBOX';
     if ismac
         BIDS_basepath = '/Users/chris/Documents/MRI_ANALYSIS/NHP-BIDS/';
-        addpath(genpath('/Users/chris/Documents/MRI_ANALYSIS/analyzePRF'));
+        addpath(genpath('/Users/chris/Documents/MRI_ANALYSIS/NHP-analyzePRF'));
     else
         BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
-        addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/analyzePRF'));
+        addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/NHP-analyzePRF'));
     end
 end
 % Add nifti reading toolbox

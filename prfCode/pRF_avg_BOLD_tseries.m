@@ -2,6 +2,7 @@ function pRF_avg_BOLD_tseries(monkey,sess)
 
 %% load the equal length files
 % manual for now
+cd ..; cd Data;
 cd(['pRF_sub-' monkey '_us-padded']);
 load(['ses-' sess '-230vols']); %#ok<*LOAD>
 fprintf(['Processing ses-' sess '-230vols\n']); %#ok<*LOAD>

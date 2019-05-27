@@ -75,7 +75,7 @@ if ispc
 else
     tool_basepath = '~/Dropbox/MATLAB_NONGIT/TOOLBOX';
     BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
-    addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/analyzePRF'));
+    addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/NHP-analyzePRF'));
 end
 % Add nifti reading toolbox
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
@@ -304,5 +304,6 @@ for s=1:size(run_path_stim,1) % sessions
     end
     fprintf(['Saving ses-' sessions{s} '\n']);
     save(fullfile(out_folder, ['ses-' sessions{s}]),'s_run','-v7.3');
+    fprintf('Saved result in code folder. Please move it manually...\n')
     clear s_run
 end
