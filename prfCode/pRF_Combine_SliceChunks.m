@@ -1,4 +1,4 @@
-function Combine_SliceChunks(Monkey,Session)
+function pRF_Combine_SliceChunks(Monkey,Session)
 % For prf analysis that is run on LISA in separate slice chunks, this
 % function recombines the results in volumes
 
