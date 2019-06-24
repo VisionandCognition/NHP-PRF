@@ -2,7 +2,6 @@ function pRF_avg_BOLD_tseries(monkey,sess)
 
 %% load the equal length files
 % manual for now
-cd ..; cd Data;
 cd(['pRF_sub-' monkey '_us-padded']);
 load(['ses-' sess '-230vols']); %#ok<*LOAD>
 fprintf(['Processing ses-' sess '-230vols\n']); %#ok<*LOAD>
@@ -16,19 +15,6 @@ for r=1:length(p_run)
     else
         r_inv=[r_inv r];
     end
-    
-%     if ~isempty(p_run(r).stimori)
-%         so=s_run(r).stimori(6,2);
-%     else
-%         so=s_run(1).stimori(6,2);
-%     end
-%     if  so == 90
-%         r_fw=[r_fw r]; %#ok<*AGROW>
-%     elseif so == 270
-%         r_inv=[r_inv r];
-%     else
-%         fprintf('ERROR: unknown stimulus configuration');
-%     end
 end
 
 %% FW stim
@@ -58,6 +44,7 @@ for r=r_fw
 end
 fprintf('Getting the median BOLD signal for all voxels\n');
 medianBOLD = nanmedian(run_fw,5); %#ok<*NASGU>
+nRuns = sum(~isnan(run_fw),5);
 stim = p_run(r).stim;
 clear run_fw
 
@@ -89,6 +76,7 @@ if ~isempty(r_inv)
     end
     fprintf('Getting the median BOLD signal for all voxels\n');
     medianBOLD_inv = nanmedian(run_inv,5);
+    nRuns_inv = sum(~isnan(run_inv),5);
     stim_inv = p_run(r).stim;
     clear run_inv
 else
@@ -98,8 +86,9 @@ end
 %% save
 fprintf('Saving the result\n');
 if ~isempty(r_inv)
-    save(['medianBOLD_sess-' sess],'medianBOLD','medianBOLD_inv','stim','stim_inv','-v7.3');
+    save(['medianBOLD_sess-' sess],'medianBOLD','medianBOLD_inv',...
+        'nRuns','nRuns_inv','stim','stim_inv','-v7.3');
 else
-    save(['medianBOLD_sess-' sess],'medianBOLD','stim','-v7.3');
+    save(['medianBOLD_sess-' sess],'medianBOLD','stim','nRuns','-v7.3');
 end
 cd ..
