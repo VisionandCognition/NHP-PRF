@@ -40,7 +40,8 @@ joblist.sessinc = 1:size(joblist.sessions,1);
 %joblist.slicechunks = {'01:14','15:28','29:42','43:56'}; % 2 digits, leading zero!
 joblist.slicechunks = {'01:15','16:30','31:45','46:60'}; % 2 digits, leading zero!
 joblist.type = 'us_reg';
- 
+joblist.hrf = 'defaultHRF';
+
 parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
 parallel_fun        = 'pRF_FitModel_LISA';
 job_name            = 'FitPRF_PerSession';

@@ -141,6 +141,81 @@ for job_ind = 1:length(joblist.sessinc)
         % open single subject file
         fid_single = fopen(fullfilename , 'w');
         
+        
+        % === OLD JOB SCHEDULER ======
+%         % ensure that the right shell is used !#/bin/bash
+%         fprintf(fid_single, '#PBS -S /bin/bash\n');
+%         % add a comment what this script does
+%         jobnameline = ['#PBS -N ' job_name '_' joblist.sessions{...
+%             joblist.sessinc(job_ind),1} '_' ...
+%             joblist.slicechunks{job_ind2} '\n'];
+%         try
+%             fprintf(fid_single, jobnameline);
+%         catch ME
+%             disp(ME);
+%         end
+%         
+%         fprintf(fid_single, '#PBS -j oe\n');
+%         if isempty(joblist.sessions{joblist.sessinc(job_ind),2})
+%             fprintf(fid_single, '#PBS -lnodes=1:ppn=16:mem64gb\n');
+%         else
+%             fprintf(fid_single, ['#PBS -lnodes=1:ppn=' num2str(...
+%                 joblist.sessions{joblist.sessinc(job_ind),2}+1) ':mem64gb\n']);
+%         end
+%         %fprintf(fid_single, '#PBS -lnodes=1:mem64gb\n');
+%         fprintf(fid_single, '#PBS -lwalltime=48:00:00\n');
+%         
+%         fprintf(fid_single, '#PBS -o $HOME/PRF/Logs/\n');
+%         fprintf(fid_single, '#\n');
+%         
+%         % send email when job starts
+%         fprintf(fid_single, ['\necho "Job $PBS_JOBID started at `date`. '...
+%             'Subject: ' joblist.monkey ', '...
+%             'Session: ' joblist.sessions{joblist.sessinc(job_ind),1} ', '...
+%             'Slices: ' joblist.slicechunks{job_ind2} ...
+%             '" | mail $USER -s "Job $PBS_JOBID"\n\n']);
+%         
+%         fprintf(fid_single,'mkdir $TMPDIR/PRF\n');
+%         fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...
+%             joblist.sessions{joblist.sessinc(job_ind),1} '* $TMPDIR/PRF\n']);
+%         fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* $TMPDIR/PRF\n']);
+%         fprintf(fid_single, 'cp -r $HOME/PRF/Code/* $TMPDIR/PRF\n');
+%         
+%         fprintf(fid_single,'cd $TMPDIR/PRF\n\n');
+%         fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n\n']);
+%         line = sprintf('%s \\\n\t%s %s %s %s [%s] \\\n\t%s \\\n\t%s', execute_matlab_process_sh, parallel_fun, ...
+%             joblist.monkey, joblist.sessions{joblist.sessinc(job_ind),1}, ...
+%             joblist.slicechunks{job_ind2}, num2str(joblist.sessions{joblist.sessinc(job_ind),2}),...
+%             log_file_dir, parallel_fun_dir);
+%         fprintf(fid_single, '%s\n\n', line);
+%         
+%         % send email when job ends
+%         fprintf(fid_single, ['\necho "Job $PBS_JOBID ended at `date`. '...
+%             'Subject: ' joblist.monkey ', '...
+%             'Session: ' joblist.sessions{joblist.sessinc(job_ind),1} ', '...
+%             'Slices: ' joblist.slicechunks{job_ind2} ...
+%             '" | mail $USER -s "Job $PBS_JOBID"\n\n']);
+%         
+%         % finally: pass exit status of execute_matlab_process.sh to LISA
+%         fprintf(fid_single, 'exit $?\n');
+%         fclose(fid_single);
+%         
+%         disp(['Adding ' fullfilename ' to original batch file.']);
+%         
+%         fullfilename2 = ['$HOME/PRF/Code/Jobs/' filename];
+%         line = sprintf('%s %s', 'qsub ', fullfilename2);
+%         fprintf(fid_commit_all, '%s\n', line);
+%         
+        
+
+
+
+
+
+
+
+
+        % ==== SLURM ====
         % ensure that the right shell is used !#/bin/bash
         fprintf(fid_single, '#PBS -S /bin/bash\n');
         % add a comment what this script does
@@ -191,7 +266,8 @@ for job_ind = 1:length(joblist.sessinc)
         fprintf(fid_single, ['\necho "Job $PBS_JOBID ended at `date`. '...
             'Subject: ' joblist.monkey ', '...
             'Session: ' joblist.sessions{joblist.sessinc(job_ind),1} ', '...
-            'Slices: ' joblist.slicechunks{job_ind2} ... 
+            'Slices: ' joblist.slicechunks{job_ind2} ',' ... 
+            'HRF: ' joblist.HRF ...
             '" | mail $USER -s "Job $PBS_JOBID"\n\n']);
         
         % finally: pass exit status of execute_matlab_process.sh to LISA
@@ -203,6 +279,12 @@ for job_ind = 1:length(joblist.sessinc)
         fullfilename2 = ['$HOME/PRF/Code/Jobs/' filename];
         line = sprintf('%s %s', 'qsub ', fullfilename2);
         fprintf(fid_commit_all, '%s\n', line);
+                
+        
+        
+        
+        
+        
     end
     fprintf(fid_commit_all, '\n');
 end

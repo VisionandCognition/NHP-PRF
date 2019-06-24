@@ -1,4 +1,4 @@
-function pRF_fitmodel(Monkey,Sessions,doUpsample,doExtraRegression,fitOnlyPosterior)
+function pRF_fitmodel(Monkey,Sessions,doUpsample,doExtraRegression,HRF,fitOnlyPosterior)
 % fits the prf model to voxels
 % Monkey: string, no caps
 % Sessions: cell array with YYYYMMDD
@@ -22,15 +22,17 @@ end
 % Platform specific basepath
 if ispc
     tool_basepath = 'D:\CK\code\MATLAB';
-    BIDS_basepath = '\\vcnin\NHP_MRI\NHP-BIDS';
+    BIDS_basepath = '\\vs02\NHP_MRI\NHP-BIDS';%'\\vcnin\NHP_MRI\NHP-BIDS';
 else
     tool_basepath = '/Users/chris/Documents/MATLAB/TOOLBOX';
     if ismac
         BIDS_basepath = '/Users/chris/Documents/MRI_ANALYSIS/NHP-BIDS/';
-        addpath(genpath('/Users/chris/Documents/MRI_ANALYSIS/NHP-analyzePRF'));
+        currpath = '/Users/chris/Documents/MRI_ANALYSIS/NHP-analyzePRF';
+        addpath(genpath(currpath));
     else
         BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
-        addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/NHP-analyzePRF'));
+        currpath = '/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/NHP-analyzePRF';
+        addpath(genpath(currpath));
     end
 end
 % Add nifti reading toolbox
@@ -114,6 +116,10 @@ for s=1:length(sessions)
     % add regressors when wanted
     if doExtraRegression
         options.wantglmdenoise = extraregr;
+    end
+    
+    if ~strcmp(HRF,'defaultHRF')
+        options.hrf = load(fullfile(currpath,'HRF',HRF),'defhrf');
     end
     
     % start a parallel pool of workers
