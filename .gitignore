@@ -1,27 +1,7 @@
-
-pRF_sub-danny/
-
-ck_pRF_wholebrain\.m~
-
-pRF_sub-danny_us/
-pRF_sub-eddy_us/
-
+# autosave files
 *.m~
+*untitled*~
 
-FitResult_motregr_sub-danny/
-
-pRF_sub-danny_us-avg/
-
-pRF_sub-eddy_us-avg/
-
-medianBOLD_test\.mat
-
-untitled~
-
-pRF_sub-danny_us-padded/
-
-pRF_sub-eddy_us-padded/
-
+# folders
 Data
-
 Results
