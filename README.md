@@ -1,10 +1,10 @@
 # NHP-analyzePRF
 
-analyzePRF is a MATLAB toolbox for fitting population receptive field (pRF) models
-to fMRI data.  It is developed by Kendrick Kay (kendrick@post.harvard.edu).
-
 This repository uses an adjusted version of the analyzePRF toolbox for the analysis
 of NHP data (c.klink@nin.knaw.nl). Documentation below is from the original toolbox.
+
+analyzePRF is a MATLAB toolbox for fitting population receptive field (pRF) models
+to fMRI data.  It is developed by Kendrick Kay (kendrick@post.harvard.edu).
 
 The toolbox has several dependencies:
 - MATLAB Optimization Toolbox
