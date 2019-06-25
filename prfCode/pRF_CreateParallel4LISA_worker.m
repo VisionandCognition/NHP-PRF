@@ -55,7 +55,9 @@ log_file_dir = [project_dir '/Logs/']; % add jobname
 log_file_dir_local = [pwd '/Logs/']; % add jobname
 
 % job files will be locally written to:
-batch_dir = [pwd '/JOBS_' job_name]; % add jobname
+cd ..
+batch_dir = fullfile(pwd, 'Jobs', ['JOBS_' job_name]); % add jobname
+cd prfCode
 
 %% location of scripts ----------------------------------------------------
 % set location of execute_matlab_process.sh

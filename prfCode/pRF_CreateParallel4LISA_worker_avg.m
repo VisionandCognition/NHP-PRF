@@ -55,7 +55,9 @@ log_file_dir = [project_dir '/Logs/']; % add jobname
 log_file_dir_local = [pwd '/Logs/']; % add jobname
 
 % job files will be locally written to:
-batch_dir = [pwd '/JOBS_' job_name]; % add jobname
+cd ..
+batch_dir = fullfile(pwd, 'Jobs', ['JOBS_' job_name]); % add jobname
+cd prfCode
 
 %% location of scripts ----------------------------------------------------
 % set location of execute_matlab_process.sh
@@ -154,7 +156,7 @@ for job_ind = 1:length(joblist.sessinc)
         
         fprintf(fid_single, 'source ~/.bash_profile\n'); 
         fprintf(fid_single, 'source ~/.bashrc\n');
-        fprintf(fid_single, 'umask u+rwx,g+rwx\n');
+        fprintf(fid_single, 'umask u+rwx,g+rwx\n\n');
 
         % information
         fprintf(fid_single, 'echo job id $SLURM_JOBID\n');
@@ -176,7 +178,7 @@ for job_ind = 1:length(joblist.sessinc)
         fprintf(fid_single, '\n');
         
         fprintf(fid_single,'mkdir $TMPDIR/PRF\n');
-        fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/ses-' ...
+        fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/' ...
             joblist.sessions{joblist.sessinc(job_ind),1} '* $TMPDIR/PRF\n']);
         fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* $TMPDIR/PRF\n']);
         fprintf(fid_single, 'cp -r $HOME/PRF/Code/* $TMPDIR/PRF\n');

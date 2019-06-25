@@ -9,6 +9,7 @@
 source ~/.bash_profile
 source ~/.bashrc
 umask u+rwx,g+rwx
+
 echo job id $SLURM_JOBID
 echo job name $SLURM_JOB_NAME
 echo submitted by $SLURM_JOB_ACCOUNT
@@ -26,7 +27,7 @@ cd $TMPDIR/PRF
 chmod +x $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh
 
 $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh \
-	pRF_FitModel_LISA_avg eddy medianBOLD_sub-eddy 16:30  [] \
+	pRF_FitModel_LISA_avg eddy medianBOLD_sub-eddy 16:30 HRF_monkey [] \
 	/home/pcklink/PRF/Logs/ \
 	$TMPDIR/PRF/
 

@@ -9,24 +9,25 @@
 source ~/.bash_profile
 source ~/.bashrc
 umask u+rwx,g+rwx
+
 echo job id $SLURM_JOBID
 echo job name $SLURM_JOB_NAME
 echo submitted by $SLURM_JOB_ACCOUNT
 echo from $SLURM_SUBMIT_DIR
 echo the allocated nodes are: $SLURM_JOB_NODELIST
 
-# INFO: FitPRF_avg_medianBOLD_sub-danny_16:30
+# INFO: FitPRF_avg_AllSessions-avg-odd_01:15
 
 mkdir $TMPDIR/PRF
-cp -r $HOME/PRF/Data/avg/danny/ses-medianBOLD_sub-danny* $TMPDIR/PRF
-cp -r $HOME/PRF/Data/mask/danny/* $TMPDIR/PRF
+cp -r $HOME/PRF/Data/avg/eddy/AllSessions-avg-odd* $TMPDIR/PRF
+cp -r $HOME/PRF/Data/mask/eddy/* $TMPDIR/PRF
 cp -r $HOME/PRF/Code/* $TMPDIR/PRF
 cd $TMPDIR/PRF
 
 chmod +x $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh
 
 $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh \
-	pRF_FitModel_LISA_avg danny medianBOLD_sub-danny 16:30  [] \
+	pRF_FitModel_LISA_avg eddy AllSessions-avg-odd 01:15 HRF_monkey [] \
 	/home/pcklink/PRF/Logs/ \
 	$TMPDIR/PRF/
 
