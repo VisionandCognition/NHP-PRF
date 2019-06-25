@@ -34,7 +34,7 @@ joblist.sessions = {...
     '20170518',     [];...
     '20171129',     [];... 
     };%[1:10]; % SESSION nWorkers
- 
+joblist.sessions = {} ;
 %%
 joblist.sessinc = 1:size(joblist.sessions,1); 
 %joblist.slicechunks = {'01:14','15:28','29:42','43:56'}; % 2 digits, leading zero!
@@ -43,10 +43,10 @@ joblist.type = 'us_reg';
 joblist.hrf = 'defaultHRF';
 
 parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
-parallel_fun        = 'pRF_FitModel_LISA';
-job_name            = 'FitPRF_PerSession';
+parallel_fun        = 'pRF_FitModel_LISA_avg';
+job_name            = 'FitPRF_avg';
  
 disp('== Running create_parallel_LISA ==')
  
-pRF_CreateParallel4LISA_worker(parallel_fun, joblist, parallel_fun_dir, job_name)
+pRF_CreateParallel4LISA_worker_avg(parallel_fun, joblist, parallel_fun_dir, job_name)
  
