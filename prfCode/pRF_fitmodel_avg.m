@@ -1,9 +1,10 @@
-function pRF_fitmodel(Monkey,Sessions,doUpsample,doExtraRegression,HRF,fitOnlyPosterior)
+function pRF_fitmodel_avg(Monkey,Sessions,doUpsample,doExtraRegression,HRF,fitOnlyPosterior)
 % fits the prf model to voxels
 % Monkey: string, no caps
 % Sessions: cell array with YYYYMMDD
 % doUpsample: uses the data that is upsampled to twice TR, so 1.25s
 % doExtraRegression: includes motion information as regressor
+% HRF: provide a custom HRF or set to 'defaultHRF'
 % fitOnlyPosterior: masks out anterior part of the brain to speed things up
 
 numWorkers = [];
@@ -51,11 +52,10 @@ else
     error('Unknown monkey name or no mask available') 
 end 
 
-% create a folder to save outputs in
 if doUpsample
-    out_folder = ['pRF_sub-' MONKEY '_us'];
+    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY '_us']);
 else
-    out_folder = ['pRF_sub-' MONKEY]; %#ok<*UNRCH>
+    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY]); %#ok<*UNRCH>
 end
 warning off %#ok<*WNOFF>
 mkdir(out_folder);
@@ -70,12 +70,15 @@ warning on %#ok<*WNON>
 % outputfolder ------
 if doUpsample
     if doExtraRegression
-        result_folder = ['FitResult_motregr_sub-' MONKEY];
+        result_folder = fullfile('..','Results','LocalFits',...
+            ['FitResult_motregr_sub-' MONKEY]);
     else
-        result_folder = ['FitResult_us_sub-' MONKEY];
+        result_folder = fullfile('..','Results','LocalFits',...
+            ['FitResult_us_sub-' MONKEY]);
     end
 else
-    result_folder = ['FitResult_sub-' MONKEY];
+    result_folder = fullfile('..','Results','LocalFits',...
+        ['FitResult_sub-' MONKEY]);
 end
 warning off; mkdir(result_folder); warning on;
 

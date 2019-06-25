@@ -24,6 +24,8 @@ sess={...
 %     '20160728'};
 
 %%
+startfld=pwd;
+cd ..; cd Data;
 cd(['pRF_sub-' monkey '_us-avg']);
 medBOLD=[];
 medBOLD_inv=[];
@@ -53,4 +55,4 @@ else
 end
     
 %%
-cd ..
+cd(startfld);

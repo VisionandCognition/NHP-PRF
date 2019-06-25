@@ -1,8 +1,10 @@
 %% Merge median BOLD signals
 clear all; clc;
 MONKEY={'danny','eddy'};
+startfld=pwd;
 for m=1:length(MONKEY)
     fprintf(['==== Processing monkey: ' MONKEY{m} ' ====\n']);
+    cd ..; cd Data;
     cd(['pRF_sub-' MONKEY{m} '_us-padded']);
     fls = dir('medianBOLD*');
     MB.medianBOLD=[]; MB.medianBOLD_inv=[];
@@ -19,7 +21,7 @@ for m=1:length(MONKEY)
         clear M
     end
     save('AllSessions','MB');
-    cd ..
+    cd(startfld)
     clear MB
     fprintf('\n\n');
 end

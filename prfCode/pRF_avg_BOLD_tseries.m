@@ -2,6 +2,8 @@ function pRF_avg_BOLD_tseries(monkey,sess)
 
 %% load the equal length files
 % manual for now
+startfld=pwd;
+cd ..; cd Data;
 cd(['pRF_sub-' monkey '_us-padded']);
 load(['ses-' sess '-230vols']); %#ok<*LOAD>
 fprintf(['Processing ses-' sess '-230vols\n']); %#ok<*LOAD>
@@ -91,4 +93,4 @@ if ~isempty(r_inv)
 else
     save(['medianBOLD_sess-' sess],'medianBOLD','stim','nRuns','-v7.3');
 end
-cd ..
+cd(startfld);

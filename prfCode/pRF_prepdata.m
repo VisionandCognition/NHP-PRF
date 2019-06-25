@@ -95,9 +95,9 @@ end
 
 % create a folder to save outputs in
 if doUpsample
-    out_folder = ['pRF_sub-' MONKEY '_us'];
+    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY '_us']);
 else
-    out_folder = ['pRF_sub-' MONKEY]; %#ok<*UNRCH>
+    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY]); %#ok<*UNRCH>
 end
 warning off %#ok<*WNOFF>
 mkdir(out_folder);

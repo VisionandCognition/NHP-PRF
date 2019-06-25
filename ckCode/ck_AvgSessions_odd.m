@@ -1,8 +1,10 @@
 %% Merge median BOLD signals
 clear all; clc;
 MONKEY={'danny','eddy'};
+startfld=pwd;
 for m=1:length(MONKEY)
     fprintf(['==== Processing monkey: ' MONKEY{m} ' ====\n']);
+    cd ..; cd Data;
     cd(['pRF_sub-' MONKEY{m} '_us-padded']);
     fls = dir('medianBOLD*');
     
@@ -46,7 +48,7 @@ for m=1:length(MONKEY)
     save('AllSessions-avg-odd','stim','sess_meanBOLD','sess_meanBOLD_inv',...
         'sess_wmeanBOLD','sess_wmeanBOLD_inv','sess_medianBOLD','sess_medianBOLD_inv',...
         'sess_sdBOLD','sess_sdBOLD_inv');
-    cd ..
+    cd(startfld);
     clear MB
     fprintf('\n\n');
 end

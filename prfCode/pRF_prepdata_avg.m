@@ -75,7 +75,8 @@ Is436 = false;
 % Platform specific basepath
 if ispc
     tool_basepath = 'D:\CK\code\MATLAB';
-    BIDS_basepath = '\\vcnin\NHP_MRI\NHP-BIDS';
+    BIDS_basepath = '\\vs02\NHP_MRI\VandC\NHP_MRI\NHP-BIDS';
+    BIDS_basepath = '\\vs02\VandC\NHP_MRI\NHP-BIDS';
 else
     tool_basepath = '~/Dropbox/MATLAB_NONGIT/TOOLBOX';
     BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
@@ -98,10 +99,11 @@ else
 end
 
 % create a folder to save outputs in
+
 if doUpsample
-    out_folder = ['pRF_sub-' MONKEY '_us-padded'];
+    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY '_us-padded']);
 else
-    out_folder = ['pRF_sub-' MONKEY '-padded']; %#ok<*UNRCH>
+    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY '-padded']); %#ok<*UNRCH>
 end
 warning off %#ok<*WNOFF>
 mkdir(out_folder);
