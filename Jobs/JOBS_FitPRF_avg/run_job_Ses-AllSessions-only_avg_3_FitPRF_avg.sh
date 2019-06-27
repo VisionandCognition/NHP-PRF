@@ -18,9 +18,10 @@ echo the allocated nodes are: $SLURM_JOB_NODELIST
 
 # INFO: FitPRF_avg_AllSessions-only_avg_31:45
 
-mkdir $TMPDIR/PRF
+mkdir -p $TMPDIR/PRF
 cp -r $HOME/PRF/Data/avg/eddy/AllSessions-only_avg* $TMPDIR/PRF
 cp -r $HOME/PRF/Data/mask/eddy/* $TMPDIR/PRF
+cp -r $HOME/PRF/Data/refhdr/eddy* $TMPDIR/PRF
 cp -r $HOME/PRF/Code/* $TMPDIR/PRF
 cd $TMPDIR/PRF
 
