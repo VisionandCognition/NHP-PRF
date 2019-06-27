@@ -115,6 +115,7 @@ fprintf(fid_commit_all, ['# If you want to submit only some jobs to the server,'
     'simply add a "#" in front of \n' ...
     '#the ones you like to ommit and execute the script then.\n']);
 fprintf(fid_commit_all, '#\n');
+fprintf(fid_commit_all, '\nchmod +x ./*\n\n');
 
 % create all single job batchfiles, and add for each a call in the main
 % batch file
@@ -122,8 +123,8 @@ for job_ind = 1:length(joblist.sessinc)
     for job_ind2 = 1:length(joblist.slicechunks)
         %% create batchfile for current job -------------------------------
         % create/overwrite file
-        filename = sprintf('run_job_Ses-%s_%s_%s.sh', joblist.sessions{...
-            joblist.sessinc(job_ind),1},num2str(job_ind2),job_name);
+        filename = sprintf('run_job_Ses-%s_%s_%s_%s.sh', joblist.sessions{...
+            joblist.sessinc(job_ind),1},num2str(job_ind2),job_name,joblist.monkey);
         fullfilename = [batch_dir '/' filename];
         
         disp(['Creating Batch file for Job ' num2str(job_ind) '_' num2str(job_ind2) ': ' fullfilename])
