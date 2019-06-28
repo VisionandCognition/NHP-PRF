@@ -4,6 +4,11 @@
 # If you want to submit only some jobs to the server,simply add a "#" in front of 
 #the ones you like to ommit and execute the script then.
 #
+
+mkdir -p $HOME/PRF/Logs/slurm
+cd $HOME/PRF/Logs/slurm
+chmod +x $HOME/PRF/Code/Jobs/*
+
 sbatch  $HOME/PRF/Code/Jobs/run_job_Ses-AllSessions-only_avg_1_FitPRF_avg_danny.sh
 sbatch  $HOME/PRF/Code/Jobs/run_job_Ses-AllSessions-only_avg_2_FitPRF_avg_danny.sh
 sbatch  $HOME/PRF/Code/Jobs/run_job_Ses-AllSessions-only_avg_3_FitPRF_avg_danny.sh

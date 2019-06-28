@@ -3,8 +3,6 @@
 #SBATCH -t 48:00:00
 #SBATCH --mail-type=END
 #SBATCH --mail-user=p.c.klink@gmail.com
-#SBATCH -o $HOME/PRF/Logs/
-
 
 source ~/.bash_profile
 source ~/.bashrc
@@ -19,6 +17,7 @@ echo the allocated nodes are: $SLURM_JOB_NODELIST
 # INFO: FitPRF_avg_AllSessions-only_avg_01:14
 
 mkdir -p $TMPDIR/PRF
+mkdir -p $TMPDIR/PRF/Logs/
 cp -r $HOME/PRF/Data/avg/danny/AllSessions-only_avg* $TMPDIR/PRF
 cp -r $HOME/PRF/Data/mask/danny/* $TMPDIR/PRF
 cp -r $HOME/PRF/Data/refhdr/danny* $TMPDIR/PRF
@@ -30,6 +29,7 @@ chmod +x $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh
 $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh \
 	pRF_FitModel_LISA_avg danny AllSessions-only_avg 01:14 HRF_monkey [] \
 	/home/pcklink/PRF/Logs/ \
-	$TMPDIR/PRF/
+	$TMPDIR/PRF/ |& tee $TMPDIR/PRF/Logs/Log_danny_AllSessions-only_avg_01:14_HRF_monkey.txt
 
+cp $TMPDIR/PRF/Logs/Log_danny_AllSessions-only_avg_01:14_HRF_monkey.txt $HOME/PRF/Logs/
 exit $?

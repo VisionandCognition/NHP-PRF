@@ -115,7 +115,9 @@ fprintf(fid_commit_all, ['# If you want to submit only some jobs to the server,'
     'simply add a "#" in front of \n' ...
     '#the ones you like to ommit and execute the script then.\n']);
 fprintf(fid_commit_all, '#\n');
-fprintf(fid_commit_all, '\nchmod +x ./*\n\n');
+fprintf(fid_commit_all, '\nmkdir -p $HOME/PRF/Logs/slurm\n');
+fprintf(fid_commit_all, 'cd $HOME/PRF/Logs/slurm\n');
+fprintf(fid_commit_all, 'chmod +x $HOME/PRF/Code/Jobs/*\n\n');
 
 % create all single job batchfiles, and add for each a call in the main
 % batch file
@@ -152,8 +154,7 @@ for job_ind = 1:length(joblist.sessinc)
         fprintf(fid_single, '#SBATCH -t 48:00:00\n');
         fprintf(fid_single, '#SBATCH --mail-type=END\n');
         fprintf(fid_single, '#SBATCH --mail-user=p.c.klink@gmail.com\n');
-        fprintf(fid_single, '#SBATCH -o $HOME/PRF/Logs/\n');
-        fprintf(fid_single, '\n\n');
+        fprintf(fid_single, '\n');
         
         fprintf(fid_single, 'source ~/.bash_profile\n'); 
         fprintf(fid_single, 'source ~/.bashrc\n');
@@ -179,6 +180,7 @@ for job_ind = 1:length(joblist.sessinc)
         fprintf(fid_single, '\n');
         
         fprintf(fid_single,'mkdir -p $TMPDIR/PRF\n');
+        fprintf(fid_single,'mkdir -p $TMPDIR/PRF/Logs/\n');
         fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/' ...
             joblist.sessions{joblist.sessinc(job_ind),1} '* $TMPDIR/PRF\n']);
         fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* $TMPDIR/PRF\n']);
@@ -191,8 +193,13 @@ for job_ind = 1:length(joblist.sessinc)
             joblist.slicechunks{job_ind2}, joblist.hrf,...
             num2str(joblist.sessions{joblist.sessinc(job_ind),2}),...
             log_file_dir, parallel_fun_dir);
-        fprintf(fid_single, '%s\n\n', line);
-       
+        logline= ['$TMPDIR/PRF/Logs/Log_' joblist.monkey '_'  ...
+            joblist.sessions{joblist.sessinc(job_ind),1} '_' ...
+            joblist.slicechunks{job_ind2} '_' ...
+            joblist.hrf '.txt'];
+        fprintf(fid_single, '%s %s %s\n\n', line, '|& tee',  logline);
+        fprintf(fid_single,['cp ' logline ' $HOME/PRF/Logs/\n']);
+        
         % finally: pass exit status of execute_matlab_process.sh to LISA
         fprintf(fid_single, 'exit $?\n');
         fclose(fid_single);
