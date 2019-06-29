@@ -2,7 +2,7 @@ function pRF_Combine_SliceChunks(Monkey,Session)
 % For prf analysis that is run on LISA in separate slice chunks, this
 % function recombines the results in volumes
 
-tool_basepath = '/Users/chris/Documents/MATLAB/TOOLBOX';
+tool_basepath = '/Users/chris/Dropbox/MATLAB_NONGIT/TOOLBOX';
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
 
 homefld = pwd;

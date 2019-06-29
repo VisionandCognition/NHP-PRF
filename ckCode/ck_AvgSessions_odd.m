@@ -29,7 +29,8 @@ for m=1:length(MONKEY)
     % normal mean
     sess_meanBOLD = nanmean(MB.medianBOLD,5);
     % weighted mean by number of runs
-    sess_wmeanBOLD = sum(MB.medianBOLD.*MB.nRuns,5)./sum(MB.nRuns,5);
+    sess_wmeanBOLD = nansum(MB.medianBOLD.*MB.nRuns,5)./...
+        nansum(MB.nRuns,5);
     % std
     sess_sdBOLD = nanstd(MB.medianBOLD,1,5);
     %median
@@ -39,7 +40,8 @@ for m=1:length(MONKEY)
         % normal mean
         sess_meanBOLD_inv = nanmean(MB.medianBOLD_inv,5);
         % weighted mean by number of runs
-        sess_wmeanBOLD_inv = sum(MB.medianBOLD_inv.*MB.nRuns_inv,5)./sum(MB.nRuns_inv,5);
+        sess_wmeanBOLD_inv = nansum(MB.medianBOLD_inv.*MB.nRuns_inv,5)./...
+            nansum(MB.nRuns_inv,5);
         % std
         sess_sdBOLD_inv = nanstd(MB.medianBOLD_inv,1,5);
         %median
