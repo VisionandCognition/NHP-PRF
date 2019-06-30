@@ -61,9 +61,13 @@ cd prfCode
 
 %% location of scripts ----------------------------------------------------
 % set location of execute_matlab_process.sh
-execute_matlab_process_sh = ['$TMPDIR/PRF/BashScripts/'...
-    'pRF_run_analyzePRF_LISA_avg.sh']; % must be ABSOLUTE path
-
+if strcmp(job_name, 'FitPRF_avg_dhrf')
+    execute_matlab_process_sh = ['$TMPDIR/PRF/BashScripts/'...
+        'pRF_run_analyzePRF_LISA_avg_dhrf.sh']; % must be ABSOLUTE path
+else
+    execute_matlab_process_sh = ['$TMPDIR/PRF/BashScripts/'...
+        'pRF_run_analyzePRF_LISA_avg.sh']; % must be ABSOLUTE path
+end
 %% PROCESSING STARTS FROM HERE (no more parameters to check) ==============
 %% create batch & log folder ----------------------------------------------
 disp('Creating batch & log folders')

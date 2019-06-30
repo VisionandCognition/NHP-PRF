@@ -22,11 +22,11 @@ for i=1:2
     
     joblist.sessinc = 1:size(joblist.sessions,1);
     joblist.type = 'avg';
-    joblist.hrf = 'HRF_monkey'; %'defaultHRF';
+    joblist.hrf = 'defaultHRF';%'HRF_monkey'; %'defaultHRF';
     
     parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
     parallel_fun        = 'pRF_FitModel_LISA_avg';
-    job_name            = 'FitPRF_avg';
+    job_name            = 'FitPRF_avg_dhrf';
     
     fprintf('\n== Running create_parallel_LISA ==')
     
