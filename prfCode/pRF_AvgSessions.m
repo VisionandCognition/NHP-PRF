@@ -12,7 +12,7 @@ for m=1:length(MONKEY)
     MB.nRuns=[]; MB.nRuns_inv=[];
     MB.stim={}; MB.stim_inv={};
     
-    for f=1:2:length(fls)
+    for f=1:length(fls)
         fprintf(['Adding ' fls(f).name '\n']);
         M = load(fls(f).name);
         MB.medianBOLD = cat(5,MB.medianBOLD,M.medianBOLD);
@@ -47,7 +47,38 @@ for m=1:length(MONKEY)
         %median
         sess_medianBOLD_inv = nanmedian(MB.medianBOLD_inv,5);
     end
-    save('AllSessions-avg-odd','stim','sess_meanBOLD','sess_meanBOLD_inv',...
+    
+    % remove volumes for which stim is nan ----
+    nostim_idx=[];
+    for i=1:stim.norm
+        if isnan(stim.norm{i}(1,1))
+            nostim_idx=[nostim_idx i]; %#ok<*AGROW>
+        end
+    end
+    stim.norm(nostim_idx)=[];
+    sess_meanBOLD(:,:,:,nostim_idx)=[];
+    sess_wmeanBOLD(:,:,:,nostim_idx)=[];
+    sess_medianBOLD(:,:,:,nostim_idx)=[];
+    sess_sdBOLD(:,:,:,nostim_idx)=[];
+    if isfield(MB,'medianBOLD_inv')
+        nostim_idx=[];
+        for i=1:stim.inv
+            if isnan(stim.inv{i}(1,1))
+                nostim_idx=[nostim_idx i];
+            end
+        end
+        stim.inv(nostim_idx)=[];
+        sess_meanBOLD_inv(:,:,:,nostim_idx)=[];
+        sess_wmeanBOLD_inv(:,:,:,nostim_idx)=[];
+        sess_medianBOLD_inv(:,:,:,nostim_idx)=[];
+        sess_sdBOLD_inv(:,:,:,nostim_idx)=[];   
+    end
+    % ----
+    
+    save('AllSessions-avg','stim','sess_meanBOLD','sess_meanBOLD_inv',...
+        'sess_wmeanBOLD','sess_wmeanBOLD_inv','sess_medianBOLD','sess_medianBOLD_inv',...
+        'sess_sdBOLD','sess_sdBOLD_inv','MB');
+    save('AllSessions-only_avg','stim','sess_meanBOLD','sess_meanBOLD_inv',...
         'sess_wmeanBOLD','sess_wmeanBOLD_inv','sess_medianBOLD','sess_medianBOLD_inv',...
         'sess_sdBOLD','sess_sdBOLD_inv');
     cd(startfld);

@@ -47,6 +47,34 @@ for m=1:length(MONKEY)
         %median
         sess_medianBOLD_inv = nanmedian(MB.medianBOLD_inv,5);
     end
+    
+    % remove volumes for which stim is nan ----
+    nostim_idx=[];
+    for i=1:stim.norm
+        if isnan(stim.norm{i}(1,1))
+            nostim_idx=[nostim_idx i]; %#ok<*AGROW>
+        end
+    end
+    stim.norm(nostim_idx)=[];
+    sess_meanBOLD(:,:,:,nostim_idx)=[];
+    sess_wmeanBOLD(:,:,:,nostim_idx)=[];
+    sess_medianBOLD(:,:,:,nostim_idx)=[];
+    sess_sdBOLD(:,:,:,nostim_idx)=[];
+    if isfield(MB,'medianBOLD_inv')
+        nostim_idx=[];
+        for i=1:stim.inv
+            if isnan(stim.inv{i}(1,1))
+                nostim_idx=[nostim_idx i];
+            end
+        end
+        stim.inv(nostim_idx)=[];
+        sess_meanBOLD_inv(:,:,:,nostim_idx)=[];
+        sess_wmeanBOLD_inv(:,:,:,nostim_idx)=[];
+        sess_medianBOLD_inv(:,:,:,nostim_idx)=[];
+        sess_sdBOLD_inv(:,:,:,nostim_idx)=[];
+    end
+    % ----
+    
     save('AllSessions-avg-even','stim','sess_meanBOLD','sess_meanBOLD_inv',...
         'sess_wmeanBOLD','sess_wmeanBOLD_inv','sess_medianBOLD','sess_medianBOLD_inv',...
         'sess_sdBOLD','sess_sdBOLD_inv');
