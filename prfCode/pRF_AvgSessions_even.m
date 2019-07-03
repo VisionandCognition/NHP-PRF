@@ -50,7 +50,7 @@ for m=1:length(MONKEY)
     
     % remove volumes for which stim is nan ----
     nostim_idx=[];
-    for i=1:stim.norm
+    for i=1:size(stim.norm,2)
         if isnan(stim.norm{i}(1,1))
             nostim_idx=[nostim_idx i]; %#ok<*AGROW>
         end
@@ -62,7 +62,7 @@ for m=1:length(MONKEY)
     sess_sdBOLD(:,:,:,nostim_idx)=[];
     if isfield(MB,'medianBOLD_inv')
         nostim_idx=[];
-        for i=1:stim.inv
+        for i=1:size(stim.inv,2)
             if isnan(stim.inv{i}(1,1))
                 nostim_idx=[nostim_idx i];
             end
