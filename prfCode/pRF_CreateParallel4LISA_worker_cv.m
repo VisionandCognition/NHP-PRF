@@ -188,7 +188,7 @@ for job_ind = 1:length(joblist.sessinc)
         fprintf(fid_single,['cp -r $HOME/PRF/Data/' joblist.type '/' joblist.monkey '/' ...
             joblist.sessions{joblist.sessinc(job_ind),1} '* $TMPDIR/PRF\n']);
         fprintf(fid_single,['cp -r $HOME/PRF/Data/mask/' joblist.monkey '/* $TMPDIR/PRF\n']);
-        fprintf(fid_single,['cp -r $HOME/PRF/Data/refhdr/' joblist.monkey '* $TMPDIR/PRF\n']);
+        fprintf(fid_single,['cp -r $HOME/PRF/Data/refhdr/' joblist.monkey '/* $TMPDIR/PRF\n']);
         fprintf(fid_single, 'cp -r $HOME/PRF/Code/* $TMPDIR/PRF\n');
         fprintf(fid_single,'cd $TMPDIR/PRF\n\n');
         fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n\n']);
