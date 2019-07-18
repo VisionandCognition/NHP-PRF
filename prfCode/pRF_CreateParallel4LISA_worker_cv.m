@@ -50,10 +50,8 @@ end
 project_dir = '/home/pcklink/PRF'; % must be the ABSOLUTE path
 % log dir on LISA
 log_file_dir = [project_dir '/Logs/']; % add jobname
-
 % set local log folder
 log_file_dir_local = [pwd '/Logs/']; % add jobname
-
 % job files will be locally written to:
 cd ..
 batch_dir = fullfile(pwd, 'Jobs', ['JOBS_' job_name]); % add jobname
@@ -68,6 +66,7 @@ else
     execute_matlab_process_sh = ['$TMPDIR/PRF/BashScripts/'...
         'pRF_run_analyzePRF_LISA_avg.sh']; % must be ABSOLUTE path
 end
+
 %% PROCESSING STARTS FROM HERE (no more parameters to check) ==============
 %% create batch & log folder ----------------------------------------------
 disp('Creating batch & log folders')
@@ -192,16 +191,21 @@ for job_ind = 1:length(joblist.sessinc)
         fprintf(fid_single, 'cp -r $HOME/PRF/Code/* $TMPDIR/PRF\n');
         fprintf(fid_single,'cd $TMPDIR/PRF\n\n');
         fprintf(fid_single,['chmod +x ' execute_matlab_process_sh '\n\n']);
-        line = sprintf('%s \\\n\t%s %s %s %s %s [%s] \\\n\t%s \\\n\t%s', execute_matlab_process_sh, parallel_fun, ...
+        % exec parfun (Monkey,Session,Slices,HRF,numWorkers,modeltype,cv)
+        line = sprintf('%s \\\n\t%s %s %s %s %s [%s] \\\n\t%s %s %s %s \\\n\t', ...
+            execute_matlab_process_sh, parallel_fun, ...
             joblist.monkey, joblist.sessions{joblist.sessinc(job_ind),1}, ...
             joblist.slicechunks{job_ind2}, joblist.hrf,...
             num2str(joblist.sessions{joblist.sessinc(job_ind),2}),...
+            joblist.modeltype,...
+            num2str(joblist.xvalmode),...
             log_file_dir, parallel_fun_dir);
         logline= ['$TMPDIR/PRF/Logs/Log_' joblist.monkey '_'  ...
             joblist.sessions{joblist.sessinc(job_ind),1} '_' ...
             joblist.slicechunks{job_ind2} '_' ...
-            joblist.hrf '.txt'];
-        fprintf(fid_single, '%s %s %s\n\n', line, '|& tee',  logline);
+            joblist.hrf '_' joblist.modeltype ...
+            '_xval' num2str(joblist.xvalmode) '.txt'];
+        fprintf(fid_single, '%s %s %s\n\n', line, '|& tee', logline);
         fprintf(fid_single,['cp ' logline ' $HOME/PRF/Logs/\n']);
         
         % finally: pass exit status of execute_matlab_process.sh to LISA

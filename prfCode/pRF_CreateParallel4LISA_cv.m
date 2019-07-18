@@ -16,16 +16,18 @@ for i=1:2
         joblist.slicechunks = {'01:15','16:30','31:45','46:60'}; % 2 digits, leading zero!
     end
     
-    joblist.sessinc = 1:size(joblist.sessions,1);
-    joblist.type = 'cv';
-    joblist.hrf = 'HRF_monkey';%'HRF_monkey'; %'defaultHRF';
-    
+    joblist.sessinc     = 1:size(joblist.sessions,1);
+    joblist.type        = 'cvlin'; % used as label
+    joblist.hrf         = 'HRF_monkey'; % 'HRF_monkey' / 'defaultHRF' / 'none'
+    joblist.modeltype   = 'linear_hrf'; % 'css_hrf' / 'linear_hrf' / 'css_ephys' / 'linear_ephys'
+    joblist.xvalmode    = 1; % 0 / 1 / 2
+        
     parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
     parallel_fun        = 'pRF_FitModel_LISA_cv';
-    job_name            = 'FitPRF_cv_mhrf';
     
+    job_name            = 'FitPRF_cvlin';
+
     fprintf('\n== Running create_parallel_LISA ==')
-    
     pRF_CreateParallel4LISA_worker_cv(...
         parallel_fun, joblist, parallel_fun_dir, job_name)
 end
