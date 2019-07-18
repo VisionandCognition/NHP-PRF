@@ -18,7 +18,7 @@ echo the allocated nodes are: $SLURM_JOB_NODELIST
 
 mkdir -p $TMPDIR/PRF
 mkdir -p $TMPDIR/PRF/Logs/
-cp -r $HOME/PRF/Data/cvlin/eddy/AllSessions-avg-cv* $TMPDIR/PRF
+cp -r $HOME/PRF/Data/cv/eddy/AllSessions-avg-cv* $TMPDIR/PRF
 cp -r $HOME/PRF/Data/mask/eddy/* $TMPDIR/PRF
 cp -r $HOME/PRF/Data/refhdr/eddy/* $TMPDIR/PRF
 cp -r $HOME/PRF/Code/* $TMPDIR/PRF

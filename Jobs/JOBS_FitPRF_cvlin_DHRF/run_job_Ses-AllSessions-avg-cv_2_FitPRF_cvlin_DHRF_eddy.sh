@@ -14,22 +14,22 @@ echo submitted by $SLURM_JOB_ACCOUNT
 echo from $SLURM_SUBMIT_DIR
 echo the allocated nodes are: $SLURM_JOB_NODELIST
 
-# INFO: FitPRF_cvlin_AllSessions-avg-cv_15:28
+# INFO: FitPRF_cvlin_DHRF_AllSessions-avg-cv_16:30
 
 mkdir -p $TMPDIR/PRF
 mkdir -p $TMPDIR/PRF/Logs/
-cp -r $HOME/PRF/Data/cv/danny/AllSessions-avg-cv* $TMPDIR/PRF
-cp -r $HOME/PRF/Data/mask/danny/* $TMPDIR/PRF
-cp -r $HOME/PRF/Data/refhdr/danny/* $TMPDIR/PRF
+cp -r $HOME/PRF/Data/cv/eddy/AllSessions-avg-cv* $TMPDIR/PRF
+cp -r $HOME/PRF/Data/mask/eddy/* $TMPDIR/PRF
+cp -r $HOME/PRF/Data/refhdr/eddy/* $TMPDIR/PRF
 cp -r $HOME/PRF/Code/* $TMPDIR/PRF
 cd $TMPDIR/PRF
 
 chmod +x $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh
 
 $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh \
-	pRF_FitModel_LISA_cv danny AllSessions-avg-cv 15:28 HRF_monkey [] \
+	pRF_FitModel_LISA_cv eddy AllSessions-avg-cv 16:30 defaultHRF [] \
 	linear_hrf 1 /home/pcklink/PRF/Logs/ $TMPDIR/PRF/ \
-	 |& tee $TMPDIR/PRF/Logs/Log_danny_AllSessions-avg-cv_15:28_HRF_monkey_linear_hrf_xval1.txt
+	 |& tee $TMPDIR/PRF/Logs/Log_eddy_AllSessions-avg-cv_16:30_defaultHRF_linear_hrf_xval1.txt
 
-cp $TMPDIR/PRF/Logs/Log_danny_AllSessions-avg-cv_15:28_HRF_monkey_linear_hrf_xval1.txt $HOME/PRF/Logs/
+cp $TMPDIR/PRF/Logs/Log_eddy_AllSessions-avg-cv_16:30_defaultHRF_linear_hrf_xval1.txt $HOME/PRF/Logs/
 exit $?

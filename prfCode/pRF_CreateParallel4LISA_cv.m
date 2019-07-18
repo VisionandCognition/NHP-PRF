@@ -17,15 +17,15 @@ for i=1:2
     end
     
     joblist.sessinc     = 1:size(joblist.sessions,1);
-    joblist.type        = 'cvlin'; % used as label
-    joblist.hrf         = 'HRF_monkey'; % 'HRF_monkey' / 'defaultHRF' / 'none'
+    joblist.type        = 'cv'; % used as label
+    joblist.hrf         = 'defaultHRF'; % 'HRF_monkey' / 'defaultHRF' / 'none'
     joblist.modeltype   = 'linear_hrf'; % 'css_hrf' / 'linear_hrf' / 'css_ephys' / 'linear_ephys'
     joblist.xvalmode    = 1; % 0 / 1 / 2
         
     parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
     parallel_fun        = 'pRF_FitModel_LISA_cv';
     
-    job_name            = 'FitPRF_cvlin';
+    job_name            = 'FitPRF_cvlin_DHRF';
 
     fprintf('\n== Running create_parallel_LISA ==')
     pRF_CreateParallel4LISA_worker_cv(...
