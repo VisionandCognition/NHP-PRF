@@ -20,7 +20,9 @@ for s=1:length(fld)
     else % concat
         result.ang      = cat(3,result.ang,R.result.ang);
         result.ecc      = cat(3,result.ecc,R.result.ecc);
-        result.expt     = cat(3,result.expt,R.result.expt);
+        if isfield(result,'expt')
+            result.expt     = cat(3,result.expt,R.result.expt);
+        end
         result.rfsize   = cat(3,result.rfsize,R.result.rfsize);
         result.R2       = cat(3,result.R2,R.result.R2);
         result.gain     = cat(3,result.gain,R.result.gain);
@@ -86,23 +88,25 @@ for cv=1:2
     gzip(fullfile(ResFld, ['Sess-' Session '_rfsize_' num2str(cv) '.nii']));
     delete(fullfile(ResFld, ['Sess-' Session '_rfsize_' num2str(cv) '.nii']));
     % exponential ---
-    fprintf('Expt, ');
-    nii = make_nii(result.expt(:,:,:,cv),[1 1 1],[],16,...
-        'pRF fit: RF size (pix)');
-    nii.hdr.hist = result.hdr_ref.hist;
-    nii.hdr.dime.datatype = 64; nii.hdr.dime.bitpix = 64;
-    save_nii(nii, fullfile(ResFld, ...
-        ['Sess-' Session '_expt_' num2str(cv) '.nii']));
-    gzip(fullfile(ResFld, ['Sess-' Session '_expt_' num2str(cv) '.nii']));
-    delete(fullfile(ResFld, ['Sess-' Session '_expt_' num2str(cv) '.nii']));
-    nii = make_nii(result.expt(:,:,:,cv).^2,[1 1 1],[],16,...
-        'pRF fit: RF size (pix)');
-    nii.hdr.hist = result.hdr_ref.hist;
-    nii.hdr.dime.datatype = 64; nii.hdr.dime.bitpix = 64;
-    save_nii(nii, fullfile(ResFld, ...
-        ['Sess-' Session '_exptsq_' num2str(cv) '.nii']));
-    gzip(fullfile(ResFld, ['Sess-' Session '_exptsq_' num2str(cv) '.nii']));
-    delete(fullfile(ResFld, ['Sess-' Session '_exptsq_' num2str(cv) '.nii']));
+    if isfield(result,'expt')
+        fprintf('Expt, ');
+        nii = make_nii(result.expt(:,:,:,cv),[1 1 1],[],16,...
+            'pRF fit: RF size (pix)');
+        nii.hdr.hist = result.hdr_ref.hist;
+        nii.hdr.dime.datatype = 64; nii.hdr.dime.bitpix = 64;
+        save_nii(nii, fullfile(ResFld, ...
+            ['Sess-' Session '_expt_' num2str(cv) '.nii']));
+        gzip(fullfile(ResFld, ['Sess-' Session '_expt_' num2str(cv) '.nii']));
+        delete(fullfile(ResFld, ['Sess-' Session '_expt_' num2str(cv) '.nii']));
+        nii = make_nii(result.expt(:,:,:,cv).^2,[1 1 1],[],16,...
+            'pRF fit: RF size (pix)');
+        nii.hdr.hist = result.hdr_ref.hist;
+        nii.hdr.dime.datatype = 64; nii.hdr.dime.bitpix = 64;
+        save_nii(nii, fullfile(ResFld, ...
+            ['Sess-' Session '_exptsq_' num2str(cv) '.nii']));
+        gzip(fullfile(ResFld, ['Sess-' Session '_exptsq_' num2str(cv) '.nii']));
+        delete(fullfile(ResFld, ['Sess-' Session '_exptsq_' num2str(cv) '.nii']));
+    end
     % R^2 Goodness of fit ---
     fprintf('R2 ');
     nii = make_nii(result.R2(:,:,:,cv),[1 1 1],[],16,...

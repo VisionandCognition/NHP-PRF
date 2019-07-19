@@ -21,12 +21,13 @@ for i=1:2
     joblist.hrf         = 'defaultHRF'; % 'HRF_monkey' / 'defaultHRF' / 'none'
     joblist.modeltype   = 'linear_hrf'; % 'css_hrf' / 'linear_hrf' / 'css_ephys' / 'linear_ephys'
     joblist.xvalmode    = 1; % 0 / 1 / 2
-        
+    joblist.resfld      = 'linhrf_cv1_dhrf';
+    
     parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
     parallel_fun        = 'pRF_FitModel_LISA_cv';
     
-    job_name            = 'FitPRF_cvlin_DHRF';
-
+    job_name            = ['FitPRF_' joblist.resfld];
+    
     fprintf('\n== Running create_parallel_LISA ==')
     pRF_CreateParallel4LISA_worker_cv(...
         parallel_fun, joblist, parallel_fun_dir, job_name)

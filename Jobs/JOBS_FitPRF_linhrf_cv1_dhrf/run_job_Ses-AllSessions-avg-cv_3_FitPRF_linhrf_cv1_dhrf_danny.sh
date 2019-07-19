@@ -14,7 +14,7 @@ echo submitted by $SLURM_JOB_ACCOUNT
 echo from $SLURM_SUBMIT_DIR
 echo the allocated nodes are: $SLURM_JOB_NODELIST
 
-# INFO: FitPRF_cvlin_DHRF_AllSessions-avg-cv_29:42
+# INFO: FitPRF_linhrf_cv1_dhrf_AllSessions-avg-cv_29:42
 
 mkdir -p $TMPDIR/PRF
 mkdir -p $TMPDIR/PRF/Logs/
@@ -28,7 +28,7 @@ chmod +x $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh
 
 $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh \
 	pRF_FitModel_LISA_cv danny AllSessions-avg-cv 29:42 defaultHRF [] \
-	linear_hrf 1 /home/pcklink/PRF/Logs/ $TMPDIR/PRF/ \
+	linear_hrf 1 linhrf_cv1_dhrf /home/pcklink/PRF/Logs/ $TMPDIR/PRF/ \
 	 |& tee $TMPDIR/PRF/Logs/Log_danny_AllSessions-avg-cv_29:42_defaultHRF_linear_hrf_xval1.txt
 
 cp $TMPDIR/PRF/Logs/Log_danny_AllSessions-avg-cv_29:42_defaultHRF_linear_hrf_xval1.txt $HOME/PRF/Logs/
