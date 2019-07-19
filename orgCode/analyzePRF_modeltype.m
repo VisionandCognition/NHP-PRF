@@ -1,6 +1,6 @@
 function results = analyzePRF_modeltype(stimulus,data,tr,options,modeltype)
 
-% function results = analyzePRF(stimulus,data,tr,options)
+% function results = analyzePRF_modeltype(stimulus,data,tr,options,modeltype)
 %
 % <stimulus> provides the apertures as a cell vector of R x C x time.
 %   values should be in [0,1].  the number of time points can differ across runs.
@@ -52,6 +52,7 @@ function results = analyzePRF_modeltype(stimulus,data,tr,options,modeltype)
 %   <display> (optional) is 'iter' | 'final' | 'off'.  default: 'iter'.
 %   <typicalgain> (optional) is a typical value for the gain in each time-series.
 %     default: 10.
+%   <allowneggain> (optional) default is 'false'
 % <modeltype> is the kind of model that is fit to the data
 %   'css_hrf' is the default compressive spatial summation model
 %   'linear_hrf' sets the spatial exponental to 1 making it the classic Dumoulin & Wandell
@@ -169,12 +170,12 @@ function results = analyzePRF_modeltype(stimulus,data,tr,options,modeltype)
 % - for cluster mode, need to make sure fitnonlinearmodel is compiled (compilemcc.m)
 % - to check whether local minima are a problem, can look at results.resnorms
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REPORT
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REPORT
 
 fprintf('*** analyzePRF: started at %s. ***\n',datestr(now));
 stime = clock;  % start time
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% INTERNAL CONSTANTS
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% INTERNAL CONSTANTS
 
 % define
 remotedir = '/scratch/knk/input/';
@@ -182,7 +183,7 @@ remotedir2 = '/scratch/knk/output/';
 remotelogin = 'knk@login2.chpc.wustl.edu';
 remoteuser = 'knk';
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SETUP AND PREPARATION
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SETUP AND PREPARATION
 
 % massage cell inputs
 if ~iscell(stimulus)
@@ -244,6 +245,9 @@ end
 if ~isfield(options,'typicalgain') || isempty(options.typicalgain)
   options.typicalgain = 10;
 end
+if ~isfield(options,'allowneggain') || isempty(options.allowneggain)
+  options.allowneggain = false;
+end
 
 % massage
 wantquick = isequal(options.seedmode,-2);
@@ -297,7 +301,7 @@ if usecluster
   remotefilestodelete = {};
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% FIGURE OUT NOISE REGRESSORS
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% FIGURE OUT NOISE REGRESSORS
 
 if isequal(options.wantglmdenoise,1)
   noisereg = analyzePRFcomputeGLMdenoiseregressors(stimulus,data,tr);
@@ -307,7 +311,7 @@ else
   noisereg = options.wantglmdenoise;
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE MODEL
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE MODEL
 
 % pre-compute some cache
 [d,xx,yy] = makegaussian2d(resmx,2,2,2,2);
@@ -320,72 +324,150 @@ switch modeltype
         modelfun = @(pp,dd) conv2run(posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
             makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
             (2*pi*abs(pp(3))^2))); 0]) .^ posrect(pp(5)),options.hrf,dd(:,prod(res)+1));
-        model = {...
-            { [] ... 
-            [1-res(1)+1 1-res(2)+1  0    0   NaN; ...
-             2*res(1)-1 2*res(2)-1  Inf  Inf Inf] ...
-            modelfun} ...
-            { @(ss)ss ...
-            [1-res(1)+1 1-res(2)+1 0    0   0; ...
-             2*res(1)-1 2*res(2)-1 Inf  Inf Inf] ...
-            @(ss)modelfun}};
+        
+        if options.allowneggain
+            model = {...
+                { [] ...
+                [1-res(1)+1 1-res(2)+1    0 -Inf   NaN; ...
+                2*res(1)-1 2*res(2)-1   Inf  Inf   Inf] ...
+                modelfun} ...
+                { @(ss)ss ...
+                [1-res(1)+1 1-res(2)+1 0  -Inf  0; ...
+                2*res(1)-1 2*res(2)-1 Inf  Inf Inf] ...
+                @(ss)modelfun}};
+        else
+            model = {...
+                { [] ...
+                [1-res(1)+1 1-res(2)+1  0    0   NaN; ...
+                2*res(1)-1 2*res(2)-1  Inf  Inf Inf] ...
+                modelfun} ...
+                { @(ss)ss ...
+                [1-res(1)+1 1-res(2)+1 0    0   0; ...
+                2*res(1)-1 2*res(2)-1 Inf  Inf Inf] ...
+                @(ss)modelfun}};
+        end
+        
     case 'linear_hrf'
         % -- Linear (skip second step where exponential is fit) --
         % define the model (parameters are R C S G N)
         modelfun = @(pp,dd) conv2run(posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
             makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
             (2*pi*abs(pp(3))^2))); 0]),options.hrf,dd(:,prod(res)+1));
-        model = {[] ... 
-            [1-res(1)+1 1-res(2)+1  0    0   ; ...
-             2*res(1)-1 2*res(2)-1  Inf  Inf ] ...
-            modelfun};
+        
+        if options.allowneggain
+            model = {[] ...
+                [1-res(1)+1 1-res(2)+1  0  -Inf   ; ...
+                2*res(1)-1 2*res(2)-1  Inf  Inf ] ...
+                modelfun};
+        else
+            model = {[] ...
+                [1-res(1)+1 1-res(2)+1  0    0   ; ...
+                2*res(1)-1 2*res(2)-1  Inf  Inf ] ...
+                modelfun};
+        end
+        
+    case 'dog_hrf'
+        % -- DOG (center surround
+        modelfun = @(pp,dd) conv2run(posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res), ...
+            (makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / (2*pi*abs(pp(3))^2)) - ...
+            (pp(6) .* makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)/pp(5)),abs(pp(3)/pp(5)),xx,yy,0,0) / (2*pi*abs(pp(3)/pp(5))^2)) ...
+            )) ; 0]),options.hrf,dd(:,prod(res)+1));
+        
+        model = {[] ...
+                [1-res(1)+1 1-res(2)+1  0    0   1    0; ...
+                 2*res(1)-1 2*res(2)-1  Inf  Inf Inf  1] ...
+                modelfun};
+            
     case 'css_ephys'
         % -- CSS without convolution with HRF
         modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
             makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
             (2*pi*abs(pp(3))^2))); 0]) .^ posrect(pp(5));
-        model = {...
-            { [] ... 
-            [1-res(1)+1 1-res(2)+1  0    0   NaN; ...
-             2*res(1)-1 2*res(2)-1  Inf  Inf Inf] ...
-            modelfun} ...
-            { @(ss)ss ...
-            [1-res(1)+1 1-res(2)+1 0    0   0; ...
-             2*res(1)-1 2*res(2)-1 Inf  Inf Inf] ...
-            @(ss)modelfun}};
+        
+        if options.allowneggain
+            model = {...
+                { [] ...
+                [1-res(1)+1 1-res(2)+1  0  -Inf NaN; ...
+                2*res(1)-1 2*res(2)-1  Inf  Inf Inf] ...
+                modelfun} ...
+                { @(ss)ss ...
+                [1-res(1)+1 1-res(2)+1 0    0   0; ...
+                2*res(1)-1 2*res(2)-1 Inf  Inf Inf] ...
+                @(ss)modelfun}};
+        else
+            model = {...
+                { [] ...
+                [1-res(1)+1 1-res(2)+1  0    0   NaN; ...
+                2*res(1)-1 2*res(2)-1  Inf  Inf Inf] ...
+                modelfun} ...
+                { @(ss)ss ...
+                [1-res(1)+1 1-res(2)+1 0    0   0; ...
+                2*res(1)-1 2*res(2)-1 Inf  Inf Inf] ...
+                @(ss)modelfun}};
+        end
+        
     case 'linear_ephys'
         % -- Linear without convolution with HRF
         modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
             makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
-            (2*pi*abs(pp(3))^2))); 0]) .^ posrect(pp(5));
-        model = {[] ... 
-            [1-res(1)+1 1-res(2)+1  0    0   ; ...
-             2*res(1)-1 2*res(2)-1  Inf  Inf ] ...
-            modelfun};
+            (2*pi*abs(pp(3))^2))); 0]);
+        
+        if options.allowneggain
+            model = {[] ...
+                [1-res(1)+1 1-res(2)+1  0   -Inf   ; ...
+                2*res(1)-1 2*res(2)-1  Inf  Inf ] ...
+                modelfun};
+        else
+            model = {[] ...
+                [1-res(1)+1 1-res(2)+1  0    0   ; ...
+                2*res(1)-1 2*res(2)-1  Inf  Inf ] ...
+                modelfun};
+        end
+        
+    case 'dog_ephys'
+        % -- DOG without convolution with HRF
+        modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res), ...
+            (makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / (2*pi*abs(pp(3))^2)) - ...
+            (pp(6) .* makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)/pp(5)),abs(pp(3)/pp(5)),xx,yy,0,0) / (2*pi*abs(pp(3)/pp(5))^2)) ...
+            )) ; 0]);
+        
+        model = {[] ...
+                [1-res(1)+1 1-res(2)+1  0    0   1    0; ...
+                 2*res(1)-1 2*res(2)-1  Inf  Inf Inf  1] ...
+                modelfun};
 end
   
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE SEEDS
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE SEEDS
 
 % init
 seeds = [];
 
 % generic large seed
 if ismember(0,options.seedmode)
-  seeds = [seeds;
+  if strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+    seeds = [seeds;
            (1+res(1))/2 (1+res(2))/2 resmx/4*sqrt(0.5) options.typicalgain 0.5];
+  elseif strcmp(modeltype,'linear_hrf') || strcmp(modeltype,'linear_ephys')
+    seeds = [seeds;
+           (1+res(1))/2 (1+res(2))/2 resmx/4*sqrt(0.5) options.typicalgain];
+  end
 end
 
 % generic small seed
 if ismember(1,options.seedmode)
-  seeds = [seeds;
+  if strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+    seeds = [seeds;
            (1+res(1))/2 (1+res(2))/2 resmx/4*sqrt(0.5)/10 options.typicalgain 0.5];
+  elseif strcmp(modeltype,'linear_hrf') || strcmp(modeltype,'linear_ephys')
+    seeds = [seeds;
+           (1+res(1))/2 (1+res(2))/2 resmx/4*sqrt(0.5)/10 options.typicalgain];
+  end         
 end
 
 % super-grid seed
 if any(ismember([2 -2],options.seedmode))
   [supergridseeds,rvalues] = analyzePRFcomputesupergridseeds(res,stimulus,data,modelfun, ...
-                                                   options.maxpolydeg,dimdata,dimtime, ...
-                                                   options.typicalgain,noisereg);
+        options.maxpolydeg,dimdata,dimtime, options.typicalgain,noisereg,modeltype);
 end
 
 % make a function that individualizes the seeds
@@ -396,14 +478,14 @@ else
   seedfun = @(vx) [seeds];
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PERFORM OPTIMIZATION
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PERFORM OPTIMIZATION
 
 % if this is true, we can bypass all of the optimization stuff!
 if wantquick
 
 else
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE RESAMPLING STUFF
+  %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE RESAMPLING STUFF
 
   % define wantresampleruns and resampling
   switch options.xvalmode
@@ -427,7 +509,7 @@ else
     end
   end
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE STIMULUS AND DATA
+  %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE STIMULUS AND DATA
 
   %%%%% CLUSTER CASE
 
@@ -518,7 +600,7 @@ else
 
   end
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE OPTIONS
+  %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE OPTIONS
 
   % last-minute prep
   if iscell(noisereg)
@@ -562,7 +644,7 @@ else
           % %   plot(pmatrix*thedata,'k-');
           % %   plot(pmatrix*modelfit,'r-');
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% FIT MODEL
+  %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% FIT MODEL
 
   %%%%% CLUSTER CASE
 
@@ -605,7 +687,7 @@ else
 
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE OUTPUT
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREPARE OUTPUT
 
 % depending on which analysis we did (quick or full optimization),
 % we have to get the outputs in a common format
@@ -666,7 +748,7 @@ file0 = [tempname '.mat'];
 fprintf('saving results to %s (just in case).\n',file0);
 save(file0,'results');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CLEAN UP
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CLEAN UP
 
 % no clean up necessary in the quick case
 if ~wantquick
@@ -697,12 +779,12 @@ if ~wantquick
 
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REPORT
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REPORT
 
 fprintf('*** analyzePRF: ended at %s (%.1f minutes). ***\n', ...
         datestr(now),etime(clock,stime)/60);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% JUNK
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% JUNK
 
 % % define the model (parameters are R C S G N [HRF])
 % modelfun = @(pp,dd) conv2run(posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / (2*pi*abs(pp(3))^2))); 0]) .^ posrect(pp(5)),pp(5+(1:numinhrf))',dd(:,prod(res)+1));

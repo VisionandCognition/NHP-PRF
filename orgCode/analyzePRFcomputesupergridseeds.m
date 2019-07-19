@@ -1,4 +1,5 @@
-function [seeds,rvalues] = analyzePRF_computesupergridseeds(res,stimulus,data,modelfun,maxpolydeg,dimdata,dimtime,typicalgain,noisereg)
+function [seeds,rvalues] = analyzePRFcomputesupergridseeds(...
+    res,stimulus,data,modelfun,maxpolydeg,dimdata,dimtime,typicalgain,noisereg,modeltype)
 
 % function [seeds,rvalues] = analyzePRF_computesupergridseeds(res,stimulus,data,modelfun,maxpolydeg,dimdata,dimtime,typicalgain,noisereg)
 %
@@ -28,6 +29,7 @@ function [seeds,rvalues] = analyzePRF_computesupergridseeds(res,stimulus,data,mo
 eccs = [0 0.00551 0.014 0.0269 0.0459 0.0731 0.112 0.166 0.242 0.348 0.498 0.707 1];
 angs = linspacecircular(0,2*pi,16);
 expts = [0.5 0.25 0.125];
+nampl = [0:0.1:1];
 
 % calc
 numvxs = prod(sizefull(data{1},dimdata));  % total number of voxels
@@ -43,22 +45,59 @@ ssindices = 2.^(0:maxn);
 
 % construct full list of seeds (seeds x params) [R C S G N]
 fprintf('constructing seeds.\n');
-allseeds = zeros(length(eccs)*length(angs)*length(ssindices)*length(expts),5);
+if strcmp(modeltype,'linear_hrf') || strcmp(modeltype,'linear_ephys')
+  allseeds = zeros(length(eccs)*length(angs)*length(ssindices),4);
+elseif strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+  allseeds = zeros(length(eccs)*length(angs)*length(ssindices)*length(expts),5);
+elseif  strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
+  allseeds = zeros(length(eccs)*length(angs)*length(ssindices)*length(ssindices)*length(nampl),6);  
+end
+
 cnt = 1;
 for p=1:length(eccs)
-  for q=1:length(angs)
-    if p==1 && q>1  % for the center-of-gaze, only do the first angle
-      continue;
+    for q=1:length(angs)
+        if p==1 && q>1  % for the center-of-gaze, only do the first angle
+            continue;
+        end
+        for s=1:length(ssindices)
+            if strcmp(modeltype,'linear_hrf') || strcmp(modeltype,'linear_ephys')
+                allseeds(cnt,:) = [(1+res(1))/2 - sin(angs(q)) * (eccs(p)*resmx) ...
+                    (1+res(2))/2 + cos(angs(q)) * (eccs(p)*resmx) ...
+                    ssindices(s) 1 ];
+                cnt = cnt + 1;
+            elseif strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+                for r=1:length(expts)
+                    allseeds(cnt,:) = [(1+res(1))/2 - sin(angs(q)) * (eccs(p)*resmx) ...
+                        (1+res(2))/2 + cos(angs(q)) * (eccs(p)*resmx) ...
+                        ssindices(s)*sqrt(expts(r)) 1 expts(r)];
+                    cnt = cnt + 1;
+                end
+            elseif strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+                for r=1:length(ssindices)
+                    for v=1:length(nampl)
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        allseeds(cnt,:) = [(1+res(1))/2 - sin(angs(q)) * (eccs(p)*resmx) ...
+                            (1+res(2))/2 + cos(angs(q)) * (eccs(p)*resmx) ...
+                            ssindices(s) 1 expts(r)];
+                        cnt = cnt + 1;
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                    end
+                end
+            end
+        end
     end
-    for s=1:length(ssindices)
-      for r=1:length(expts)
-        allseeds(cnt,:) = [(1+res(1))/2 - sin(angs(q)) * (eccs(p)*resmx) ...
-                           (1+res(2))/2 + cos(angs(q)) * (eccs(p)*resmx) ...
-                           ssindices(s)*sqrt(expts(r)) 1 expts(r)];
-        cnt = cnt + 1;
-      end
-    end
-  end
 end
 allseeds(cnt:end,:) = [];  % chop because of the omission above
 
