@@ -75,14 +75,12 @@ for p=1:length(eccs)
                     cnt = cnt + 1;
                 end
             elseif strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
-                for r=1:length(ssindices)
-                    for v=1:length(sdratio)
-                        for w=1:length(normamp)
-                            allseeds(cnt,:) = [(1+res(1))/2 - sin(angs(q)) * (eccs(p)*resmx) ...
-                                (1+res(2))/2 + cos(angs(q)) * (eccs(p)*resmx) ...
-                                ssindices(s) sdratio(v) normamp(w)];
-                            cnt = cnt + 1;
-                        end
+                for v=1:length(sdratio)
+                    for w=1:length(normamp)
+                        allseeds(cnt,:) = [(1+res(1))/2 - sin(angs(q)) * (eccs(p)*resmx) ...
+                            (1+res(2))/2 + cos(angs(q)) * (eccs(p)*resmx) ...
+                            ssindices(s) 1 sdratio(v) normamp(w)];
+                        cnt = cnt + 1;
                     end
                 end
             end
