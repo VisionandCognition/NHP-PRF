@@ -11,8 +11,8 @@ gain = pp(4) % (amplitude is set to 1, this gain will be applied applied to both
 expt = pp(5) % >>> not used in DOG
 
 % new parameters
-sdgain   = pp(5) % sd2/sd1 constrained to be >1
-norm_amp = pp(6) % a2/a1 where a is set to always be 1  (later scaled by gain)
+sdration   = pp(5) % sd2/sd1 constrained to be >1
+norm_amp = pp(6) % a2/a1 where a is set to always be 1. costrianed 0-1 (later scaled by gain)
 
 % surr gauss
 x  = pp(1) % same for both Gs

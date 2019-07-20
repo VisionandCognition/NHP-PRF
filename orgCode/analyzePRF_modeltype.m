@@ -349,7 +349,7 @@ switch modeltype
         
     case 'linear_hrf'
         % -- Linear (skip second step where exponential is fit) --
-        % define the model (parameters are R C S G N)
+        % define the model (parameters are R C S G)
         modelfun = @(pp,dd) conv2run(posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
             makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
             (2*pi*abs(pp(3))^2))); 0]),options.hrf,dd(:,prod(res)+1));
@@ -368,6 +368,7 @@ switch modeltype
         
     case 'dog_hrf'
         % -- DOG (center surround
+        % define the model (parameters are R C S G X X)
         modelfun = @(pp,dd) conv2run(posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res), ...
             (makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / (2*pi*abs(pp(3))^2)) - ...
             (pp(6) .* makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)/pp(5)),abs(pp(3)/pp(5)),xx,yy,0,0) / (2*pi*abs(pp(3)/pp(5))^2)) ...
@@ -380,6 +381,7 @@ switch modeltype
             
     case 'css_ephys'
         % -- CSS without convolution with HRF
+        % define the model (parameters are R C S G N)
         modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
             makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
             (2*pi*abs(pp(3))^2))); 0]) .^ posrect(pp(5));
@@ -408,6 +410,7 @@ switch modeltype
         
     case 'linear_ephys'
         % -- Linear without convolution with HRF
+        % define the model (parameters are R C S G)
         modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
             makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
             (2*pi*abs(pp(3))^2))); 0]);
@@ -450,6 +453,9 @@ if ismember(0,options.seedmode)
   elseif strcmp(modeltype,'linear_hrf') || strcmp(modeltype,'linear_ephys')
     seeds = [seeds;
            (1+res(1))/2 (1+res(2))/2 resmx/4*sqrt(0.5) options.typicalgain];
+  elseif strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
+    seeds = [seeds;
+           (1+res(1))/2 (1+res(2))/2 resmx/4*sqrt(0.5) options.typicalgain 2 0.5];  
   end
 end
 
@@ -461,6 +467,9 @@ if ismember(1,options.seedmode)
   elseif strcmp(modeltype,'linear_hrf') || strcmp(modeltype,'linear_ephys')
     seeds = [seeds;
            (1+res(1))/2 (1+res(2))/2 resmx/4*sqrt(0.5)/10 options.typicalgain];
+  elseif strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
+    seeds = [seeds;
+           (1+res(1))/2 (1+res(2))/2 resmx/4*sqrt(0.5) options.typicalgain 2 0.5];    
   end         
 end
 
@@ -706,10 +715,17 @@ numfits = size(paramsA,1);
 clear results;
 results.ang =      NaN*zeros(numvxs,numfits);
 results.ecc =      NaN*zeros(numvxs,numfits);
-results.expt =     NaN*zeros(numvxs,numfits);
+if strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+    results.expt =     NaN*zeros(numvxs,numfits);
+elseif strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
+    results.sdratio = NaN*zeros(numvxs,numfits);
+    results.normamp = NaN*zeros(numvxs,numfits);
+end
 results.rfsize =   NaN*zeros(numvxs,numfits);
 results.R2 =       NaN*zeros(numvxs,numfits);
 results.gain =     NaN*zeros(numvxs,numfits);
+
+
 results.resnorms = cell(numvxs,1);
 results.numiters = cell(numvxs,1);
 
@@ -718,7 +734,12 @@ results.ang(options.vxs,:) =    permute(mod(atan2((1+res(1))/2 - paramsA(:,1,:),
                                                   paramsA(:,2,:) - (1+res(2))/2),2*pi)/pi*180,[3 1 2]);
 results.ecc(options.vxs,:) =    permute(sqrt(((1+res(1))/2 - paramsA(:,1,:)).^2 + ...
                                              (paramsA(:,2,:) - (1+res(2))/2).^2),[3 1 2]);
-results.expt(options.vxs,:) =   permute(posrect(paramsA(:,5,:)),[3 1 2]);
+if strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+    results.expt(options.vxs,:) =   permute(posrect(paramsA(:,5,:)),[3 1 2]);
+elseif strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
+    results.sdratio(options.vxs,:) =   permute(posrect(paramsA(:,5,:)),[3 1 2]);
+    results.normamp(options.vxs,:) =   permute(posrect(paramsA(:,6,:)),[3 1 2]);
+end
 results.rfsize(options.vxs,:) = permute(abs(paramsA(:,3,:)) ./ sqrt(posrect(paramsA(:,5,:))),[3 1 2]);
 results.R2(options.vxs,:) =     permute(rA,[2 1]);
 results.gain(options.vxs,:) =   permute(posrect(paramsA(:,4,:)),[3 1 2]);
@@ -730,7 +751,12 @@ end
 % reshape
 results.ang =      reshape(results.ang,      [xyzsize numfits]);
 results.ecc =      reshape(results.ecc,      [xyzsize numfits]);
-results.expt =     reshape(results.expt,     [xyzsize numfits]);
+if strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+    results.expt =     reshape(results.expt,     [xyzsize numfits]);
+elseif strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
+    results.sdratio =     reshape(results.X,     [xyzsize numfits]);
+    results.normamp =     reshape(results.X,     [xyzsize numfits]);
+end
 results.rfsize =   reshape(results.rfsize,   [xyzsize numfits]);
 results.R2 =       reshape(results.R2,       [xyzsize numfits]);
 results.gain =     reshape(results.gain,     [xyzsize numfits]);

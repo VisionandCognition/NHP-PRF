@@ -29,7 +29,9 @@ function [seeds,rvalues] = analyzePRFcomputesupergridseeds(...
 eccs = [0 0.00551 0.014 0.0269 0.0459 0.0731 0.112 0.166 0.242 0.348 0.498 0.707 1];
 angs = linspacecircular(0,2*pi,16);
 expts = [0.5 0.25 0.125];
-nampl = [0:0.1:1];
+
+sdratio = [1 1.5 2 2.5 3];
+normamp = [0 0.1 0.25 0.5 1];
 
 % calc
 numvxs = prod(sizefull(data{1},dimdata));  % total number of voxels
@@ -50,7 +52,7 @@ if strcmp(modeltype,'linear_hrf') || strcmp(modeltype,'linear_ephys')
 elseif strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
   allseeds = zeros(length(eccs)*length(angs)*length(ssindices)*length(expts),5);
 elseif  strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
-  allseeds = zeros(length(eccs)*length(angs)*length(ssindices)*length(ssindices)*length(nampl),6);  
+  allseeds = zeros(length(eccs)*length(angs)*length(ssindices)*length(sdratio)*length(normamp),6);  
 end
 
 cnt = 1;
@@ -72,27 +74,15 @@ for p=1:length(eccs)
                         ssindices(s)*sqrt(expts(r)) 1 expts(r)];
                     cnt = cnt + 1;
                 end
-            elseif strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+            elseif strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
                 for r=1:length(ssindices)
-                    for v=1:length(nampl)
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        allseeds(cnt,:) = [(1+res(1))/2 - sin(angs(q)) * (eccs(p)*resmx) ...
-                            (1+res(2))/2 + cos(angs(q)) * (eccs(p)*resmx) ...
-                            ssindices(s) 1 expts(r)];
-                        cnt = cnt + 1;
-                        
-                        
-                        
-                        
-                        
-                        
-                        
+                    for v=1:length(sdratio)
+                        for w=1:length(normamp)
+                            allseeds(cnt,:) = [(1+res(1))/2 - sin(angs(q)) * (eccs(p)*resmx) ...
+                                (1+res(2))/2 + cos(angs(q)) * (eccs(p)*resmx) ...
+                                ssindices(s) sdratio(v) normamp(w)];
+                            cnt = cnt + 1;
+                        end
                     end
                 end
             end
