@@ -1,5 +1,8 @@
 Ms={'danny','eddy'};
-Ss={'AllSessions-avg-cv','AllSessions-avg-cv_DHRF'};
+Ss={... 'linhrf_cv1_dhrf', 'linhrf_cv1_mhrf',...
+    'doghrf_cv1_dhrf','doghrf_cv1_mhrf'};
+Ss={'linhrf_cv1_dhrf', 'linhrf_cv1_mhrf'};
+
 for m=1:length(Ms)
     fprintf(['MONKEY: ' Ms{m} '\n']);
     for s=1:length(Ss)
