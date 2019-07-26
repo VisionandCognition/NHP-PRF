@@ -18,16 +18,16 @@ for i=1:2
     
     joblist.sessinc     = 1:size(joblist.sessions,1);
     joblist.type        = 'cv'; % used as label NB! also the folder where data is loaded from
-    joblist.hrf         = 'defaultHRF'; % 'HRF_monkey' / 'defaultHRF' / 'none'
-    joblist.modeltype   = 'dog_hrf'; 
+    joblist.hrf         = 'HRF_monkey'; % 'HRF_monkey' / 'defaultHRF' / 'none'
+    joblist.modeltype   = 'linear_hrf'; 
     % 'css_hrf' / 'linear_hrf' / 'dog_hrf'
     % 'css_ephys' / 'linear_ephys' / 'dog_ephys'
     
     joblist.xvalmode    = 1; % 0 / 1 / 2
-    joblist.resfld      = 'doghrf_cv1_dhrf';
+    joblist.resfld      = 'linhrf_cv1_mhrf_neggain';
     
     parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
-    parallel_fun        = 'pRF_FitModel_LISA_cv';
+    parallel_fun        = 'pRF_FitModel_LISA_cv_neggain';
     
     job_name            = ['FitPRF_' joblist.resfld];
     

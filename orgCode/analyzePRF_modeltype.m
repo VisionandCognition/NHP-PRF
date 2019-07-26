@@ -726,7 +726,6 @@ results.rfsize =   NaN*zeros(numvxs,numfits);
 results.R2 =       NaN*zeros(numvxs,numfits);
 results.gain =     NaN*zeros(numvxs,numfits);
 
-
 results.resnorms = cell(numvxs,1);
 results.numiters = cell(numvxs,1);
 
@@ -735,15 +734,23 @@ results.ang(options.vxs,:) =    permute(mod(atan2((1+res(1))/2 - paramsA(:,1,:),
     paramsA(:,2,:) - (1+res(2))/2),2*pi)/pi*180,[3 1 2]);
 results.ecc(options.vxs,:) =    permute(sqrt(((1+res(1))/2 - paramsA(:,1,:)).^2 + ...
     (paramsA(:,2,:) - (1+res(2))/2).^2),[3 1 2]);
+
 if strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
     results.expt(options.vxs,:) =   permute(posrect(paramsA(:,5,:)),[3 1 2]);
 elseif strcmp(modeltype,'dog_hrf') || strcmp(modeltype,'dog_ephys')
     results.sdratio(options.vxs,:) =   permute(posrect(paramsA(:,5,:)),[3 1 2]);
     results.normamp(options.vxs,:) =   permute(posrect(paramsA(:,6,:)),[3 1 2]);
 end
-results.rfsize(options.vxs,:) = permute(abs(paramsA(:,3,:)) ./ sqrt(posrect(paramsA(:,5,:))),[3 1 2]);
+
+if strcmp(modeltype,'css_hrf') || strcmp(modeltype,'css_ephys')
+    results.rfsize(options.vxs,:) = permute(abs(paramsA(:,3,:)) ./ sqrt(posrect(paramsA(:,5,:))),[3 1 2]);
+else
+    results.rfsize(options.vxs,:) = permute(abs(paramsA(:,3,:)),[3 1 2]);
+end
+
 results.R2(options.vxs,:) =     permute(rA,[2 1]);
 results.gain(options.vxs,:) =   permute(posrect(paramsA(:,4,:)),[3 1 2]);
+
 if ~wantquick
     results.resnorms(options.vxs) = a1.resnorms;
     results.numiters(options.vxs) = a1.numiters;
