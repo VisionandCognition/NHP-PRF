@@ -11,12 +11,12 @@ for i=1:2
     
     joblist.sessinc     = 1:size(joblist.sessions,1);
     joblist.type        = 'ephys'; % used as label NB! also the folder where data is loaded from
-    joblist.modeltype   = 'css_ephys'; 
+    joblist.modeltype   = 'linear_ephys'; 
     % 'css_hrf' / 'linear_hrf' / 'dog_hrf'
     % 'css_ephys' / 'linear_ephys' / 'dog_ephys'
     
     joblist.xvalmode    = 1; % 0 / 1 / 2
-    joblist.resfld      = 'ephys_cv1';
+    joblist.resfld      = 'linear_ephys_cv1';
     
     parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
     parallel_fun        = 'pRF_FitModel_LISA_ephys';
