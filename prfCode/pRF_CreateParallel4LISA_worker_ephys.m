@@ -150,7 +150,7 @@ for job_ind = 1:length(joblist.sessinc)
         fprintf(fid_single, '#!/bin/bash\n');
         % SLURM definitions
         fprintf(fid_single, '#SBATCH -N 1 --ntasks-per-node=16\n');
-        fprintf(fid_single, '#SBATCH -t 12:00:00\n');
+        fprintf(fid_single, '#SBATCH -t 06:00:00\n');
         fprintf(fid_single, '#SBATCH --mail-type=END\n');
         fprintf(fid_single, '#SBATCH --mail-user=p.c.klink@gmail.com\n');
         fprintf(fid_single, '\n');
