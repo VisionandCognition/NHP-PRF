@@ -1,6 +1,6 @@
 % CreateParallel Bash scripts for pRF fitting on LISA
 m={'danny','eddy'};
-for i=1:2
+for i=2
     M=m{i};
     if strcmp(M,'danny')
         joblist.monkey = 'danny';
@@ -18,16 +18,16 @@ for i=1:2
     
     joblist.sessinc     = 1:size(joblist.sessions,1);
     joblist.type        = 'cv'; % used as label NB! also the folder where data is loaded from
-    joblist.hrf         = 'HRF_monkey'; % 'HRF_monkey' / 'defaultHRF' / 'none'
-    joblist.modeltype   = 'linear_hrf'; 
+    joblist.hrf         = 'defaultHRF'; % 'HRF_monkey' / 'defaultHRF' / 'none'
+    joblist.modeltype   = 'css_hrf'; 
     % 'css_hrf' / 'linear_hrf' / 'dog_hrf'
     % 'css_ephys' / 'linear_ephys' / 'dog_ephys'
     
     joblist.xvalmode    = 1; % 0 / 1 / 2
-    joblist.resfld      = 'linhrf_cv1_mhrf_neggain';
+    joblist.resfld      = 'csshrf_cv1_dhrf';
     
     parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
-    parallel_fun        = 'pRF_FitModel_LISA_cv_neggain';
+    parallel_fun        = 'pRF_FitModel_LISA_cv';
     
     job_name            = ['FitPRF_' joblist.resfld];
     
