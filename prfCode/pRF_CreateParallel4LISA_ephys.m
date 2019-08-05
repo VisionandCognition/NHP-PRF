@@ -15,8 +15,8 @@ for i=1:2
     % 'css_hrf' / 'linear_hrf' / 'dog_hrf'
     % 'css_ephys' / 'linear_ephys' / 'dog_ephys'
     
-    joblist.xvalmode    = 0; % 0 / 1 / 2
-    joblist.resfld      = 'linear_ephys_cv0_neggain';
+    joblist.xvalmode    = 1; % 0 / 1 / 2
+    joblist.resfld      = 'linear_ephys_cv1_neggain';
     
     parallel_fun_dir    = '$TMPDIR/PRF/'; %$TMPDIR is fast 'scratch' space
     parallel_fun        = 'pRF_FitModel_LISA_ephys_neggain';
