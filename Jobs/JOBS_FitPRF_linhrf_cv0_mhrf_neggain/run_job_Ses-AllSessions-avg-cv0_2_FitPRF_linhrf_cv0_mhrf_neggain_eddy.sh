@@ -27,9 +27,9 @@ cd $TMPDIR/PRF
 chmod +x $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh
 
 $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh \
-	pRF_FitModel_LISA_cv0_neggain eddy AllSessions-avg-cv0 16:30 HRF_monkey [] \
-	linear_hrf 1 linhrf_cv0_mhrf_neggain /home/pcklink/PRF/Logs/ $TMPDIR/PRF/ \
-	 |& tee $TMPDIR/PRF/Logs/Log_eddy_AllSessions-avg-cv0_16:30_HRF_monkey_linear_hrf_xval1.txt
+	pRF_FitModel_LISA_cv_neggain eddy AllSessions-avg-cv0 16:30 HRF_monkey [] \
+	linear_hrf 0 linhrf_cv0_mhrf_neggain /home/pcklink/PRF/Logs/ $TMPDIR/PRF/ \
+	 |& tee $TMPDIR/PRF/Logs/Log_eddy_AllSessions-avg-cv0_16:30_HRF_monkey_linear_hrf_xval0.txt
 
-cp $TMPDIR/PRF/Logs/Log_eddy_AllSessions-avg-cv0_16:30_HRF_monkey_linear_hrf_xval1.txt $HOME/PRF/Logs/
+cp $TMPDIR/PRF/Logs/Log_eddy_AllSessions-avg-cv0_16:30_HRF_monkey_linear_hrf_xval0.txt $HOME/PRF/Logs/
 exit $?

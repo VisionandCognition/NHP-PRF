@@ -27,9 +27,9 @@ cd $TMPDIR/PRF
 chmod +x $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh
 
 $TMPDIR/PRF/BashScripts/pRF_run_analyzePRF_LISA_avg.sh \
-	pRF_FitModel_LISA_cv0 danny AllSessions-avg-cv0 15:28 defaultHRF [] \
-	lin_hrf 1 linhrf_cv0_dhrf /home/pcklink/PRF/Logs/ $TMPDIR/PRF/ \
-	 |& tee $TMPDIR/PRF/Logs/Log_danny_AllSessions-avg-cv0_15:28_defaultHRF_lin_hrf_xval1.txt
+	pRF_FitModel_LISA_cv danny AllSessions-avg-cv0 15:28 defaultHRF [] \
+	linear_hrf 0 linhrf_cv0_dhrf /home/pcklink/PRF/Logs/ $TMPDIR/PRF/ \
+	 |& tee $TMPDIR/PRF/Logs/Log_danny_AllSessions-avg-cv0_15:28_defaultHRF_linear_hrf_xval0.txt
 
-cp $TMPDIR/PRF/Logs/Log_danny_AllSessions-avg-cv0_15:28_defaultHRF_lin_hrf_xval1.txt $HOME/PRF/Logs/
+cp $TMPDIR/PRF/Logs/Log_danny_AllSessions-avg-cv0_15:28_defaultHRF_linear_hrf_xval0.txt $HOME/PRF/Logs/
 exit $?
