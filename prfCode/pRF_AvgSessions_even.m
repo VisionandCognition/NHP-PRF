@@ -78,7 +78,16 @@ for m=1:length(MONKEY)
     save('AllSessions-avg-even','stim','sess_meanBOLD','sess_meanBOLD_inv',...
         'sess_wmeanBOLD','sess_wmeanBOLD_inv','sess_medianBOLD','sess_medianBOLD_inv',...
         'sess_sdBOLD','sess_sdBOLD_inv');
+    
     cd(startfld);
     clear MB
     fprintf('\n\n');
+    
+    cd ..; cd Data;
+    fprint('Copying files (may take a while...\n');
+    [~,~,~] = mkdir(fullfile(pwd,'avg',MONKEY{m}));
+    [~,~,~] = copyfile(...
+        fullfile(pwd,['pRF_sub-' MONKEY{m} '_us-padded'],'AllSessions-avg-even.mat'),...
+        fullfile(pwd,'avg',MONKEY{m},'AllSessions-avg-even.mat'));
+    cd(startfld);
 end

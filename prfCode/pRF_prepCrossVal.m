@@ -21,5 +21,8 @@ stim.norm = {R(1).stim.norm, R(2).stim.norm};
 stim.inv = {R(1).stim.inv, R(2).stim.inv};
 
 clear R;
+
+cd(startfld)
+[~,~,~] = mkdir(fullfile(pwd,'cv',MONKEY{m}));
 save('AllSessions-avg-cv.mat');
 cd(startfld)
