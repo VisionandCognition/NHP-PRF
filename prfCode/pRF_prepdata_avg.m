@@ -106,7 +106,7 @@ else
     out_folder = fullfile('..','Data',['pRF_sub-' MONKEY '-padded']); %#ok<*UNRCH>
 end
 warning off %#ok<*WNOFF>
-mkdir(out_folder);
+[~,~,~] = mkdir(out_folder);
 warning on %#ok<*WNON>
 
 %% GET THE FILE-PATHS OF THE IMAGING  & STIM-MASK FILES ===================
