@@ -1,6 +1,11 @@
+function pRF_AvgSessions_even(MONKEY)
+
+if nargin < 1
+    MONKEY={'danny','eddy'};
+end
+
 %% Merge median BOLD signals
-clear all; clc;
-MONKEY={'danny','eddy'};
+clc;
 startfld=pwd;
 for m=1:length(MONKEY)
     fprintf(['==== Processing monkey: ' MONKEY{m} ' ====\n']);

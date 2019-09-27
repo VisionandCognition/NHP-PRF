@@ -74,8 +74,7 @@ Is436 = false;
 %% INITIALIZE =============================================================
 % Platform specific basepath
 if ispc
-    tool_basepath = 'D:\CK\code\MATLAB';
-    BIDS_basepath = '\\vs02\NHP_MRI\VandC\NHP_MRI\NHP-BIDS';
+    tool_basepath = 'D:\CK\TOOLBOX\';
     BIDS_basepath = '\\vs02\VandC\NHP_MRI\NHP-BIDS';
 else
     tool_basepath = '~/Dropbox/MATLAB_NONGIT/TOOLBOX';
@@ -88,18 +87,10 @@ addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
 addpath(genpath(fullfile(tool_basepath, 'analyzePRF')));
 
 % Link to the brain mask
-if strcmp(MONKEY, 'danny')
-    BrainMask_file = fullfile(BIDS_basepath, 'manual-masks','final',...
-        'sub-danny','ses-20180117','func','T1_to_func_brainmask_zcrop.nii');
-elseif strcmp(MONKEY, 'eddy')
-    BrainMask_file = fullfile(BIDS_basepath, 'manual-masks','final','sub-eddy',...
-        'ses-20170607b','anat','HiRes_to_T1_mean.nii_shadowreg_Eddy_brainmask.nii');
-else
-    error('Unknown monkey name or no mask available')
-end
+BrainMask_file = fullfile(BIDS_basepath, 'manual-masks',...
+    ['sub-' MONKEY],'func',['sub-' MONKEY '_ref_func_mask_res-1x1x1.nii');
 
 % create a folder to save outputs in
-
 if doUpsample
     out_folder = fullfile('..','Data',['pRF_sub-' MONKEY '_us-padded']);
 else
