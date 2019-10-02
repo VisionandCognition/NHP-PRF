@@ -1,0 +1,4 @@
+Register to unwarped anatomy
+Warp results to NMT (volume and surfaces)
+Plot results on surface
+    - Individual & NMT
