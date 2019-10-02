@@ -1,4 +1,4 @@
-# NHP-analyzePRF
+# NHP-PRF
 
 This repository was build around an adjusted version of the analyzePRF-toolbox for the analysis
 of population receptive fields. It was expanded and adjusted for use with NHP data (c.klink@nin.knaw.nl). 
