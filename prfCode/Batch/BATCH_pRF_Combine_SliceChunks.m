@@ -1,3 +1,5 @@
+addpath(genpath('../../prfCode'));
+
 Ms={'danny','eddy'};
 Ss={'csshrf_cv1_dhrf',...
     'csshrf_cv1_mhrf',...
@@ -13,3 +15,5 @@ for m=2%1:length(Ms)
         %pRF_Combine_SliceChunks_cv0(Ms{m},Ss{s});
     end
 end
+
+rmpath(genpath('../../prfCode'));

@@ -10,6 +10,11 @@ cv = 0;
 %% These are fixed for this configuration ===
 TR=2.5; doUpsample=true;
 mlroot = pwd; 
+cd ..; 
+mask_path = fullfile(pwd,'Data','LISA_Data','mask');
+refhdr_path = fullfile(pwd,'Data','LISA_Data','refhdr');
+
+cd LocalTest
 
 %% Prep & Load ============================================================
 
@@ -23,10 +28,10 @@ disp(['Starting script for job ' Monkey ', ' Session ', Slices ' Slices])
 
 % Link to the brain mask
 if strcmp(Monkey, 'danny')
-    BrainMask_file = fullfile(mlroot,'LISA','PRF','Data','mask', ...
+    BrainMask_file = fullfile(mask_path, ...
        Monkey, 'T1_to_func_brainmask_zcrop.nii');
 elseif strcmp(Monkey, 'eddy')
-    BrainMask_file = fullfile(mlroot,'LISA','PRF','Data','mask', ...
+    BrainMask_file = fullfile(mask_path', ...
         Monkey, 'HiRes_to_T1_mean.nii_shadowreg_Eddy_brainmask.nii');
 end
 
@@ -43,7 +48,7 @@ fprintf(['Saving results in: ' result_folder]);
 % limitations. Set numWorkers at the start of this function.
 % Modeling everything together may be overkill (size wise).
 
-addpath(genpath('./LISA/PRF/Code'));
+addpath(genpath('~/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/LISA/PRF/Code'));
 
 % get the brain mask ----
 fprintf('\nUnpacking BrainMask');
@@ -55,10 +60,10 @@ fprintf(['=== Fitting pRF model for ses-' Session ' ===\n']);
 % load data -----
 fprintf('Loading data...\n');
 
-dataroot = '~/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/Data';
+dataroot = '~/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/Data/MRI';
 if cv == 0
     %load(fullfile(dataroot,'cv0',Monkey,Session)); 
-    load(fullfile(dataroot,'Avg-Data','Danny','AllSessions-only_avg')); 
+    load(fullfile(dataroot,'avg','danny','AllSessions-only_avg')); 
 else
     load(fullfile(dataroot,'cv',Monkey,Session)); 
 end
@@ -135,7 +140,7 @@ options.vxs = find(mask_nii.img(:,:,slices)>0);
 options.display = 'final';
 
 if strcmp(HRF,'HRF_monkey')
-    load(fullfile(mlroot,'LISA','PRF','Code','HRF',HRF),'customHRF_rs','customHRF_rsus');
+    load(fullfile('..','..','HRF',HRF),'customHRF_rs','customHRF_rsus');
     if doUpsample 
         options.hrf = customHRF_rsus;
     else
@@ -169,7 +174,7 @@ else
 end
 
 %%
-load(fullfile(mlroot,'LISA','PRF','Data','refhdr',[Monkey '_refhdr']));
+load(fullfile(refhdr_path,[Monkey '_refhdr']));
 result.hdr_ref = ref_hdr;
 
 % save the result ----

@@ -9,7 +9,7 @@ clc;
 startfld=pwd;
 for m=2%1:length(MONKEY)
     fprintf(['==== Processing monkey: ' MONKEY{m} ' ====\n']);
-    cd ..; cd Data;
+    cd ..; cd Data; cd MRI;
     cd(['pRF_sub-' MONKEY{m} '_us-padded']);
     fls = dir('medianBOLD*');
     

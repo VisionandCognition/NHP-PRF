@@ -25,8 +25,10 @@ sess={...
 
 %%
 startfld=pwd;
-cd ..; cd Data;
-cd(['pRF_sub-' monkey '_us-avg']);
+
+cd ..; cd Data;cd MRI;cd avg;cd(monkey);
+%cd(['pRF_sub-' monkey '_us-avg']);
+
 medBOLD=[];
 medBOLD_inv=[];
 for s=1:length(sess)

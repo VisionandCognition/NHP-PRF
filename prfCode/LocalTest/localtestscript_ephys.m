@@ -39,12 +39,12 @@ for Instance = 1:4
     %   ['Instance_' InstanceLabel]);
     
     if ~exist(result_folder,'dir')
-        mkdir(result_folder);
+        [~,~,~]=mkdir(result_folder);
     end
     fprintf(['Saving results in: ' result_folder '\n']);
     
     %% MODEL PRFs /SESSION ================================================
-    addpath(genpath('./LISA/PRF/Code'));
+    addpath(genpath('~/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/LISA/PRF/Code'));
     
     fprintf(['=== Fitting pRF model for ses-' Session ' ===\n']);
     fprintf('Loading data...\n');
@@ -52,7 +52,7 @@ for Instance = 1:4
     if ispc
         datafld = ['\\vs02\VandC\NHP_MRI\Projects\pRF\Data\ephys\' Monkey];
     else
-        datafld = ['~/Documents/MRI_ANALYSIS/NHP-pRF/LISA/PRF/Data/ephys/' Monkey];
+        datafld = ['~/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/LISA/PRF/Data/ephys/' Monkey];
     end
     
     % load the stimulus

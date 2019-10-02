@@ -1,3 +1,5 @@
+addpath(genpath('../../FitResults/Ephys'));
+
 load('pRF_estimates_all')
 
 rth=0.7;
@@ -68,3 +70,5 @@ for m = 1:2
         end
     end
 end
+
+rmpath(genpath('../../FitResults/Ephys'));

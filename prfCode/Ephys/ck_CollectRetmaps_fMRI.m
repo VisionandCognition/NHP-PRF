@@ -5,7 +5,7 @@ tool_basepath = '~/Dropbox/MATLAB_NONGIT/TOOLBOX';
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
 
 %% Load fMRI files
-MRI_path = '/Users/chris/Dropbox/CURRENT_PROJECTS/PRF/fMRI_ePhys/Data/fmri';
+MRI_path = '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP-MRI/Projects/pRF/Results/MRI';
 
 Monkey={'Danny','Eddy'};
 for m=1:2

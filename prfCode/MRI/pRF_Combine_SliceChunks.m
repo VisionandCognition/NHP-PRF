@@ -6,7 +6,7 @@ tool_basepath = '/Users/chris/Dropbox/MATLAB_NONGIT/TOOLBOX';
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
 
 homefld = pwd;
-ResFld =  ['~/Documents/MRI_ANALYSIS/NHP-pRF/Results/avg/' Monkey '/' Session];
+ResFld =  ['~/Documents/MRI_ANALYSIS/NHP-PRF/FitResults/org/' Monkey '/' Session];
 cd(ResFld);
 fld = dir('Slices_*');
 for s=1:length(fld)

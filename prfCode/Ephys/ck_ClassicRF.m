@@ -3,6 +3,8 @@ add_classicRF = true; % don't have to do this every time. Once suffices.
 
 MONKEY={'Lick','Aston'};
 data_fld=pwd;
+data_fld=fullfile('..','..','FitResults','Ephys');
+
 inst=1:8;
 
 load('pRF_estimates_ephys')
@@ -11,8 +13,8 @@ if add_classicRF
     for m=1:length(MONKEY)
         for a=inst
             fprintf(['Loading ' MONKEY{m} ', inst' num2str(a) '\n']);
-            M(m).inst(a) = load(fullfile(data_fld,...
-                ['classicRF' MONKEY{m}],['RFs_instance' num2str(a)]),...
+            M(m).inst(a) = load(fullfile(data_fld,MONKEY{m},...
+                'classicRF',['RFs_instance' num2str(a)]),...
                 'RFs','channelRFs','meanChannelSNR');
         end
     end

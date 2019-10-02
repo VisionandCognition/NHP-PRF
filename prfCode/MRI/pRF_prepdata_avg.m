@@ -79,7 +79,7 @@ if ispc
 else
     tool_basepath = '~/Dropbox/MATLAB_NONGIT/TOOLBOX';
     BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
-    addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/NHP-analyzePRF'));
+    addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/NHP-PRF'));
 end
 % Add nifti reading toolbox
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
@@ -88,13 +88,13 @@ addpath(genpath(fullfile(tool_basepath, 'analyzePRF')));
 
 % Link to the brain mask
 BrainMask_file = fullfile(BIDS_basepath, 'manual-masks',...
-    ['sub-' MONKEY],'func',['sub-' MONKEY '_ref_func_mask_res-1x1x1.nii');
+    ['sub-' MONKEY],'func',['sub-' MONKEY '_ref_func_mask_res-1x1x1.nii']);
 
 % create a folder to save outputs in
 if doUpsample
-    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY '_us-padded']);
+    out_folder = fullfile('..','Data','MRI',['pRF_sub-' MONKEY '_us-padded']);
 else
-    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY '-padded']); %#ok<*UNRCH>
+    out_folder = fullfile('..','Data','MRI',['pRF_sub-' MONKEY '-padded']); %#ok<*UNRCH>
 end
 warning off %#ok<*WNOFF>
 [~,~,~] = mkdir(out_folder);

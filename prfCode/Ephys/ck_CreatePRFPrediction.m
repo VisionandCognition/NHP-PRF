@@ -23,7 +23,7 @@ if ismac % laptop & portable HDD
 elseif ispc
     data_path = '\\vcnin\PRF_EPHYS';
 else % 
-    data_path = '/media/NETDISKS/VCNIN/PRF_EPHYS';
+    data_path = '/media/NETDISKS/VS02/VandC/PRF_EPHYS';
 end
 raw_fld = fullfile(data_path,'Data_raw');
 pp_fld = fullfile(data_path,'Data_preproc');

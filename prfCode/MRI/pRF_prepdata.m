@@ -75,7 +75,7 @@ if ispc
 else
     tool_basepath = '~/Dropbox/MATLAB_NONGIT/TOOLBOX';
     BIDS_basepath = '/NHP_MRI/NHP-BIDS/';
-    addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/NHP-analyzePRF'));
+    addpath(genpath('/media/DOCUMENTS/DOCUMENTS/MRI_ANALYSIS/NHP-PRF'));
 end
 % Add nifti reading toolbox
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
@@ -83,21 +83,14 @@ addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
 addpath(genpath(fullfile(tool_basepath, 'analyzePRF')));
 
 % Link to the brain mask
-if strcmp(MONKEY, 'danny')
-    BrainMask_file = fullfile(BIDS_basepath, 'manual-masks','sub-danny',...
-        'ses-20180117','func','T1_to_func_brainmask_zcrop.nii');
-elseif strcmp(MONKEY, 'eddy')
-    BrainMask_file = fullfile(BIDS_basepath, 'manual-masks','sub-eddy',...
-        'ses-20170607b','anat','HiRes_to_T1_mean.nii_shadowreg_Eddy_brainmask.nii');
-else
-    error('Unknown monkey name or no mask available')
-end
+BrainMask_file = fullfile(BIDS_basepath, 'manual-masks',...
+    ['sub-' MONKEY],'func',['sub-' MONKEY '_ref_func_mask_res-1x1x1.nii']);
 
 % create a folder to save outputs in
 if doUpsample
-    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY '_us']);
+    out_folder = fullfile('..','Data','MRI',['pRF_sub-' MONKEY '_us']);
 else
-    out_folder = fullfile('..','Data',['pRF_sub-' MONKEY]); %#ok<*UNRCH>
+    out_folder = fullfile('..','Data','MRI',['pRF_sub-' MONKEY]); %#ok<*UNRCH>
 end
 warning off %#ok<*WNOFF>
 mkdir(out_folder);

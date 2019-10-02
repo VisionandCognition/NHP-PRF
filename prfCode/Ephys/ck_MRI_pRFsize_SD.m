@@ -1,7 +1,7 @@
 tool_basepath = '~/Dropbox/MATLAB_NONGIT/TOOLBOX';
 addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
 
-s='/Users/chris/Documents/MRI_ANALYSIS/pRF-NHP/Results';
+s='/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/FitResults/MRI/org';
 
 m='danny';
 f={'20171116','20171129_1','20171129_2','20171207','20171214','20171214_1',...

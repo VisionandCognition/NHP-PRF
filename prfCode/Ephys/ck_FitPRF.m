@@ -26,7 +26,7 @@ if ismac % laptop & portable HDD
     home_path = '/Users/chris';
     ncores = 4; % parallel on how many cores?
 elseif isunix %
-    data_path = '/media/NETDISKS/VCNIN/PRF_EPHYS';
+    data_path = '/media/NETDISKS/VS02/VandC/PRF_EPHYS';
     home_path = '/home/chris';
     ncores = 6; % do this thing in parallel on how many cores?
 else % windows >> running on server

@@ -1,5 +1,6 @@
 %% ck_Run
 % use this file to run subfunctions
+addpath(genpath('../../prfCode'));
 
 %% SETTINGS ###############################################################
 subj = 'Aston'; % Lick / Aston
@@ -54,3 +55,5 @@ end
 if Do.PlotPRF_LFP
     ck_PlotPRF_LFP(subj,sess)
 end
+
+rmpath(genpath('../../prfCode'));

@@ -3,7 +3,9 @@ function pRF_prepCrossVal(monkey)
 clc;
 startfld=pwd;
 fprintf(['Prepping crossvalidation data input for ' monkey '\n']);
-cd ..; cd Data; cd avg; cd(monkey);
+
+cd ..; cd Data; cd MRI; cd avg; cd(monkey);
+
 R = load('AllSessions-avg-odd.mat');
 R(2) = load('AllSessions-avg-even.mat');
 
@@ -23,6 +25,6 @@ stim.inv = {R(1).stim.inv, R(2).stim.inv};
 clear R;
 
 cd(startfld)
-[~,~,~] = mkdir(fullfile(pwd,'cv',MONKEY{m}));
+[~,~,~] = mkdir(fullfile('..','.Data','MRI','cv',MONKEY{m}));
 save('AllSessions-avg-cv.mat');
 cd(startfld)

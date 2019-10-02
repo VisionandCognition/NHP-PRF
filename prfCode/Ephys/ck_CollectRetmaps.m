@@ -12,7 +12,7 @@ if ismac % laptop & portable HDD
     data_path = '/Volumes/MRI_2/PRF_EPHYS';
     home_path = '/Users/chris';
 else %
-    data_path = '/media/NETDISKS/VCNIN/PRF_EPHYS';
+    data_path = '/media/NETDISKS/VS02/VandC/PRF_EPHYS';
     home_path = '/home/chris';
 end
 data_fld = fullfile(data_path,'Data_proc');

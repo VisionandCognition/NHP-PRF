@@ -1,3 +1,5 @@
+addpath(genpath('../../FitResults/MultiModal'));
+
 load pRF_estimates_MRI_inFunc
 load pRF_estimates_ephys
 %%
@@ -287,6 +289,7 @@ plot(x,y)
 y=polyval(poly_LFPg2_V4,x);
 plot(x,y)
 
+rmpath(genpath('../../FitResults/MultiModal'));
 
 
 

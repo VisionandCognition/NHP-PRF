@@ -1,5 +1,7 @@
 warning off;clear all; clc;
 
+addpath(genpath('../../prfCode'));
+
 fprintf('=================================================\n');
 fprintf('Padding & upsampling for Danny \n');
 fprintf('=================================================\n');
@@ -13,3 +15,5 @@ fprintf('=================================================\n')
 pRF_prepdata_avg('pRF_PrepDatalist_Eddy',1)
 
 fprintf('== ALL DONE! ==\n')
+
+rmpath(genpath('../../prfCode'));

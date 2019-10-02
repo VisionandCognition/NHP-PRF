@@ -1,4 +1,5 @@
 %%
+addpath(genpath('../../FitResults/Multimodal'));
 load pRF_estimates_MRI_inFunc
 
 %%
@@ -237,3 +238,5 @@ for a=1:13
 end
 figure(f2);
 legend(ROImap)
+
+rmpath(genpath('../../FitResults/Multimodal'));
