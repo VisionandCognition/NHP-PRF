@@ -1,15 +1,24 @@
 # NHP-analyzePRF
 
-This repository uses an adjusted version of the analyzePRF toolbox for the analysis
-of NHP data (c.klink@nin.knaw.nl). The original toolbox is extended to allow fitting a range of pRF models:   
+This repository was build around an adjusted version of the analyzePRF-toolbox for the analysis
+of population receptive fields. It was expanded and adjusted for use with NHP data (c.klink@nin.knaw.nl). 
+
+The original toolbox is extended to allow fitting a range of pRF models:   
 
 - The Compressive Spatial Summation model (Kay, Winawer, Mezer & Wandell, 2013)
-- The 'classic' linear model (Dumoulin & Wandell, 2008)
+- The 'classic' linear model (Dumoulin & Wandell, 2008) with or without allowing negative gains.
 - The difference of gaussians model (Zuiderbaan, Harvey & Dumoulin, 2012)   
 
-In addition, there's an option to use the toolbox for ephys data (no HRF convolution).
+There's an option to use the toolbox for ephys data (without HRF convolution).
+
+Finally, there's code to perform the fitting procedures on the SurfSara LISA cluster and to further process the fit-results (compare models and modalities).
+
+
+
 
 Documentation below is from the original toolbox.
+
+**=================================================================================**
 
 analyzePRF is a MATLAB toolbox for fitting population receptive field (pRF) models
 to fMRI data.  It is developed by Kendrick Kay (kendrick@post.harvard.edu).
