@@ -2,6 +2,10 @@
 *.m~
 *untitled*~
 
-# folders
+# folders & symlinks
 Data
-Results
+FitResults
+prfCode/Data/Ephys
+prfCode/Data/MRI
+prfCode/Data/LISA_Data
+
