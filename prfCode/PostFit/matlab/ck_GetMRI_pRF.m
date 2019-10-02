@@ -6,7 +6,7 @@ addpath(genpath(fullfile(tool_basepath, 'NIfTI')));
 
 %% Set fMRI paths =========================================================
 base_path = ...
-    '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP-MRI/Projects/pRF/Results';
+    '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP-MRI/Projects/pRF/FitResults';
 roi_path = ...
      '/Users/chris/Dropbox/CURRENT_PROJECTS/PRF/fMRI_ePhys/Data/fmri/NonReg/ROI';
 

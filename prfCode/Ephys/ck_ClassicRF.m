@@ -3,7 +3,7 @@ add_classicRF = true; % don't have to do this every time. Once suffices.
 
 MONKEY={'Lick','Aston'};
 data_fld=pwd;
-data_fld=fullfile('..','..','FitResults','Ephys');
+data_fld=fullfile('..','..','FitResults','ephys');
 
 inst=1:8;
 

@@ -11,8 +11,8 @@ RTH=$3
 # /debugging ==================
 
 startpath=$(pwd)
-cd ./Results/$MONKEY/$sess
-brainmask=../../Reference/${MONKEY}/input_files/Func/brainmask.nii.gz
+cd ../../../../FitResults/MRI/$MONKEY/$sess
+brainmask=../../../Reference/${MONKEY}/input_files/Func/brainmask.nii.gz
 
 echo "Masking results for" $MONKEY $sess "at R2 value of" $RTH
 
