@@ -8,7 +8,7 @@ Ss={'csshrf_cv1_dhrf',...
     'linhrf_cv1_mhrf_neggain','linhrf_cv1_dhrf_neggain'...
     };
 
-for m=2%1:length(Ms)
+for m=1:length(Ms)
     fprintf(['MONKEY: ' Ms{m} '\n']);
     for s=1:length(Ss)
         pRF_Combine_SliceChunks_cv(Ms{m},Ss{s});

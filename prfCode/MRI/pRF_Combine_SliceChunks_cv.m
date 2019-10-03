@@ -65,7 +65,7 @@ if isfield(result,'sdratio')
     end
 else
     for cv = 1:size(result.rfsize,4)
-        result.fwhm = result.rfsize(:,:,:,cv).*(2*sqrt(2*log(2)));
+        result.fwhm(:,:,:,cv) = result.rfsize(:,:,:,cv).*(2*sqrt(2*log(2)));
     end
 end
 
@@ -182,7 +182,7 @@ for cv=1:2
     else    
         % fwhm
         fprintf('FWHM, ');
-        nii = make_nii(result.fwhm,[1 1 1],[],16,...
+        nii = make_nii(result.fwhm(:,:,:,cv),[1 1 1],[],16,...
             'pRF fit: FWHM (pix)');
         nii.hdr.hist = result.hdr_ref.hist;
         nii.hdr.dime.datatype = 64; nii.hdr.dime.bitpix = 64;

@@ -1,28 +1,23 @@
-%{
-eddy
-danny
+%% MRI ====================================================================
+monkeys = {'eddy','danny'};
 
-linhrf_cv1_mhrf_neggain
-linhrf_cv1_mhrf
-linhrf_cv1_dhrf_neggain
-linhrf_cv1_dhrf
-doghrf_cv1_mhrf
-doghrf_cv1_dhrf
-csshrf_cv1_mhrf
-csshrf_cv1_dhrf
-%}
+models = {...
+    'linhrf_cv1_dhrf','linhrf_cv1_mhrf',...
+    'linhrf_cv1_dhrf_neggain','linhrf_cv1_mhrf_neggain',...
+    'doghrf_cv1_dhrf','doghrf_cv1_mhrf',...
+    'csshrf_cv1_dhrf','csshrf_cv1_mhrf'};
+
+ck_GetMRI_pRF(monkeys,models);
 
 
-ck_GetEphys_pRF(monkey,model);
+%% EPHYS ==================================================================
+monkeys = {'lick','aston'};
 
-%{
-lick
-aston
+models = {...
+    'linear_ephys_cv1',...
+    'linear_ephys_cv1_neggain',...
+    'dog_ephys_cv1',...
+    'css_ephys_cv1',...
+    'classicRF'};
 
-linear_ephys_cv1_neggain
-linear_ephys_cv1
-dog_ephys_cv1
-css_ephys_cv1
-%}
-
-ck_GetMRI_pRF(monkey,model);
+ck_GetEphys_pRF(monkeys,models);

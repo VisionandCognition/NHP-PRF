@@ -1,13 +1,21 @@
-function ck_GetEphys_pRF(monkey,model);
+function ck_GetEphys_pRF(monkeys,models)
 
-DATA = {...
-    'Lick' , '20180807_B2';...
-    'Aston', '20181004_B1'};
+if nargin < 2
+    fprintf('ERROR: Not enough arguments specified\n');
+    return
+end
 
-%% Collect EPHYS ==========================================================
-fprintf('Collecting ephys retinotopic maps...\n');
 
 %% data location ==========================================================
+fitres_path = ...
+    '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/FitResults/ephys';
+chanmap_path = ...
+    '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/Data/ephys';
+
+
+
+
+
 base_path = pwd;
 if ismac % laptop & portable HDD
     data_path = '/Volumes/MRI_2/PRF_EPHYS';
@@ -18,6 +26,13 @@ else %
 end
 data_fld = fullfile(data_path,'Data_proc');
 start_fld=pwd;
+
+
+%% Collect EPHYS ==========================================================
+fprintf('Collecting ephys retinotopic maps...\n');
+
+
+
 
 %% get the data and info ==================================================
 for m = 1:size(DATA,1)
