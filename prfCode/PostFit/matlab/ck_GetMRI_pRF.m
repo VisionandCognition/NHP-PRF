@@ -22,15 +22,17 @@ fprintf('Collecting MRI retinotopic maps...\n');
 for m = 1:length(monkeys)
     fprintf(['Processing monkey: ' monkeys{m} '\n']);
     cMonkey = monkeys{m}; cMonkey(1)=upper(cMonkey(1));
+    
+    R(m).monkey = monkeys{m};
+    R(m).mode = 'MRI';
+    
     for mm = 1:length(models)
         fprintf(['Model: ' models{mm} '\n']);
         
         RES = load(fullfile(fitres_path,monkeys{m},models{mm},...
             ['pRF_Sess-' models{mm}]),'result');
         
-        R(m).monkey = monkeys{m};
         R(m).model(mm).prfmodel = models{mm};
-        R(m).model(mm).mode = 'MRI';
         R(m).model(mm).hrf = RES.result.options.hrf;
         R(m).model(mm).voldim = size(RES.result.R2,4);
                 
@@ -83,6 +85,6 @@ for m = 1:length(monkeys)
 end
 
 %% Save the combined results ==============================================
-fprintf('Saving the combined ephys result-file\n');
+fprintf('Saving the combined MRI result-file\n');
 [~,~,~] = mkdir(fullfile(fitres_path,'Combined'));
-save(fullfile(fitres_path,'Combined','AllFits_MRI'),'R')
+save(fullfile(fitres_path,'Combined','AllFits_MRI_cv1'),'R')
