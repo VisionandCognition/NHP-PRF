@@ -17,11 +17,23 @@ rfs
 ang
 ecc
 fwhm
+
 imag
 real
+
+X
+Y
+
 maxR2
 meanR2
 
+
+
+
+% if present
+expt % css
+normamp %
+sd2 % (or sdratio)
 
 
 Sess-linhrf_cv1_dhrf_rfsize_2.nii.gz
