@@ -15,7 +15,8 @@ fitres_path = ...
     '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/FitResults/MRI';
 roi_path = ...
     '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/Results/MRI';
-
+bids_path = ...
+    '/Users/chris/Documents/MRI_ANALYSIS/NHP-BIDS/manual-masks';
 %% collect the fit results ================================================
 fprintf('Collecting MRI retinotopic maps...\n');
 
@@ -74,6 +75,10 @@ for m = 1:length(monkeys)
     ROIs = {'V1', 'V2_merged','V3_merged','V3A','V4_merged','VIP','5_merged',...
         '7_merged','LIP_merged','MST','MT','TEO','TPO',...
         [cMonkey '_LH_V1_electrodes'],[cMonkey '_LH_V4_electrodes']};
+    
+    BRAINMASK = load_nii(fullfile(bids_path,['sub-' monkeys{m}],'func',...
+            ['sub-' monkeys{m} '_ref_func_mask_res-1x1x1.nii']));
+    R(m).BRAIN = reshape(BRAINMASK.img, [numel(BRAINMASK.img),1]);
     
     for r=1:length(ROIs)
         fprintf([ROIs{r} '\n']);
