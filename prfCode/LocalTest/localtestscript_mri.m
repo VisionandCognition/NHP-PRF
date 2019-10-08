@@ -1,16 +1,20 @@
 clear all; clc; %#ok<*CLALL>
+
 Monkey = 'danny';
-Session = 'AllSessions-avg-cv0';
+Session = 'AllSessions-avg-cv';
 Slices = 30;
 HRF = 'HRF_monkey';
-numWorkers = 2;
-modeltype = 'dog_hrf';
-cv = 0;
+numWorkers = 4;
+modeltype = 'linear_hrf';
+cv = 1;
 
 %% These are fixed for this configuration ===
 TR=2.5; doUpsample=true;
 mlroot = pwd; 
 cd ..; 
+
+
+
 mask_path = fullfile(pwd,'Data','LISA_Data','mask');
 refhdr_path = fullfile(pwd,'Data','LISA_Data','refhdr');
 

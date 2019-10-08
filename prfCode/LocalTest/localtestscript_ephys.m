@@ -4,11 +4,14 @@ Monkey = 'lick'; %#ok<*UNRCH>
 MONKEY = Monkey; MONKEY(1)=upper(MONKEY(1));
 Session = 'mua';
 Instance = 1;
-numWorkers = 2;
+numWorkers = 4;
 modeltype = 'linear_ephys';
-cv = 1;
-resfld = 'linear_ephys_test';
+cv = 0;
+resfld = 'linear_ephys_cv0_test';
 AllowNegGain = true;
+TypicalGain = 10;
+MaxIter = 100;
+SignalGain=100;
 
 %fprintf('RUNNING IN DEBUG MODE! CHANGE THIS FLAG FOR PRODUCTION!\n');
 %%
@@ -89,9 +92,9 @@ for Instance = 1%:8
         
         if cv == 0
             ephys_data{1} = [];
-            for ch=1:128
+            for ch=1:10%128
                 ephys_data{1}=cat(1,ephys_data{1},...
-                    RESP.mMUA(ch).bar - RESP.mMUA(ch).BL);
+                    (RESP.mMUA(ch).bar - RESP.mMUA(ch).BL).*SignalGain);
             end
             stimulus{1}=[];
             for imgnr=1:length(STIM.img)
@@ -102,11 +105,11 @@ for Instance = 1%:8
             end
         elseif cv == 1
             ephys_data{1}=[];ephys_data{2}=[];
-            for ch=1%:128
+            for ch=1:10%128
                 ephys_data{1}=cat(1,ephys_data{1},...
-                    RESP.mMUA_odd(ch).bar - RESP.mMUA_odd(ch).BL);
+                    (RESP.mMUA_odd(ch).bar - RESP.mMUA_odd(ch).BL)*SignalGain);
                 ephys_data{2}=cat(1,ephys_data{2},...
-                    RESP.mMUA_even(ch).bar - RESP.mMUA_even(ch).BL);
+                    (RESP.mMUA_even(ch).bar - RESP.mMUA_even(ch).BL)*SignalGain);
             end
             stimulus{1}=[];stimulus{2}=[];
             for imgnr=1:length(STIM.img)
@@ -129,8 +132,11 @@ for Instance = 1%:8
         options.wantglmdenoise = 0;
         
         % set typicalgain to a lower value
-        options.typicalgain = 10;
+        options.typicalgain = TypicalGain;
         
+        % maximum number of fitting iterations
+        options.maxiter = MaxIter;
+            
         % allow negative gain factors
         options.allowneggain = false;
         
@@ -228,7 +234,10 @@ for Instance = 1%:8
             options.wantglmdenoise = 0;
             
             % set typicalgain to a lower value
-            %options.typicalgain = 10;
+            options.typicalgain = TypicalGain;
+            
+            % maximum number of fitting iterations
+            options.maxiter = MaxIter;
             
             % allow negative gain factors
             options.allowneggain = AllowNegGain;
@@ -261,3 +270,10 @@ for Instance = 1%:8
     end
     delete(gcp('nocreate'));
 end
+
+%% print some results
+fprintf(['Angles: ' num2str(result.ang(1)) ' ' num2str(result.ang(2)) '\n'])
+fprintf(['Ecc: ' num2str(result.ecc(1)) ' ' num2str(result.ecc(2)) '\n'])
+fprintf(['R2: ' num2str(result.R2(1)) ' ' num2str(result.R2(2)) '\n'])
+fprintf(['Sz: ' num2str(result.rfsize(1)) ' ' num2str(result.rfsize(2)) '\n'])
+fprintf(['Gain: ' num2str(result.gain(1)) ' ' num2str(result.gain(2)) '\n'])
