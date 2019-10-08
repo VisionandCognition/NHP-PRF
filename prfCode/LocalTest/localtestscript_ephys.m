@@ -2,17 +2,17 @@ clear all; clc; %#ok<*CLALL>
 
 Monkey = 'lick'; %#ok<*UNRCH>
 MONKEY = Monkey; MONKEY(1)=upper(MONKEY(1));
-Session = 'lfp';
+Session = 'mua';
 Instance = 1;
-numWorkers = 4;
+numWorkers = 2;
 modeltype = 'linear_ephys';
 cv = 1;
-resfld = 'linear_ephys_cv1_neggain';
+resfld = 'linear_ephys_test';
 AllowNegGain = true;
 
 %fprintf('RUNNING IN DEBUG MODE! CHANGE THIS FLAG FOR PRODUCTION!\n');
-
-for Instance = 1:4
+%%
+for Instance = 1%:8
     %% These are fixed for this configuration =================================
     TR=0.5;
     mlroot = pwd; % this is $TMPDIR/PRF when running it on LISA (fast disks)
@@ -95,11 +95,14 @@ for Instance = 1:4
             end
             stimulus{1}=[];
             for imgnr=1:length(STIM.img)
-                stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
+                % RESAMPLE STIMULUS >> 295 x 295 means 10px = 1 deg
+                rsIMG = imresize(STIM.img{imgnr} ,[295 295]);
+                stimulus{1}=cat(3,stimulus{1},rsIMG);
+                %stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
             end
         elseif cv == 1
             ephys_data{1}=[];ephys_data{2}=[];
-            for ch=1:128
+            for ch=1%:128
                 ephys_data{1}=cat(1,ephys_data{1},...
                     RESP.mMUA_odd(ch).bar - RESP.mMUA_odd(ch).BL);
                 ephys_data{2}=cat(1,ephys_data{2},...
@@ -107,7 +110,10 @@ for Instance = 1:4
             end
             stimulus{1}=[];stimulus{2}=[];
             for imgnr=1:length(STIM.img)
-                stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
+                % RESAMPLE STIMULUS >> 295 x 295 means 10px = 1 deg
+                rsIMG = imresize(STIM.img{imgnr} ,[295 295]);
+                stimulus{1}=cat(3,stimulus{1},rsIMG);
+                %stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
                 stimulus{2}=stimulus{1};
             end
         end
@@ -123,7 +129,7 @@ for Instance = 1:4
         options.wantglmdenoise = 0;
         
         % set typicalgain to a lower value
-        % options.typicalgain = 10;
+        options.typicalgain = 10;
         
         % allow negative gain factors
         options.allowneggain = false;
