@@ -1,4 +1,4 @@
-function ck_BasicProc_AllFits
+%function ck_BasicProc_AllFits
 
 % this script will do some basic processing like calculate 
 % - means from two-way crossvalidated results
@@ -20,7 +20,7 @@ for r = 1:length(R_MRI) % animals
         fprintf(['Processing MODEL ' R_MRI(r).model(m).prfmodel '\n']);
         
         % convert pixels to degrees
-        R_MRI(r).model(m).rfs = R_MRI(r).model(m).rfs./10;
+        R_MRI(r).model(m).rfs = R_MRI(r).model(m).rfs./10; %#ok<*SAGROW>
         R_MRI(r).model(m).ecc = R_MRI(r).model(m).ecc./10;
         R_MRI(r).model(m).fwhm = R_MRI(r).model(m).fwhm./10;
         
@@ -75,6 +75,16 @@ for r = 1:length(R_MRI) % animals
         R_MRI(r).model(m).max.X = R_MRI(r).model(m).X(R_MRI(r).model(m).max.R2_idx)';
         R_MRI(r).model(m).max.Y = R_MRI(r).model(m).Y(R_MRI(r).model(m).max.R2_idx)';
     end
+    % ROIs ----
+    R_MRI(r).Brainmask = R_MRI(r).BRAIN>0;
+    
+    roi_idx = [];
+    for rr = 1:length(R_MRI(r).ROI)
+        roi_names{rr} = R_MRI(r).ROI(rr).label;
+        roi_idx = [roi_idx R_MRI(r).ROI(rr).idx];
+    end
+    R_MRI(r).roi_names = roi_names;
+    R_MRI(r).roi_idx = roi_idx;
 end
 
 %% ephys ------------------------------------------------------------------
@@ -234,40 +244,98 @@ for r = 1:length(R_EPHYS) % animals
             
         else % classic RF mapping
             fprintf('MUA\n');
-         
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+            for i = 1:8 % instances
+                for c = 1:length(R_EPHYS(r).model(m).MUA(i).RF) % channels
+                    if c == 1 % pre-allocate
+                        R_EPHYS(r).model(m).MUA(i).X = ...
+                            nan(1,length(R_EPHYS(r).model(m).MUA(i).RF));
+                        R_EPHYS(r).model(m).MUA(i).Y = ...
+                            nan(1,length(R_EPHYS(r).model(m).MUA(i).RF));
+                        R_EPHYS(r).model(m).MUA(i).rfs = ...
+                            nan(1,length(R_EPHYS(r).model(m).MUA(i).RF));
+                        R_EPHYS(r).model(m).MUA(i).ang = ...
+                            nan(1,length(R_EPHYS(r).model(m).MUA(i).RF));
+                        R_EPHYS(r).model(m).MUA(i).ecc = ...
+                            nan(1,length(R_EPHYS(r).model(m).MUA(i).RF));
+                    end
+                    
+                    % rfs / ang / ecc
+                    R_EPHYS(r).model(m).MUA(i).rfs(c) = ...
+                        R_EPHYS(r).model(m).MUA(i).RF{c}.szdeg;
+                    R_EPHYS(r).model(m).MUA(i).ang(c) = ...
+                        R_EPHYS(r).model(m).MUA(i).RF{c}.theta;
+                    R_EPHYS(r).model(m).MUA(i).ecc(c) = ...
+                        R_EPHYS(r).model(m).MUA(i).RF{c}.ecc;
+                    
+                    % XY
+                    Pix2Deg = R_EPHYS(r).model(m).MUA(i).RF{c}.sz./...
+                        R_EPHYS(r).model(m).MUA(i).RF{c}.szdeg;
+                    R_EPHYS(r).model(m).MUA(i).X(c) = ...
+                        R_EPHYS(r).model(m).MUA(i).RF{c}.centrex.*Pix2Deg;
+                    R_EPHYS(r).model(m).MUA(i).Y(c) = ...
+                        R_EPHYS(r).model(m).MUA(i).RF{c}.centrey*Pix2Deg;
+
+                    % fwhm
+                    R_EPHYS(r).model(m).MUA(i).fwhm = ...
+                        R_EPHYS(r).model(m).MUA(i).rfs.*(2*sqrt(2*log(2)));
+                    
+                    % SNR
+                     R_EPHYS(r).model(m).MUA(i).SNR =  ...
+                         R_EPHYS(r).model(m).MUA(i).SNR';
+                end
+            end
         end
     end 
+    % ChannelMapping =====
+    fprintf('Collecting the channel-map\n')
+    CM = []; cm = R_EPHYS(r).ChanMap;
+    for i = 1:size(cm.arrayNums,2) % instances
+        for ch = 1:size(cm.arrayNums,1) % channels
+            CM=[CM;...
+                i ch ...
+                cm.arrayNums(ch,i) cm.channelNums(ch,i) cm.areas(ch,i) ];
+        end
+    end
+    R_EPHYS(r).cm = CM;
 end
+
+%% Create a bunch of tables with all results ==============================
+% MRI ---
+% Only brain voxels
+% == avg / max ==
+% monkey mode model
+fprintf('Creating combined tables...\n')
+
+
+for r = 1:length(R_MRI) % animals
+    bm=R_MRI(r).Brainmask;
+    for m = 1:length(R_MRI(r).model) % model fits  
+        % mean
+        RTMm.Monkey
+        RTMm.Mode
+        RTMm.Model
+        RTMm.ROI
+        RTMm.hrf
+        RTMm.R2
+        RTMm.rfs
+        RTMm.fwhm
+        RTMm.X
+        RTMm.Y
+        RTMm.ang
+        RTMm.ecc
+        
+        % max
+        
+        
+        % diff
+
+    end
+end
+
+
+
+
+& diff
+
+
+
