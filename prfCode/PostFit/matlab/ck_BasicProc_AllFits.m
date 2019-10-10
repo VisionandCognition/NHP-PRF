@@ -306,36 +306,144 @@ end
 % monkey mode model
 fprintf('Creating combined tables...\n')
 
-
+%% MRI
+fprintf('MRI ==\n');
 for r = 1:length(R_MRI) % animals
+    % adjust ROI labels so they can be used as fields
+    for ridx=1:length(R_MRI(r).ROI)
+        R_MRI(r).ROI(ridx).label2=R_MRI(r).ROI(ridx).label;
+        if ~isnan(str2double(R_MRI(r).ROI(ridx).label2(1)))
+            R_MRI(r).ROI(ridx).label2 = ['a' R_MRI(r).ROI(ridx).label2];
+        end
+        if length(R_MRI(r).ROI(ridx).label2) >=11 && ...
+                (strcmp(R_MRI(r).ROI(ridx).label2(1:11), 'Danny_LH_V1') || ... 
+                strcmp(R_MRI(r).ROI(ridx).label2(1:10),'Eddy_LH_V1'))
+            R_MRI(r).ROI(ridx).label2 = 'V1_electrodes';
+        elseif length(R_MRI(r).ROI(ridx).label2) >=11 && ...
+                (strcmp(R_MRI(r).ROI(ridx).label2(1:11), 'Danny_LH_V4') || ... 
+                strcmp(R_MRI(r).ROI(ridx).label2(1:10), 'Eddy_LH_V4'))
+            R_MRI(r).ROI(ridx).label2 = 'V4_electrodes';
+        end
+    end
+    % brain voxels logical
     bm=R_MRI(r).Brainmask;
+    
+    %create tables
     for m = 1:length(R_MRI(r).model) % model fits  
-        % mean
-        RTMm.Monkey
-        RTMm.Mode
-        RTMm.Model
-        RTMm.ROI
-        RTMm.hrf
-        RTMm.R2
-        RTMm.rfs
-        RTMm.fwhm
-        RTMm.X
-        RTMm.Y
-        RTMm.ang
-        RTMm.ecc
+        if r==1 && m==1
+            % start the structures
+            RTMm.Monkey =[]; RTMm.Mode =[]; RTMm.Model =[];
+            for ridx=1:length(R_MRI(r).ROI)
+                RTMm.(R_MRI(r).ROI(ridx).label2) = [];
+            end
+            RTMm.R2 = []; RTMm.rfs = []; RTMm.fwhm = [];
+            RTMm.X = []; RTMm.Y = [];
+            RTMm.ang = []; RTMm.ecc = [];
+            
+            RTMmx.Monkey =[]; RTMmx.Mode =[]; RTMmx.Model =[];
+            for ridx=1:length(R_MRI(r).ROI)
+                RTMmx.(R_MRI(r).ROI(ridx).label2) = [];
+            end
+            RTMmx.R2 = []; RTMmx.rfs = []; RTMmx.fwhm = [];
+            RTMmx.X = []; RTMmx.Y = [];
+            RTMmx.ang = []; RTMmx.ecc = [];
+            
+            
+            RTM.Monkey =[]; RTM.Mode =[]; RTM.Model =[];
+            for ridx=1:length(R_MRI(r).ROI)
+                RTM.(R_MRI(r).ROI(ridx).label2) = [];
+            end
+            RTM.R2_1 = []; RTM.rfs_1 = []; RTM.fwhm_1 = [];
+            RTM.X_1 = []; RTM.Y_1 = [];
+            RTM.ang_1 = []; RTM.ecc_1 = [];
+            RTM.R2_2 = []; RTM.rfs_2 = []; RTM.fwhm_2 = [];
+            RTM.X_2 = []; RTM.Y_2 = [];
+            RTM.ang_2 = []; RTM.ecc_2 = [];
+            
+        end
+        nVox = sum(bm);
         
-        % max
+        % mean ====
+        % labels
+        RTMm_Monkey = cell(nVox,1);
+        for n=1:nVox; RTMm_Monkey{n}=R_MRI(r).monkey;end
+        RTMm.Monkey = cat(1,RTMm.Monkey,RTMm_Monkey);
+        %--
+        RTMm_Mode = cell(nVox,1);
+        for n=1:nVox; RTMm_Mode{n}=R_MRI(r).mode;end
+        RTMm.Mode = cat(1,RTMm.Mode,RTMm_Mode);
+        %--
+        RTMm_Model = cell(nVox,1);
+        for n=1:nVox; RTMm_Model{n}=R_MRI(r).model(m).prfmodel;end 
+        RTMm.Model = cat(1,RTMm.Model,RTMm_Model);
+        %--
+        for ridx=1:length(R_MRI(r).ROI)
+            RTMm.(R_MRI(r).ROI(ridx).label2) = cat(1,...
+                RTMm.(R_MRI(r).ROI(ridx).label2),...
+                R_MRI(r).ROI(ridx).idx(bm));
+        end
+        % values
+        RTMm.R2 = cat(1,RTMm.R2,R_MRI(r).model(m).avg.R2(bm)');
+        RTMm.rfs = cat(1,RTMm.rfs,R_MRI(r).model(m).avg.rfs(bm)');
+        RTMm.fwhm = cat(1,RTMm.fwhm,R_MRI(r).model(m).avg.fwhm(bm)');
+        RTMm.X = cat(1,RTMm.X,R_MRI(r).model(m).avg.X(bm)');
+        RTMm.Y = cat(1,RTMm.Y,R_MRI(r).model(m).avg.Y(bm)');
+        RTMm.ang = cat(1,RTMm.ang,R_MRI(r).model(m).avg.ang(bm)');
+        RTMm.ecc = cat(1,RTMm.ecc,R_MRI(r).model(m).avg.ecc(bm)');
         
+        % max ====
+        % labels
+        RTMmx.Monkey = RTMm.Monkey;
+        RTMmx.Mode = RTMm.Mode;
+        RTMmx.Model = RTMm.Model;
+        for ridx=1:length(R_MRI(r).ROI)
+            RTMmx.(R_MRI(r).ROI(ridx).label2) = ...
+                RTMm.(R_MRI(r).ROI(ridx).label2); 
+        end
+        % values
+        RTMmx.R2 = cat(1,RTMmx.R2,R_MRI(r).model(m).max.R2(bm)');
+        RTMmx.rfs = cat(1,RTMmx.rfs,R_MRI(r).model(m).max.rfs(bm)');
+        RTMmx.fwhm = cat(1,RTMmx.fwhm,R_MRI(r).model(m).max.fwhm(bm)');
+        RTMmx.X = cat(1,RTMmx.X,R_MRI(r).model(m).max.X(bm)');
+        RTMmx.Y = cat(1,RTMmx.Y,R_MRI(r).model(m).max.Y(bm)');
+        RTMmx.ang = cat(1,RTMmx.ang,R_MRI(r).model(m).max.ang(bm)');
+        RTMmx.ecc = cat(1,RTMmx.ecc,R_MRI(r).model(m).max.ecc(bm)');
         
-        % diff
-
+        % diff ====
+        % labels
+        RTM.Monkey = RTMm.Monkey;
+        RTM.Mode = RTMm.Mode;
+        RTM.Model = RTMm.Model;
+        for ridx=1:length(R_MRI(r).ROI)
+            RTM.(R_MRI(r).ROI(ridx).label2) = ...
+                RTMm.(R_MRI(r).ROI(ridx).label2);
+        end
+        % values
+        RTM.R2_1 = cat(1,RTM.R2_1,R_MRI(r).model(m).R2(1,bm)');
+        RTM.R2_2 = cat(1,RTM.R2_2,R_MRI(r).model(m).R2(2,bm)');
+        RTM.rfs_1 = cat(1,RTM.rfs_1,R_MRI(r).model(m).rfs(1,bm)');
+        RTM.rfs_2 = cat(1,RTM.rfs_2,R_MRI(r).model(m).rfs(2,bm)');
+        RTM.fwhm_1 = cat(1,RTM.fwhm_1,R_MRI(r).model(m).fwhm(1,bm)');
+        RTM.fwhm_2 = cat(1,RTM.fwhm_2,R_MRI(r).model(m).fwhm(2,bm)');
+        RTM.X_1 = cat(1,RTM.X_1,R_MRI(r).model(m).X(1,bm)');
+        RTM.X_2 = cat(1,RTM.X_2,R_MRI(r).model(m).X(2,bm)');
+        RTM.Y_1 = cat(1,RTM.Y_1,R_MRI(r).model(m).Y(1,bm)');
+        RTM.Y_2 = cat(1,RTM.Y_2,R_MRI(r).model(m).Y(2,bm)');
+        RTM.ang_1 = cat(1,RTM.ang_1,R_MRI(r).model(m).ang(1,bm)');
+        RTM.ang_2 = cat(1,RTM.ang_2,R_MRI(r).model(m).ang(2,bm)');
+        RTM.ecc_1 = cat(1,RTM.ecc_1,R_MRI(r).model(m).ecc(1,bm)');
+        RTM.ecc_2 = cat(1,RTM.ecc_2,R_MRI(r).model(m).ecc(2,bm)');
     end
 end
+tMRI = struct2table(RTM);
+tMRI_mean = struct2table(RTMm);
+tMRI_max = struct2table(RTMmx);
+
+
+%% EPHYS
 
 
 
-
-& diff
 
 
 
