@@ -1,19 +1,29 @@
-%function ck_BasicProc_AllFits
-clear all; clc;
+function ck_BasicProc_AllFits
 % this script will do some basic processing like calculate 
 % - means from two-way crossvalidated results
 % - X,Y coordinates from polar coordinates
 % - highest R2 for crossval
 % - distance between crossval runs in location and size
 
-%% load ===================================================================
+%%
+% clear all;
+clc;
+
+%% LOAD DATA ==============================================================
 fitres_path = ...
     '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/FitResults/';
+
+fprintf('==============================\n')
 fprintf('Loading data...');
 load(fullfile(fitres_path,'MultiModal','AllFits_cv1'),'R_MRI','R_EPHYS');
 fprintf('DONE\n')
+fprintf('==============================\n')
 
-%% mri --------------------------------------------------------------------
+output_path = [...
+    '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/'...
+    'Projects/pRF/FitResults/MultiModal'];
+
+%% MRI --------------------------------------------------------------------
 fprintf('MRI data ---------------------\n');
 for r = 1:length(R_MRI) % animals
     for m = 1:length(R_MRI(r).model) % model fits
@@ -87,7 +97,7 @@ for r = 1:length(R_MRI) % animals
     R_MRI(r).roi_idx = roi_idx;
 end
 
-%% ephys ------------------------------------------------------------------
+%% EPHYS ------------------------------------------------------------------
 fprintf('Ephys data ---------------------\n');
 for r = 1:length(R_EPHYS) % animals
     for m = 1:length(R_EPHYS(r).model) % model fits
@@ -189,7 +199,7 @@ for r = 1:length(R_EPHYS) % animals
                     
                     for f=1:length(F)
                         if isfield(R_EPHYS(r).model(m).LFP(i,fb), F{f})
-                            R_EPHYS(r).model(m).LFP(i,fb).avg.(F{f}) = mean(R_EPHYS(r).model(m).LFP(i,fb).(F{f}),2)';
+                            R_EPHYS(r).model(m).LFP(i,fb).avg.(F{f}) = mean(R_EPHYS(r).model(m).LFP(i,fb).(F{f}),2);
                         end
                     end
                     
@@ -200,8 +210,8 @@ for r = 1:length(R_EPHYS) % animals
                         R_EPHYS(r).model(m).LFP(i,fb).ecc.*sind(R_EPHYS(r).model(m).LFP(i,fb).ang);
                     
                     % avg XY
-                    R_EPHYS(r).model(m).LFP(i,fb).avg.X=mean(R_EPHYS(r).model(m).LFP(i,fb).X,2)';
-                    R_EPHYS(r).model(m).LFP(i,fb).avg.Y=mean(R_EPHYS(r).model(m).LFP(i,fb).Y,2)';
+                    R_EPHYS(r).model(m).LFP(i,fb).avg.X=mean(R_EPHYS(r).model(m).LFP(i,fb).X,2);
+                    R_EPHYS(r).model(m).LFP(i,fb).avg.Y=mean(R_EPHYS(r).model(m).LFP(i,fb).Y,2);
                     R_EPHYS(r).model(m).LFP(i,fb).avg.ecc=sqrt( ...
                         R_EPHYS(r).model(m).LFP(i,fb).avg.X.^2 + R_EPHYS(r).model(m).LFP(i,fb).avg.Y.^2);
                     
@@ -231,11 +241,11 @@ for r = 1:length(R_EPHYS) % animals
                     for f=1:length(F)
                         if isfield(R_EPHYS(r).model(m).LFP(i,fb), F{f}) && ~isempty(R_EPHYS(r).model(m).LFP(i,fb).(F{f}))
                             R_EPHYS(r).model(m).LFP(i,fb).max.(F{f}) = ...
-                                R_EPHYS(r).model(m).LFP(i,fb).(F{f})(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx)';
+                                R_EPHYS(r).model(m).LFP(i,fb).(F{f})(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx);
                         end
                     end
-                    R_EPHYS(r).model(m).LFP(i,fb).max.X = R_EPHYS(r).model(m).LFP(i,fb).X(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx)';
-                    R_EPHYS(r).model(m).LFP(i,fb).max.Y = R_EPHYS(r).model(m).LFP(i,fb).Y(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx)';
+                    R_EPHYS(r).model(m).LFP(i,fb).max.X = R_EPHYS(r).model(m).LFP(i,fb).X(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx);
+                    R_EPHYS(r).model(m).LFP(i,fb).max.Y = R_EPHYS(r).model(m).LFP(i,fb).Y(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx);
                 end
             end
             if isfield(R_EPHYS(r).model(m).LFP,'rfsize')
@@ -308,7 +318,7 @@ fprintf('\n==============================\n')
 fprintf('Creating combined tables...\n')
 fprintf('==============================\n')
 
-%% MRI
+%% MRI --------------------------------------------------------------------
 fprintf('MRI ==\n');
 for r = 1:length(R_MRI) % animals
     % adjust ROI labels so they can be used as fields
@@ -556,10 +566,13 @@ tMRI = struct2table(RTM);
 tMRI_mean = struct2table(RTMm);
 tMRI_max = struct2table(RTMmx);
 
-%% EPHYS
-fprintf('EPHYS ==\n');
+MRI.RTE = RTM;
+MRI.RTEm = RTMm;
+MRI.RTEmx=RTMmx;
+
+%% EPHYS MUA --------------------------------------------------------------
+fprintf('EPHYS MUA ==\n');
 for r = 1:length(R_EPHYS) % animals
-    
     %create tables
     for m = 1:length(R_EPHYS(r).model) % model fits  
         if r==1 && m==1
@@ -568,6 +581,7 @@ for r = 1:length(R_EPHYS) % animals
             RTEm.Monkey =[]; RTEm.Mode = []; 
             RTEm.Model = []; RTEm.SigType = [];
             RTEm.Array = []; RTEm.Chan = []; RTEm.Area = [];
+            
             % results
             RTEm.R2 = []; RTEm.rfs = []; RTEm.fwhm = [];
             RTEm.X = []; RTEm.Y = [];
@@ -597,6 +611,10 @@ for r = 1:length(R_EPHYS) % animals
             RTE.ang_2 = []; RTE.ecc_2 = [];
             
             
+            RTE.Monkey =[]; RTE.Mode = []; 
+            RTE.Model = []; RTE.SigType = [];
+            RTE.Array = []; RTE.Chan = []; RTE.Area = [];
+            
             RTE.gain_1 = []; RTE.gain_2 = [];
             RTE.expt_1 =[]; RTE.expt_2 =[]; 
             RTE.sdratio_1 = []; RTE.sdratio_2 = [];
@@ -609,7 +627,6 @@ for r = 1:length(R_EPHYS) % animals
         
         nChan = size(R_EPHYS(1).model(1).MUA(1).ang,1);
         nInst = length(R_EPHYS(1).model(1).MUA);
-        nLFP = 5; LFPlabels = {'Theta','Alpha','Beta','lGamma','hGamma'};
         
         % MUA ---------
         % labels
@@ -617,6 +634,7 @@ for r = 1:length(R_EPHYS) % animals
         for ni = 1:nInst
             for n=1:nChan
                 RTEm_Monkey{i} = R_EPHYS(r).monkey;
+                i=i+1;
             end
         end
         RTEm.Monkey = cat(1,RTEm.Monkey,RTEm_Monkey);
@@ -625,6 +643,7 @@ for r = 1:length(R_EPHYS) % animals
         for ni = 1:nInst
             for n=1:nChan
                 RTEm_Mode{i} = R_EPHYS(r).mode;
+                i=i+1;
             end
         end
         RTEm.Mode = cat(1,RTEm.Mode,RTEm_Mode);
@@ -633,6 +652,7 @@ for r = 1:length(R_EPHYS) % animals
         for ni = 1:nInst
             for n=1:nChan
                 RTEm_Model{i} = R_EPHYS(r).model(m).prfmodel;
+                i=i+1;
             end
         end
         RTEm.Model = cat(1,RTEm.Model,RTEm_Model);
@@ -641,16 +661,19 @@ for r = 1:length(R_EPHYS) % animals
         for ni = 1:nInst
             for n=1:nChan
                 RTEm_SigType{i} = 'MUA';
+                i=i+1;
             end
         end
         RTEm.SigType = cat(1,RTEm.SigType,RTEm_SigType);
         %--
-        RTEm_Array = repmat(R_EPHYS(1).cm(:,3),length(R_EPHYS(r).model),1); 
-        RTEm.Array = cat(1,RTEm.Array,RTEm_Array);
-        RTEm_Chan = repmat(R_EPHYS(1).cm(:,4),length(R_EPHYS(r).model),1);
-        RTEm.Chan = cat(1,RTEm.Chan,RTEm_Chan);
-        RTEm_Area = repmat(R_EPHYS(1).cm(:,5),length(R_EPHYS(r).model),1);
-        RTEm.Area = cat(1,RTEm.Area,RTEm_Area);
+        if m==1
+            RTEm_Array = repmat(R_EPHYS(r).cm(:,3),length(R_EPHYS(r).model),1);
+            RTEm.Array = cat(1,RTEm.Array,RTEm_Array);
+            RTEm_Chan = repmat(R_EPHYS(r).cm(:,4),length(R_EPHYS(r).model),1);
+            RTEm.Chan = cat(1,RTEm.Chan,RTEm_Chan);
+            RTEm_Area = repmat(R_EPHYS(r).cm(:,5),length(R_EPHYS(r).model),1);
+            RTEm.Area = cat(1,RTEm.Area,RTEm_Area);
+        end
         %-- 
         for i=1:nInst
             if m==5 % classic RF
@@ -716,12 +739,12 @@ for r = 1:length(R_EPHYS) % animals
         end
         
         % max ====
-        RTEmx.Monkey =  RTEm.Monkey; 
-        RTEmx.Mode = RTEm.Mode; 
-        RTEmx.Model = RTEm.Model; 
+        RTEmx.Monkey =  RTEm.Monkey;
+        RTEmx.Mode = RTEm.Mode;
+        RTEmx.Model = RTEm.Model;
         RTEmx.SigType = RTEm.SigType;
-        RTEmx.Array = RTEm.Array; 
-        RTEmx.Chan = RTEm.Chan; 
+        RTEmx.Array = RTEm.Array;
+        RTEmx.Chan = RTEm.Chan;
         RTEmx.Area = RTEm.Area;
         
         %-- 
@@ -757,7 +780,7 @@ for r = 1:length(R_EPHYS) % animals
                 end
                 
                 if isfield(R_EPHYS(r).model(m).MUA(i).max,'gain')
-                    RTExm.gain = cat(1,RTEmx.gain,R_EPHYS(r).model(m).MUA(i).max.gain);
+                    RTEmx.gain = cat(1,RTEmx.gain,R_EPHYS(r).model(m).MUA(i).max.gain);
                 else
                     RTEmx.gain = cat(1,RTEmx.gain,nan(nChan,1));
                 end
@@ -788,15 +811,7 @@ for r = 1:length(R_EPHYS) % animals
             end
         end
         
-        % diff ====
-        RTE.Monkey =  RTEm.Monkey;
-        RTE.Mode = RTEm.Mode;
-        RTE.Model = RTEm.Model;
-        RTE.SigType = RTEm.SigType;
-        RTE.Array = RTEm.Array;
-        RTE.Chan = RTEm.Chan;
-        RTE.Area = RTEm.Area;
-        
+        % diff ====    
         %--
         for i=1:nInst % exclude classic RF here (no point in adding)
             if m<5
@@ -817,6 +832,7 @@ for r = 1:length(R_EPHYS) % animals
                 %--
                 RTE.dXY = cat(1,RTE.dXY,R_EPHYS(r).model(m).MUA(i).diff.XY);
                 RTE.dRFS = cat(1,RTE.dRFS,R_EPHYS(r).model(m).MUA(i).diff.rfs);
+                %--
                 
                 % optional fields
                 if isfield(R_EPHYS(r).model(m).MUA,'R2')
@@ -867,21 +883,370 @@ for r = 1:length(R_EPHYS) % animals
             end
         end
     end
+
     % remove the 5th modeltype from label fields where you don't want them
-    nRows = (m-1)*nInst*nChan;
-    RTE.Monkey =  RTE.Monkey(1:nRows,:);
-    RTE.Mode = RTE.Mode(1:nRows,:);
-    RTE.Model = RTE.Model(1:nRows,:);
-    RTE.SigType = RTE.SigType(1:nRows,:);
-    RTE.Array = RTE.Array(1:nRows,:);
-    RTE.Chan = RTE.Chan(1:nRows,:);
-    RTE.Area = RTE.Area(1:nRows,:);
+    nRows = nInst*nChan;
+    sp=(r-1)*length(R_EPHYS(r).model)*nRows;
+    
+    RTE.Monkey = cat(1,RTE.Monkey,RTEm.Monkey(sp+1:end-nRows,:));
+    RTE.Mode = cat(1,RTE.Mode,RTEm.Mode(sp+1:end-nRows,:));
+    RTE.Model = cat(1,RTE.Model,RTEm.Model(sp+1:end-nRows,:));
+    RTE.SigType = cat(1,RTE.SigType,RTEm.SigType(sp+1:end-nRows,:));
+    RTE.Array = cat(1,RTE.Array,RTEm.Array(sp+1:end-nRows,:));
+    RTE.Chan = cat(1,RTE.Chan,RTEm.Chan(sp+1:end-nRows,:));
+    RTE.Area = cat(1,RTE.Area,RTEm.Area(sp+1:end-nRows,:));
+
 end
-tEPHYS = struct2table(RTE);
-tEPHYS_mean = struct2table(RTEm);
-tEPHYS_max = struct2table(RTMmx);
+tMUA = struct2table(RTE);
+tMUA_mean = struct2table(RTEm);
+tMUA_max = struct2table(RTEmx);
+MUA.RTE = RTE;
+MUA.RTEm = RTEm;
+MUA.RTEmx=RTEmx;
 
+%% EPHYS LFP --------------------------------------------------------------
+LFPlabels = {'Theta','Alpha','Beta','lGamma','hGamma'};
+fprintf('EPHYS LFP ==\n');
+for r = 1:length(R_EPHYS) % animals
+    %create tables
+    for m = 1:length(R_EPHYS(r).model)-1 % model fits (skip the last)
+        if r==1 && m==1
+            % start the structures
+            % labels
+            RTEm.Monkey =[]; RTEm.Mode = []; 
+            RTEm.Model = []; RTEm.SigType = [];
+            RTEm.Array = []; RTEm.Chan = []; RTEm.Area = [];
+            
+            % results
+            RTEm.R2 = []; RTEm.rfs = []; RTEm.fwhm = [];
+            RTEm.X = []; RTEm.Y = [];
+            RTEm.ang = []; RTEm.ecc = [];
+            
+            % not for all
+            RTEm.expt =[]; RTEm.sdratio = []; 
+            RTEm.gain = []; RTEm.normamp = [];
+            RTEm.SNR = [];
+            
+             % results
+            RTEmx.R2 = []; RTEmx.rfs = []; RTEmx.fwhm = [];
+            RTEmx.X = []; RTEmx.Y = [];
+            RTEmx.ang = []; RTEmx.ecc = [];
+            
+            % not for all
+            RTEmx.expt =[]; RTEmx.sdratio = []; 
+            RTEmx.gain = []; RTEmx.normamp = [];
+            RTEmx.SNR = []; 
+            
+            RTE.R2_1 = []; RTE.rfs_1 = []; RTE.fwhm_1 = [];
+            RTE.X_1 = []; RTE.Y_1 = [];
+            RTE.ang_1 = []; RTE.ecc_1 = [];
+            
+            RTE.R2_2 = []; RTE.rfs_2 = []; RTE.fwhm_2 = [];
+            RTE.X_2 = []; RTE.Y_2 = [];
+            RTE.ang_2 = []; RTE.ecc_2 = [];
+            
+            
+            RTE.Monkey =[]; RTE.Mode = []; 
+            RTE.Model = []; RTE.SigType = [];
+            RTE.Array = []; RTE.Chan = []; RTE.Area = [];
+            
+            RTE.gain_1 = []; RTE.gain_2 = [];
+            RTE.expt_1 =[]; RTE.expt_2 =[]; 
+            RTE.sdratio_1 = []; RTE.sdratio_2 = [];
+            RTE.normamp_1 = []; RTE.normamp_2 = [];
 
+            RTE.dXY=[]; RTE.dRFS = [];
+            
+            RTE.SNR = []; 
+        end
+        
+        nChan = size(R_EPHYS(1).model(1).LFP(1).ang,1);
+        nInst = size(R_EPHYS(1).model(1).LFP,1);
+        nFB = size(R_EPHYS(1).model(1).LFP,2);
+        nMod = length(R_EPHYS(r).model)-1;
+        
+        % LFP ---------
+        % labels
+        RTEm_Monkey = cell(nChan*nInst,1); i=1;
+        for ni = 1:nInst
+            for n=1:nChan
+                for f=1:nFB
+                    RTEm_Monkey{i} = R_EPHYS(r).monkey;
+                    i=i+1;
+                end
+            end
+        end
+        RTEm.Monkey = cat(1,RTEm.Monkey,RTEm_Monkey);
+        %--
+        RTEm_Mode = cell(nChan*nInst,1); i=1;
+        for ni = 1:nInst
+            for n=1:nChan
+                for f=1:nFB
+                    RTEm_Mode{i} = R_EPHYS(r).mode;
+                    i=i+1;
+                end
+            end
+        end
+        RTEm.Mode = cat(1,RTEm.Mode,RTEm_Mode);
+        %--
+        RTEm_Model = cell(nChan*nInst,1); i=1;
+        for ni = 1:nInst
+            for n=1:nChan
+                for f=1:nFB
+                    RTEm_Model{i} = R_EPHYS(r).model(m).prfmodel;
+                    i=i+1;
+                end
+            end
+        end
+        RTEm.Model = cat(1,RTEm.Model,RTEm_Model);
+        %--
+        RTEm_SigType = cell(nChan*nInst,1); i=1;
+        for ni = 1:nInst
+            for n=1:nChan
+                for f=1:nFB
+                    RTEm_SigType{i} = LFPlabels{f};
+                    i=i+1;
+                end
+            end
+        end
+        RTEm.SigType = cat(1,RTEm.SigType,RTEm_SigType);
+        %--
+        if m==1
+            RTEm_Array = repmat(R_EPHYS(r).cm(:,3),nMod*nFB,1);
+            RTEm.Array = cat(1,RTEm.Array,RTEm_Array);
+            RTEm_Chan = repmat(R_EPHYS(r).cm(:,4),nMod*nFB,1);
+            RTEm.Chan = cat(1,RTEm.Chan,RTEm_Chan);
+            RTEm_Area = repmat(R_EPHYS(r).cm(:,5),nMod*nFB,1);
+            RTEm.Area = cat(1,RTEm.Area,RTEm_Area);
+        end
+        %-- 
+        for i=1:nInst
+            for f=1:nFB
+                % standard fields
+                RTEm.rfs = cat(1,RTEm.rfs,R_EPHYS(r).model(m).LFP(i,f).avg.rfs);
+                RTEm.fwhm = cat(1,RTEm.fwhm,R_EPHYS(r).model(m).LFP(i,f).avg.fwhm);
+                RTEm.X = cat(1,RTEm.X,R_EPHYS(r).model(m).LFP(i,f).avg.X);
+                RTEm.Y = cat(1,RTEm.Y,R_EPHYS(r).model(m).LFP(i,f).avg.Y);
+                RTEm.ang = cat(1,RTEm.ang,R_EPHYS(r).model(m).LFP(i,f).avg.ang);
+                RTEm.ecc = cat(1,RTEm.ecc,R_EPHYS(r).model(m).LFP(i,f).avg.ecc);
+                % optional fields
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).avg,'R2')
+                    RTEm.R2 = cat(1,RTEm.R2,R_EPHYS(r).model(m).LFP(i,f).avg.R2);
+                else
+                    RTEm.R2 = cat(1,RTEm.R2,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).avg,'gain')
+                    RTEm.gain = cat(1,RTEm.gain,R_EPHYS(r).model(m).LFP(i,f).avg.gain);
+                else
+                    RTEm.gain = cat(1,RTEm.gain,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).avg,'expt')
+                    RTEm.expt = cat(1,RTEm.expt,R_EPHYS(r).model(m).LFP(i,f).avg.expt);
+                else
+                    RTEm.expt = cat(1,RTEm.expt,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).avg,'sdratio')
+                    RTEm.sdratio = cat(1,RTEm.sdratio,R_EPHYS(r).model(m).LFP(i,f).avg.sdratio);
+                else
+                    RTEm.sdratio = cat(1,RTEm.sdratio,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).avg,'normamp')
+                    RTEm.normamp = cat(1,RTEm.normamp,R_EPHYS(r).model(m).LFP(i,f).avg.normamp);
+                else
+                    RTEm.normamp = cat(1,RTEm.normamp,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f),'SNR')
+                    RTEm.SNR = cat(1,RTEm.SNR,R_EPHYS(r).model(m).LFP(i,f).SNR);
+                else
+                    RTEm.SNR = cat(1,RTEm.SNR,nan(nChan,1));
+                end
+            end
+        end
+        
+        % max ====
+        RTEmx.Monkey =  RTEm.Monkey;
+        RTEmx.Mode = RTEm.Mode;
+        RTEmx.Model = RTEm.Model;
+        RTEmx.SigType = RTEm.SigType;
+        RTEmx.Array = RTEm.Array;
+        RTEmx.Chan = RTEm.Chan;
+        RTEmx.Area = RTEm.Area;
+        
+        %-- 
+        for i=1:nInst
+            for f=1:nFB
+                % standard fields
+                RTEmx.rfs = cat(1,RTEmx.rfs,R_EPHYS(r).model(m).LFP(i,f).max.rfs);
+                RTEmx.fwhm = cat(1,RTEmx.fwhm,R_EPHYS(r).model(m).LFP(i,f).max.fwhm);
+                RTEmx.X = cat(1,RTEmx.X,R_EPHYS(r).model(m).LFP(i,f).max.X);
+                RTEmx.Y = cat(1,RTEmx.Y,R_EPHYS(r).model(m).LFP(i,f).max.Y);
+                RTEmx.ang = cat(1,RTEmx.ang,R_EPHYS(r).model(m).LFP(i,f).max.ang);
+                RTEmx.ecc = cat(1,RTEmx.ecc,R_EPHYS(r).model(m).LFP(i,f).max.ecc);
+                % optional fields
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).max,'R2')
+                    RTEmx.R2 = cat(1,RTEmx.R2,R_EPHYS(r).model(m).LFP(i,f).max.R2);
+                else
+                    RTEmx.R2 = cat(1,RTEmx.R2,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).max,'gain')
+                    RTEmx.gain = cat(1,RTEmx.gain,R_EPHYS(r).model(m).LFP(i,f).max.gain);
+                else
+                    RTEmx.gain = cat(1,RTEmx.gain,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).max,'expt')
+                    RTEmx.expt = cat(1,RTEmx.expt,R_EPHYS(r).model(m).LFP(i,f).max.expt);
+                else
+                    RTEmx.expt = cat(1,RTEmx.expt,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).max,'sdratio')
+                    RTEmx.sdratio = cat(1,RTEmx.sdratio,R_EPHYS(r).model(m).LFP(i,f).max.sdratio);
+                else
+                    RTEmx.sdratio = cat(1,RTEmx.sdratio,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f).max,'normamp')
+                    RTEmx.normamp = cat(1,RTEmx.normamp,R_EPHYS(r).model(m).LFP(i,f).max.normamp);
+                else
+                    RTEmx.normamp = cat(1,RTEmx.normamp,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP(i,f),'SNR')
+                    RTEmx.SNR = cat(1,RTEmx.SNR,R_EPHYS(r).model(m).LFP(i,f).SNR);
+                else
+                    RTEmx.SNR = cat(1,RTEmx.SNR,nan(nChan,1));
+                end
+            end
+        end
+        
+        % diff ====    
+        %--
+        for i=1:nInst % exclude classic RF here (no point in adding)
+            for f=1:nFB
+                % standard fields
+                RTE.rfs_1 = cat(1,RTE.rfs_1,R_EPHYS(r).model(m).LFP(i,f).rfs(:,1));
+                RTE.fwhm_1 = cat(1,RTE.fwhm_1,R_EPHYS(r).model(m).LFP(i,f).fwhm(:,1));
+                RTE.X_1 = cat(1,RTE.X_1,R_EPHYS(r).model(m).LFP(i,f).X(:,1));
+                RTE.Y_1 = cat(1,RTE.Y_1,R_EPHYS(r).model(m).LFP(i,f).Y(:,1));
+                RTE.ang_1 = cat(1,RTE.ang_1,R_EPHYS(r).model(m).LFP(i,f).ang(:,1));
+                RTE.ecc_1 = cat(1,RTE.ecc_1,R_EPHYS(r).model(m).LFP(i,f).ecc(:,1));
+                %--
+                RTE.rfs_2 = cat(1,RTE.rfs_2,R_EPHYS(r).model(m).LFP(i,f).rfs(:,2));
+                RTE.fwhm_2 = cat(1,RTE.fwhm_2,R_EPHYS(r).model(m).LFP(i,f).fwhm(:,2));
+                RTE.X_2 = cat(1,RTE.X_2,R_EPHYS(r).model(m).LFP(i,f).X(:,2));
+                RTE.Y_2 = cat(1,RTE.Y_2,R_EPHYS(r).model(m).LFP(i,f).Y(:,2));
+                RTE.ang_2 = cat(1,RTE.ang_2,R_EPHYS(r).model(m).LFP(i,f).ang(:,2));
+                RTE.ecc_2 = cat(1,RTE.ecc_2,R_EPHYS(r).model(m).LFP(i,f).ecc(:,2));
+                %--
+                RTE.dXY = cat(1,RTE.dXY,R_EPHYS(r).model(m).LFP(i,f).diff.XY);
+                RTE.dRFS = cat(1,RTE.dRFS,R_EPHYS(r).model(m).LFP(i,f).diff.rfs);
+                %--
+                
+                % optional fields
+                if isfield(R_EPHYS(r).model(m).LFP,'R2')
+                    RTE.R2_1 = cat(1,RTE.R2_1,R_EPHYS(r).model(m).LFP(i,f).R2(:,1));
+                    RTE.R2_2 = cat(1,RTE.R2_2,R_EPHYS(r).model(m).LFP(i,f).R2(:,2));
+                else
+                    RTE.R2_1 = cat(1,RTE.R2_1,nan(nChan,1));
+                    RTE.R2_2 = cat(1,RTE.R2_2,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP,'gain')
+                    RTE.gain_1 = cat(1,RTE.gain_1,R_EPHYS(r).model(m).LFP(i,f).gain(:,1));
+                    RTE.gain_2 = cat(1,RTE.gain_2,R_EPHYS(r).model(m).LFP(i,f).gain(:,2));
+                else
+                    RTE.gain_1 = cat(1,RTE.gain_1,nan(nChan,1));
+                    RTE.gain_2 = cat(1,RTE.gain_2,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP,'expt')
+                    RTE.expt_1 = cat(1,RTE.expt_1,R_EPHYS(r).model(m).LFP(i,f).expt(:,1));
+                    RTE.expt_2 = cat(1,RTE.expt_2,R_EPHYS(r).model(m).LFP(i,f).expt(:,2));
+                else
+                    RTE.expt_1 = cat(1,RTE.expt_1,nan(nChan,1));
+                    RTE.expt_2 = cat(1,RTE.expt_2,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP,'sdratio')
+                    RTE.sdratio_1 = cat(1,RTE.sdratio_1,R_EPHYS(r).model(m).LFP(i,f).sdratio(:,1));
+                    RTE.sdratio_2 = cat(1,RTE.sdratio_2,R_EPHYS(r).model(m).LFP(i,f).sdratio(:,2));
+                else
+                    RTE.sdratio_1 = cat(1,RTE.sdratio_1,nan(nChan,1));
+                    RTE.sdratio_2 = cat(1,RTE.sdratio_2,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP,'normamp')
+                    RTE.normamp_1 = cat(1,RTE.normamp_1,R_EPHYS(r).model(m).LFP(i,f).normamp(:,1));
+                    RTE.normamp_2 = cat(1,RTE.normamp_2,R_EPHYS(r).model(m).LFP(i,f).normamp(:,2));
+                else
+                    RTE.normamp_1 = cat(1,RTE.normamp_1,nan(nChan,1));
+                    RTE.normamp_2 = cat(1,RTE.normamp_2,nan(nChan,1));
+                end
+                
+                if isfield(R_EPHYS(r).model(m).LFP,'SNR')
+                    RTE.SNR = cat(1,RTE.SNR,R_EPHYS(r).model(m).LFP(i,f).SNR);
+                else
+                    RTE.SNR = cat(1,RTE.SNR,nan(nChan,1));
+                end
+            end
+        end
+    end
+end
+RTE.Monkey = RTEm.Monkey;
+RTE.Mode = RTEm.Mode;
+RTE.Model = RTEm.Model;
+RTE.SigType = RTEm.SigType;
+RTE.Array = RTEm.Array;
+RTE.Chan = RTEm.Chan;
+RTE.Area = RTEm.Area;
+    
+tLFP = struct2table(RTE);
+tLFP_mean = struct2table(RTEm);
+tLFP_max = struct2table(RTEmx);
 
-% EPHYS avg/max not in column format
+LFP.RTE = RTE;
+LFP.RTEm = RTEm;
+LFP.RTEmx=RTEmx;
 
+%% SAVE the tables & structs ==============================================
+fprintf('\n==============================\n')
+fprintf('Saving the results\n')
+fprintf('==============================\n')
+
+fprintf('Tables...\n');
+% save(...
+%     fullfile(output_path,'CombiTables'),...
+%     'tMRI','tMRI_mean','tMRI_max',... 
+%     'tMUA','tMUA_mean','tMUA_max',... 
+%     'tLFP','tLFP_mean','tLFP_max','-v7.3');
+
+save(...
+    fullfile(output_path,'Tables_diff'),...
+    'tMRI','tMUA','tLFP','-v7.3');
+save(...
+    fullfile(output_path,'Tables_mean'),...
+    'tMRI_mean','tMUA_mean','tLFP_mean','-v7.3');
+save(...
+    fullfile(output_path,'Tables_max'),...
+    'tMRI_max','tMUA_max','tLFP_max','-v7.3');
+
+fprintf('Structures...\n');
+% save(...
+%     fullfile(output_path,'CombiStructs'),...
+%     'MRI','MUA','LFP','-v7.3');    
+
+save(...
+    fullfile(output_path,'MRI_Struct'),'MRI','-v7.3');  
+save(...
+    fullfile(output_path,'MUA_Struct'),'MUA','-v7.3');  
+save(...
+    fullfile(output_path,'LFP_Struct'),'LFP','-v7.3');  
+
+fprintf('\nALL DONE!\n');
