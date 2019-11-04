@@ -278,12 +278,12 @@ for r = 1:length(R_EPHYS) % animals
                         R_EPHYS(r).model(m).MUA(i).RF{c}.ecc;
                     
                     % XY
-                    Pix2Deg = R_EPHYS(r).model(m).MUA(i).RF{c}.sz./...
+                    PixPerDeg = R_EPHYS(r).model(m).MUA(i).RF{c}.sz./...
                         R_EPHYS(r).model(m).MUA(i).RF{c}.szdeg;
                     R_EPHYS(r).model(m).MUA(i).X(c) = ...
-                        R_EPHYS(r).model(m).MUA(i).RF{c}.centrex.*Pix2Deg;
+                        R_EPHYS(r).model(m).MUA(i).RF{c}.centrex./PixPerDeg;
                     R_EPHYS(r).model(m).MUA(i).Y(c) = ...
-                        R_EPHYS(r).model(m).MUA(i).RF{c}.centrey*Pix2Deg;
+                        R_EPHYS(r).model(m).MUA(i).RF{c}.centrey./PixPerDeg;
 
                     % fwhm
                     R_EPHYS(r).model(m).MUA(i).fwhm = ...
@@ -562,6 +562,8 @@ for r = 1:length(R_MRI) % animals
         end
     end
 end
+
+
 tMRI = struct2table(RTM);
 tMRI_mean = struct2table(RTMm);
 tMRI_max = struct2table(RTMmx);
@@ -1012,13 +1014,22 @@ for r = 1:length(R_EPHYS) % animals
         RTEm.SigType = cat(1,RTEm.SigType,RTEm_SigType);
         %--
         if m==1
-            RTEm_Array = repmat(R_EPHYS(r).cm(:,3),nMod*nFB,1);
-            RTEm.Array = cat(1,RTEm.Array,RTEm_Array);
-            RTEm_Chan = repmat(R_EPHYS(r).cm(:,4),nMod*nFB,1);
-            RTEm.Chan = cat(1,RTEm.Chan,RTEm_Chan);
-            RTEm_Area = repmat(R_EPHYS(r).cm(:,5),nMod*nFB,1);
-            RTEm.Area = cat(1,RTEm.Area,RTEm_Area);
+            idx=1;
+            for ni = 1:nInst
+                for n=1:nChan
+                    for f=1:nFB
+                        RTEm_Array =[RTEm_Array; R_EPHYS(r).cm(idx,3)];
+                        RTEm_Chan = [RTEm_Array; R_EPHYS(r).cm(idx,4)];   
+                        RTEm_Area = [RTEm_Array; R_EPHYS(r).cm(idx,5)];
+                        idx=idx+1;
+                    end
+                end
+            end
+            RTEm.Array = repmat(RTEm.Array,nMod,1);
+            RTEm.Chan = repmat(RTEm.Chan,nMod,1);
+            RTEm.Area = repmat(RTEm.Area,nMod,1);
         end
+        
         %-- 
         for i=1:nInst
             for f=1:nFB
