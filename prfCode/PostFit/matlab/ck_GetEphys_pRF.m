@@ -1,4 +1,4 @@
-function ck_GetEphys_pRF(monkeys,models)
+function ck_GetEphys_pRF(monkeys,models,output)
 
 if nargin < 2
     fprintf('ERROR: Not enough arguments specified\n');
@@ -70,4 +70,4 @@ end
 %% Save the combined results ==============================================
 fprintf('Saving the combined ephys result-file\n');
 [~,~,~] = mkdir(fullfile(fitres_path,'Combined'));
-save(fullfile(fitres_path,'Combined','AllFits_ephys_cv1'),'R')
+save(fullfile(fitres_path,'Combined',output),'R')
