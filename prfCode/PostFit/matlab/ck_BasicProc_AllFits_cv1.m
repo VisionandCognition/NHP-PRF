@@ -1,13 +1,11 @@
-function ck_BasicProc_AllFits
+function ck_BasicProc_AllFits_cv1
 % this script will do some basic processing like calculate 
-% - means from two-way crossvalidated results
 % - X,Y coordinates from polar coordinates
-% - highest R2 for crossval
-% - distance between crossval runs in location and size
 
 %%
 % clear all;
 clc;
+CVMODE='cv1';
 
 %% LOAD DATA ==============================================================
 fitres_path = ...
@@ -15,13 +13,14 @@ fitres_path = ...
 
 fprintf('==============================\n')
 fprintf('Loading data...');
-load(fullfile(fitres_path,'MultiModal','AllFits_cv1'),'R_MRI','R_EPHYS');
+load(fullfile(fitres_path,'MultiModal',['AllFits_' CVMODE]),'R_MRI','R_EPHYS');
 fprintf('DONE\n')
 fprintf('==============================\n')
 
 output_path = [...
     '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/'...
-    'Projects/pRF/FitResults/MultiModal'];
+    'Projects/pRF/FitResults/MultiModal/' CVMODE];
+[~,~] = mkdir(output_path);
 
 %% MRI --------------------------------------------------------------------
 fprintf('MRI data ---------------------\n');
@@ -563,7 +562,6 @@ for r = 1:length(R_MRI) % animals
     end
 end
 
-
 tMRI = struct2table(RTM);
 tMRI_mean = struct2table(RTMm);
 tMRI_max = struct2table(RTMmx);
@@ -604,6 +602,7 @@ for r = 1:length(R_EPHYS) % animals
             RTEmx.gain = []; RTEmx.normamp = [];
             RTEmx.SNR = []; 
             
+            %
             RTE.R2_1 = []; RTE.rfs_1 = []; RTE.fwhm_1 = [];
             RTE.X_1 = []; RTE.Y_1 = [];
             RTE.ang_1 = []; RTE.ecc_1 = [];
@@ -611,7 +610,6 @@ for r = 1:length(R_EPHYS) % animals
             RTE.R2_2 = []; RTE.rfs_2 = []; RTE.fwhm_2 = [];
             RTE.X_2 = []; RTE.Y_2 = [];
             RTE.ang_2 = []; RTE.ecc_2 = [];
-            
             
             RTE.Monkey =[]; RTE.Mode = []; 
             RTE.Model = []; RTE.SigType = [];
@@ -1014,20 +1012,23 @@ for r = 1:length(R_EPHYS) % animals
         RTEm.SigType = cat(1,RTEm.SigType,RTEm_SigType);
         %--
         if m==1
+            RTEm_Array=[];
+            RTEm_Chan=[];
+            RTEm_Area=[];
             idx=1;
             for ni = 1:nInst
                 for n=1:nChan
                     for f=1:nFB
                         RTEm_Array =[RTEm_Array; R_EPHYS(r).cm(idx,3)];
-                        RTEm_Chan = [RTEm_Array; R_EPHYS(r).cm(idx,4)];   
-                        RTEm_Area = [RTEm_Array; R_EPHYS(r).cm(idx,5)];
-                        idx=idx+1;
+                        RTEm_Chan = [RTEm_Chan; R_EPHYS(r).cm(idx,4)];   
+                        RTEm_Area = [RTEm_Area; R_EPHYS(r).cm(idx,5)];
                     end
+                    idx=idx+1;
                 end
             end
-            RTEm.Array = repmat(RTEm.Array,nMod,1);
-            RTEm.Chan = repmat(RTEm.Chan,nMod,1);
-            RTEm.Area = repmat(RTEm.Area,nMod,1);
+            RTEm.Array = [RTEm.Array; repmat(RTEm_Array,nMod,1)];
+            RTEm.Chan = [RTEm.Chan; repmat(RTEm_Chan,nMod,1)];
+            RTEm.Area = [RTEm.Area; repmat(RTEm_Area,nMod,1)];
         end
         
         %-- 

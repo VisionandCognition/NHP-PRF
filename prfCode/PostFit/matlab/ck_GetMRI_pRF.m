@@ -17,6 +17,7 @@ roi_path = ...
     '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/Results/MRI';
 bids_path = ...
     '/Users/chris/Documents/MRI_ANALYSIS/NHP-BIDS/manual-masks';
+
 %% collect the fit results ================================================
 fprintf('Collecting MRI retinotopic maps...\n');
 
@@ -50,7 +51,7 @@ for m = 1:length(monkeys)
                 [numel(RES.result.ang(:,:,:,i)),1]);
             R(m).model(mm).fwhm(i,:) = reshape(RES.result.fwhm(:,:,:,i),...
                 [numel(RES.result.ang(:,:,:,i)),1]);
-            if models{m}(1:3) == 'dog'
+            if models{mm}(1:3) == 'dog'
                 R(m).model(mm).sdratio(i,:) = reshape(RES.result.sdratio(:,:,:,i),...
                     [numel(RES.result.ang(:,:,:,i)),1]);
                 R(m).model(mm).normamp(i,:) = reshape(RES.result.normamp(:,:,:,i),...
@@ -59,7 +60,7 @@ for m = 1:length(monkeys)
                 R(m).model(mm).sdratio = [];
                 R(m).model(mm).normamp = [];
             end
-            if models{m}(1:3) == 'css'
+            if models{mm}(1:3) == 'css'
                 R(m).model(mm).expt(i,:) = reshape(RES.result.expt(:,:,:,i),...
                     [numel(RES.result.ang(:,:,:,i)),1]);
             else
