@@ -7,8 +7,8 @@ Instance = 1;
 numWorkers = 2;
 modeltype = 'linear_ephys';
 cv = 1;
-resfld = 'linear_ephys_cv0_test';
-AllowNegGain = true;
+resfld = ['linear_ephys_cv' num2str(cv) '_test'];
+AllowNegGain = false;
 TypicalGain = 1;
 MaxIter = 1000;
 SignalGain=1;
@@ -17,7 +17,7 @@ SignalGain=1;
 %%
 for Instance = 1%:8
     %% These are fixed for this configuration =================================
-    TR=0.5;
+    TR=0.5; % temporal resolution of the ephys signal
     mlroot = pwd; % this is $TMPDIR/PRF when running it on LISA (fast disks)
     Pix2Deg = 1/29.5;
     

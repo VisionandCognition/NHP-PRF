@@ -1,14 +1,15 @@
 % Compare the linear fits from MS-derived code with that from analyzePRF
 
 %% Load ===================================================================
+CVMODE='cv1';
 fprintf('Loading results...\n');
 base='/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF';
-load(fullfile(base,'FitResults','MultiModal','MUA_Struct'));
+load(fullfile(base,'FitResults','MultiModal',CVMODE,'MUA_Struct'));
 load(fullfile(base,'FitResults','MultiModal','old','pRF_estimates_ephys'));
 fprintf('Done!\n')
 
 %% set R2 window to look at ===============================================
-model='linear_ephys_cv1';
+model=['linear_ephys_' CVMODE];
 monkey='lick';
 
 RT = [80 100];
@@ -112,7 +113,7 @@ hist(dSz,100);
 title('distibutions of size differences')
 subplot(2,2,2); hold on;
 hist(dP,100);
-title('distibutions of poisiton differences')
+title('distibutions of position differences')
 
 %% Size vs ecc ============================================================
 %figure;
