@@ -272,31 +272,31 @@ for r = 1:length(R_MRI) % animals
         RTM.ecc = cat(1,RTM.ecc,R_MRI(r).model(m).ecc(bm)');
         
         % optional fields
-        if isfield(R_MRI(r).model(m),'R2')
+        if isfield(R_MRI(r).model(m),'R2') && ~isempty(R_MRI(r).model(m).R2)
             RTM.R2 = cat(1,RTM.R2,R_MRI(r).model(m).R2(bm)');
         else
             RTM.R2 = cat(1,RTM.R2,nan(nVox,1));
         end
         
-        if isfield(R_MRI(r).model(m),'gain')
+        if isfield(R_MRI(r).model(m),'gain') && ~isempty(R_MRI(r).model(m).gain)
             RTM.gain = cat(1,RTM.gain,R_MRI(r).model(m).gain(bm)');
         else
             RTM.gain = cat(1,RTM.gain,nan(nVox,1));
         end
         
-        if isfield(R_MRI(r).model(m),'expt')
+        if isfield(R_MRI(r).model(m),'expt') && ~isempty(R_MRI(r).model(m).expt)
             RTM.expt = cat(1,RTM.expt,R_MRI(r).model(m).expt(bm)');
         else
             RTM.expt = cat(1,RTM.expt,nan(nVox,1));
         end
         
-        if isfield(R_MRI(r).model(m),'sdratio')
+        if isfield(R_MRI(r).model(m),'sdratio') && ~isempty(R_MRI(r).model(m).sdratio)
             RTM.sdratio = cat(1,RTM.sdratio,R_MRI(r).model(m).sdratio(bm)');
         else
             RTM.sdratio = cat(1,RTM.sdratio,nan(nVox,1));
         end
         
-        if isfield(R_MRI(r).model(m),'normamp')
+        if isfield(R_MRI(r).model(m),'normamp') && ~isempty(R_MRI(r).model(m).normamp)
             RTM.normamp = cat(1,RTM.normamp,R_MRI(r).model(m).normamp(bm)');
         else
             RTM.normamp = cat(1,RTM.normamp,nan(nVox,1));
@@ -450,7 +450,7 @@ for r = 1:length(R_EPHYS) % animals
     sp=(r-1)*length(R_EPHYS(r).model)*nRows;
 
 end
-tMUA_mean = struct2table(RTE);
+tMUA = struct2table(RTE);
 MUA.RTE = RTE;
 
 %% EPHYS LFP --------------------------------------------------------------
@@ -543,9 +543,9 @@ for r = 1:length(R_EPHYS) % animals
                     idx=idx+1;
                 end
             end
-            RTE.Array = [RTE.Array; repmat(RTE.Array,nMod,1)];
-            RTE.Chan = [RTE.Chan; repmat(RTE.Chan,nMod,1)];
-            RTE.Area = [RTE.Area; repmat(RTE.Area,nMod,1)];
+            RTE.Array = [RTE.Array; repmat(RTE_Array,nMod,1)];
+            RTE.Chan = [RTE.Chan; repmat(RTE_Chan,nMod,1)];
+            RTE.Area = [RTE.Area; repmat(RTE_Area,nMod,1)];
         end
         
         %-- 
