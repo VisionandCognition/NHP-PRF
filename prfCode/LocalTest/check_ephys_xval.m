@@ -14,6 +14,9 @@ SignalGain=1;
 
 %fprintf('RUNNING IN DEBUG MODE! CHANGE THIS FLAG FOR PRODUCTION!\n');
 %%
+ephys_data0{1}=[];
+ephys_data{1}=[];ephys_data{2}=[];
+
 for Instance = 1:8
     fprintf(['Instance ' num2str(Instance) '\n'])
     
@@ -65,7 +68,7 @@ for Instance = 1:8
         % load the responses
         if strcmp(Monkey,'lick')
             RESP0=load(fullfile(datafld,Session,['Lick_20180807_B2_array_' num2str(Instance) '_mMUA.mat']));
-            C0=RESP.C;
+            C0=RESP0.C;
         elseif strcmp(Monkey,'aston')
             RESP0=load(fullfile(datafld,Session,['Aston_20181004_B1_array_' num2str(Instance) '_mMUA.mat']));
             C0=RESP.C;
@@ -84,11 +87,11 @@ for Instance = 1:8
         end
         
         % concatenate -----
-        stimulus0={};ephys_data0={};
-        stimulus={};ephys_data={};
+        stimulus0={};%ephys_data0={};
+        stimulus={};%ephys_data={};
         fprintf('Concatenating stimuli and volumes...\n');
         
-        ephys_data0{1} = [];
+        %ephys_data0{1} = [];
         for ch=1:128
             ephys_data0{1}=cat(1,ephys_data0{1},...
                 (RESP0.mMUA(ch).bar - RESP0.mMUA(ch).BL).*SignalGain);
@@ -101,7 +104,7 @@ for Instance = 1:8
             stimulus0{1}=cat(3,stimulus0{1},STIM.img{imgnr});
         end
         
-        ephys_data{1}=[];ephys_data{2}=[];
+        %ephys_data{1}=[];ephys_data{2}=[];
         for ch=1:128
             ephys_data{1}=cat(1,ephys_data{1},...
                 (RESP.mMUA_odd(ch).bar - RESP.mMUA_odd(ch).BL)*SignalGain);
@@ -265,95 +268,116 @@ for Instance = 1:8
     delete(gcp('nocreate'));
 end
 
+%% save the results
+save(['Check_' Session],'ephys_data','ephys_data0')
+
 %% Plot the odd and even response profiles
-figure;
-for i=1:1024
-    subplot(32,32,i);hold on;
-    plot(ephys_data{1}(1,:),'r')
-    plot(ephys_data{2}(1,:),'b')
-    plot(ephys_data0{1}(1,:),'k')
+[~,~] = mkdir(['Check_' Session]);
+cd(['Check_' Session]);
+
+for elec=1:1024
+    %fprintf(['Figure ' num2str(elec) '\n'])
+    f=figure;
+    hold on;
+    plot(ephys_data{1}(elec,:),'r')
+    plot(ephys_data{2}(elec,:),'b')
+    plot(ephys_data0{1}(elec,:),'k')
+    title(['Electrode ' num2str(elec)])
+    l=legend({'odd','even','all'});
+    set(f,'Position',[ 50 50 600 400]);
+    
+    saveas(f,['Elec_' num2str(elec) '.png'])
+    close(f);
 end
+cd ..
 
-%% print some results
-fprintf(['Angles: ' num2str(result.ang(1)) ' ' num2str(result.ang(2)) '\n'])
-fprintf(['Ecc: ' num2str(result.ecc(1)) ' ' num2str(result.ecc(2)) '\n'])
-fprintf(['R2: ' num2str(result.R2(1)) ' ' num2str(result.R2(2)) '\n'])
-fprintf(['Sz: ' num2str(result.rfsize(1)) ' ' num2str(result.rfsize(2)) '\n'])
-fprintf(['Gain: ' num2str(result.gain(1)) ' ' num2str(result.gain(2)) '\n'])
 
-%% plot the prediction and data
-% Perform some setup
-if 1
-    data = ephys_data;
-    tr=TR;
+
+
+
+%%
+if false
     
-    % Define some variables
-    res = [size(stimulus{1},1) size(stimulus{1},2)];
-    %res = [295 295];                    % row x column resolution of the stimuli
-    resmx = max(res);                   % maximum resolution (along any dimension)
-    degs = result.options.maxpolydeg;  % vector of maximum polynomial degrees used in the model
+    %% print some results
+    fprintf(['Angles: ' num2str(result.ang(1)) ' ' num2str(result.ang(2)) '\n'])
+    fprintf(['Ecc: ' num2str(result.ecc(1)) ' ' num2str(result.ecc(2)) '\n'])
+    fprintf(['R2: ' num2str(result.R2(1)) ' ' num2str(result.R2(2)) '\n'])
+    fprintf(['Sz: ' num2str(result.rfsize(1)) ' ' num2str(result.rfsize(2)) '\n'])
+    fprintf(['Gain: ' num2str(result.gain(1)) ' ' num2str(result.gain(2)) '\n'])
     
-    % Pre-compute cache for faster execution
-    [d,xx,yy] = makegaussian2d(resmx,2,2,2,2);
-    
-    % Prepare the stimuli for use in the model
-    stimulusPP = {};
-    for p=1:length(stimulus)
-        stimulusPP{p} = squish(stimulus{p},2)';  % this flattens the image so that the dimensionality is now frames x pixels
-        stimulusPP{p} = [stimulusPP{p} p*ones(size(stimulusPP{p},1),1)];  % this adds a dummy column to indicate run breaks
+    %% plot the prediction and data
+    % Perform some setup
+    if 1
+        data = ephys_data;
+        tr=TR;
+        
+        % Define some variables
+        res = [size(stimulus{1},1) size(stimulus{1},2)];
+        %res = [295 295];                    % row x column resolution of the stimuli
+        resmx = max(res);                   % maximum resolution (along any dimension)
+        degs = result.options.maxpolydeg;  % vector of maximum polynomial degrees used in the model
+        
+        % Pre-compute cache for faster execution
+        [d,xx,yy] = makegaussian2d(resmx,2,2,2,2);
+        
+        % Prepare the stimuli for use in the model
+        stimulusPP = {};
+        for p=1:length(stimulus)
+            stimulusPP{p} = squish(stimulus{p},2)';  % this flattens the image so that the dimensionality is now frames x pixels
+            stimulusPP{p} = [stimulusPP{p} p*ones(size(stimulusPP{p},1),1)];  % this adds a dummy column to indicate run breaks
+        end
+        
+        % Define the model function.  This function takes parameters and stimuli as input and
+        % returns a predicted time-series as output.  Specifically, the variable <pp> is a vector
+        % of parameter values (1 x 5) and the variable <dd> is a matrix with the stimuli (frames x pixels).
+        % Although it looks complex, what the function does is pretty straightforward: construct a
+        % 2D Gaussian, crop it to <res>, compute the dot-product between the stimuli and the
+        % Gaussian, raise the result to an exponent, and then convolve the result with the HRF,
+        % taking care to not bleed over run boundaries.
+        %     modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
+        %         makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
+        %         (2*pi*abs(pp(3))^2))); 0]) .^ posrect(pp(5));
+        modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
+            makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
+            (2*pi*abs(pp(3))^2))); 0]);
+        
+        % Construct projection matrices that fit and remove the polynomials.
+        % Note that a separate projection matrix is constructed for each run.
+        polymatrix = {};
+        for p=1:length(degs)
+            polymatrix{p} = projectionmatrix(constructpolynomialmatrix(size(data{p},2),0:degs(p)));
+        end
+        
+        % Inspect the data and the model fit
+        
+        %% Which channel should we inspect?
+        ch = 1;
+        
+        % For each run, collect the data and the model fit.  We project out polynomials
+        % from both the data and the model fit.  This deals with the problem of
+        % slow trends in the data.
+        datats = {};
+        modelts = {};
+        for p=1:length(data)
+            datats{p} =  polymatrix{p}*data{p}(ch,:)';
+            modelts{p} = polymatrix{p}*modelfun(result.params(1,:,ch),single(stimulusPP{p}));
+        end
+        
+        % Visualize the results
+        figure; hold on;
+        %set(gcf,'Units','points','Position',[100 100 1000 100]);
+        plot(cat(1,datats{:}),'r-');
+        plot(cat(1,modelts{:}),'b-');
+        straightline(240,'v','k-');
+        xlabel('Time (s)');
+        ylabel('Signal');
+        ax = axis;
+        %axis([.5 1200+.5 ax(3:4)]);
+        title('Time-series data');
+        
+        
     end
-    
-    % Define the model function.  This function takes parameters and stimuli as input and
-    % returns a predicted time-series as output.  Specifically, the variable <pp> is a vector
-    % of parameter values (1 x 5) and the variable <dd> is a matrix with the stimuli (frames x pixels).
-    % Although it looks complex, what the function does is pretty straightforward: construct a
-    % 2D Gaussian, crop it to <res>, compute the dot-product between the stimuli and the
-    % Gaussian, raise the result to an exponent, and then convolve the result with the HRF,
-    % taking care to not bleed over run boundaries.
-    %     modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
-    %         makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
-    %         (2*pi*abs(pp(3))^2))); 0]) .^ posrect(pp(5));
-    modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
-        makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
-        (2*pi*abs(pp(3))^2))); 0]);
-    
-    % Construct projection matrices that fit and remove the polynomials.
-    % Note that a separate projection matrix is constructed for each run.
-    polymatrix = {};
-    for p=1:length(degs)
-        polymatrix{p} = projectionmatrix(constructpolynomialmatrix(size(data{p},2),0:degs(p)));
-    end
-    
-    % Inspect the data and the model fit
-    
-    %% Which channel should we inspect?
-    ch = 1;
-    
-    % For each run, collect the data and the model fit.  We project out polynomials
-    % from both the data and the model fit.  This deals with the problem of
-    % slow trends in the data.
-    datats = {};
-    modelts = {};
-    for p=1:length(data)
-        datats{p} =  polymatrix{p}*data{p}(ch,:)';
-        modelts{p} = polymatrix{p}*modelfun(result.params(1,:,ch),single(stimulusPP{p}));
-    end
-    
-    % Visualize the results
-    figure; hold on;
-    %set(gcf,'Units','points','Position',[100 100 1000 100]);
-    plot(cat(1,datats{:}),'r-');
-    plot(cat(1,modelts{:}),'b-');
-    straightline(240,'v','k-');
-    xlabel('Time (s)');
-    ylabel('Signal');
-    ax = axis;
-    %axis([.5 1200+.5 ax(3:4)]);
-    title('Time-series data');
-    
     
 end
-
-
 
 
