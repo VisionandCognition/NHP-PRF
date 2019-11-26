@@ -3,16 +3,13 @@ clear all; clc; %#ok<*CLALL>
 Monkey = 'lick'; %#ok<*UNRCH>
 MONKEY = Monkey; MONKEY(1)=upper(MONKEY(1));
 Session = 'mua';
-Instance = 1;
-numWorkers = 2;
-modeltype = 'linear_ephys';
 resfld = ['ephys_xval_test'];
 AllowNegGain = false;
 TypicalGain = 1;
 MaxIter = 1000;
 SignalGain=1;
+numWorkers=2;
 
-%fprintf('RUNNING IN DEBUG MODE! CHANGE THIS FLAG FOR PRODUCTION!\n');
 %%
 ephys_data0{1}=[];
 ephys_data{1}=[];ephys_data{2}=[];
@@ -38,11 +35,7 @@ for Instance = 1:8
     
     result_folder = fullfile(mlroot, 'Results', Monkey, resfld, ...
         ['Instance_' InstanceLabel]);
-    
-    % make outputfolder
-    %result_folder = fullfile(mlroot, 'TestResults', Monkey, Session, ...
-    %   ['Instance_' InstanceLabel]);
-    
+       
     if ~exist(result_folder,'dir')
         [~,~,~]=mkdir(result_folder);
     end
@@ -89,7 +82,7 @@ for Instance = 1:8
         % concatenate -----
         stimulus0={};%ephys_data0={};
         stimulus={};%ephys_data={};
-        fprintf('Concatenating stimuli and volumes...\n');
+        fprintf('Concatenating stimuli and data...\n');
         
         %ephys_data0{1} = [];
         for ch=1:128
@@ -97,7 +90,7 @@ for Instance = 1:8
                 (RESP0.mMUA(ch).bar - RESP0.mMUA(ch).BL).*SignalGain);
         end
         stimulus0{1}=[];
-        for imgnr=1:length(STIM.img)
+        for imgnr=1:length(STIM.img)/2
             % RESAMPLE STIMULUS >> 295 x 295 means 10px = 1 deg
             %rsIMG = imresize(STIM.img{imgnr} ,[295 295]);
             %stimulus{1}=cat(3,stimulus{1},rsIMG);
@@ -119,48 +112,7 @@ for Instance = 1:8
             stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
             stimulus{2}=stimulus{1};
         end
-        
-        %         % fit pRF -----
-        %         % get indices to mask voxels > 0
-        %         options.display = 'final';
-        %
-        %         % set crossvalidation option
-        %         options.xvalmode = cv; % two-fold cross-validation (first half of runs; second half of runs)
-        %
-        %         % no denoising
-        %         options.wantglmdenoise = 0;
-        %
-        %         % set typicalgain to a lower value
-        %         options.typicalgain = TypicalGain;
-        %
-        %         % maximum number of fitting iterations
-        %         options.maxiter = MaxIter;
-        %
-        %         % allow negative gain factors
-        %         options.allowneggain = false;
-        %
-        %         % no drift correction for ephys
-        %         options.maxpolydeg = 0;
-        %
-        %         % start a parallel pool of workers
-        %         if ~isempty(numWorkers)
-        %             parpool(numWorkers);
-        %         else
-        %             % if numWorkers = []
-        %             % don't predefine the number of workers
-        %             % let it take the max available when running
-        %         end
-        %
-        %         % run analyzePRF tool
-        %         result = analyzePRF_modeltype(stimulus,ephys_data,TR,options,modeltype);
-        %         result.Chan = C;
-        %         result.Pix2Deg = Pix2Deg;
-        %
-        %         % save the result ----
-        %         fprintf('\nSaving the result: ');
-        %         save(fullfile(result_folder,['pRF_Sess-' Session '_Inst_' num2str(Instance)]),...
-        %             'result','-v7.3');
-        %         %cd ..
+
         fprintf('>> Done!\n');
         
     elseif strcmp(Session,'lfp')
@@ -218,49 +170,7 @@ for Instance = 1:8
                 stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
                 stimulus{2}=stimulus{1};
             end
-            
-            
-            %             % fit pRF -----
-            %             % get indices to mask voxels > 0
-            %             options.display = 'final';
-            %
-            %             % set crossvalidation option
-            %             options.xvalmode = cv; % two-fold cross-validation (first half of runs; second half of runs)
-            %
-            %             % no denoising
-            %             options.wantglmdenoise = 0;
-            %
-            %             % set typicalgain to a lower value
-            %             options.typicalgain = TypicalGain;
-            %
-            %             % maximum number of fitting iterations
-            %             options.maxiter = MaxIter;
-            %
-            %             % allow negative gain factors
-            %             options.allowneggain = AllowNegGain;
-            %
-            %             % no drift correction for ephys
-            %             options.maxpolydeg = 0;
-            %
-            %             % start a parallel pool of workers
-            %             if ~isempty(numWorkers)
-            %                 parpool(numWorkers);
-            %             else
-            %                 % if numWorkers = []
-            %                 % don't predefine the number of workers
-            %                 % let it take the max available when running
-            %             end
-            %
-            %             % run analyzePRF tool
-            %             result = analyzePRF_modeltype(stimulus,ephys_data,TR,options,modeltype);
-            %             result.Chan = C;
-            %             result.Pix2Deg = Pix2Deg;
-            %
-            %             % save the result ----
-            %             fprintf('\nSaving the result: ');
-            %             save(fullfile(result_folder,['pRF_Sess-' Session '_fb' ...
-            %                 num2str(fb) '_Inst_' num2str(Instance)]),'result','-v7.3');
-            %             delete(gcp('nocreate'));
+
         end
         %cd ..
         fprintf('>> Done!\n');
@@ -291,93 +201,34 @@ for elec=1:1024
 end
 cd ..
 
+%% Plot the odd and even response profiles === fixed ===
+[~,~] = mkdir(['Check2_' Session]);
+cd(['Check2_' Session]);
 
+inv_idx = [150:-1:121 180:-1:151 210:-1:181 240:-1:211];
 
+ephys_data2{1}=[]; ephys_data2{2}=[]; ephys_data02{1}=[];
+for elec = 1:size(ephys_data{1},1)
+    ephys_data2{1} = cat(1,ephys_data2{1},...
+        mean([ephys_data{1}(elec,1:120);ephys_data{2}(elec,inv_idx)],1));
+    ephys_data2{2} = cat(1,ephys_data2{2},...
+        mean([ephys_data{2}(elec,1:120);ephys_data{1}(elec,inv_idx)],1));
+    ephys_data02{1} = cat(1,ephys_data02{1},...
+        mean([ephys_data0{1}(elec,1:120);ephys_data0{1}(elec,inv_idx)],1));
+end  
 
-
-%%
-if false
-    
-    %% print some results
-    fprintf(['Angles: ' num2str(result.ang(1)) ' ' num2str(result.ang(2)) '\n'])
-    fprintf(['Ecc: ' num2str(result.ecc(1)) ' ' num2str(result.ecc(2)) '\n'])
-    fprintf(['R2: ' num2str(result.R2(1)) ' ' num2str(result.R2(2)) '\n'])
-    fprintf(['Sz: ' num2str(result.rfsize(1)) ' ' num2str(result.rfsize(2)) '\n'])
-    fprintf(['Gain: ' num2str(result.gain(1)) ' ' num2str(result.gain(2)) '\n'])
-    
-    %% plot the prediction and data
-    % Perform some setup
-    if 1
-        data = ephys_data;
-        tr=TR;
-        
-        % Define some variables
-        res = [size(stimulus{1},1) size(stimulus{1},2)];
-        %res = [295 295];                    % row x column resolution of the stimuli
-        resmx = max(res);                   % maximum resolution (along any dimension)
-        degs = result.options.maxpolydeg;  % vector of maximum polynomial degrees used in the model
-        
-        % Pre-compute cache for faster execution
-        [d,xx,yy] = makegaussian2d(resmx,2,2,2,2);
-        
-        % Prepare the stimuli for use in the model
-        stimulusPP = {};
-        for p=1:length(stimulus)
-            stimulusPP{p} = squish(stimulus{p},2)';  % this flattens the image so that the dimensionality is now frames x pixels
-            stimulusPP{p} = [stimulusPP{p} p*ones(size(stimulusPP{p},1),1)];  % this adds a dummy column to indicate run breaks
-        end
-        
-        % Define the model function.  This function takes parameters and stimuli as input and
-        % returns a predicted time-series as output.  Specifically, the variable <pp> is a vector
-        % of parameter values (1 x 5) and the variable <dd> is a matrix with the stimuli (frames x pixels).
-        % Although it looks complex, what the function does is pretty straightforward: construct a
-        % 2D Gaussian, crop it to <res>, compute the dot-product between the stimuli and the
-        % Gaussian, raise the result to an exponent, and then convolve the result with the HRF,
-        % taking care to not bleed over run boundaries.
-        %     modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
-        %         makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
-        %         (2*pi*abs(pp(3))^2))); 0]) .^ posrect(pp(5));
-        modelfun = @(pp,dd) posrect(pp(4)) * (dd*[vflatten(placematrix(zeros(res),...
-            makegaussian2d(resmx,pp(1),pp(2),abs(pp(3)),abs(pp(3)),xx,yy,0,0) / ...
-            (2*pi*abs(pp(3))^2))); 0]);
-        
-        % Construct projection matrices that fit and remove the polynomials.
-        % Note that a separate projection matrix is constructed for each run.
-        polymatrix = {};
-        for p=1:length(degs)
-            polymatrix{p} = projectionmatrix(constructpolynomialmatrix(size(data{p},2),0:degs(p)));
-        end
-        
-        % Inspect the data and the model fit
-        
-        %% Which channel should we inspect?
-        ch = 1;
-        
-        % For each run, collect the data and the model fit.  We project out polynomials
-        % from both the data and the model fit.  This deals with the problem of
-        % slow trends in the data.
-        datats = {};
-        modelts = {};
-        for p=1:length(data)
-            datats{p} =  polymatrix{p}*data{p}(ch,:)';
-            modelts{p} = polymatrix{p}*modelfun(result.params(1,:,ch),single(stimulusPP{p}));
-        end
-        
-        % Visualize the results
-        figure; hold on;
-        %set(gcf,'Units','points','Position',[100 100 1000 100]);
-        plot(cat(1,datats{:}),'r-');
-        plot(cat(1,modelts{:}),'b-');
-        straightline(240,'v','k-');
-        xlabel('Time (s)');
-        ylabel('Signal');
-        ax = axis;
-        %axis([.5 1200+.5 ax(3:4)]);
-        title('Time-series data');
-        
-        
-    end
-    
+for elec=1:size(ephys_data2{1},1)
+    %fprintf(['Figure ' num2str(elec) '\n'])
+    f=figure;
+    hold on;
+    plot(ephys_data2{1}(elec,:),'r')
+    plot(ephys_data2{2}(elec,:),'b')
+    plot(ephys_data02{1}(elec,:),'k')
+    title(['Electrode ' num2str(elec)])
+    l=legend({'odd','even','all'});
+    set(f,'Position',[ 50 50 600 400]);
+    saveas(f,['Elec_' num2str(elec) '.png'])
+    close(f);
 end
-
+cd ..
 
