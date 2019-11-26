@@ -125,6 +125,17 @@ for Instance = 1%:8
                 stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
                 stimulus{2}=stimulus{1};
             end
+            
+            inv_idx = [150:-1:121 180:-1:151 210:-1:181 240:-1:211];
+
+            ephys_data2{1}=[]; ephys_data2{2}=[];
+            for elec = 1:size(ephys_data{1},1)
+                ephys_data2{1} = cat(1,ephys_data2{1},...
+                    mean([ephys_data{1}(elec,1:120);ephys_data{1}(elec,inv_idx)],1));
+                ephys_data2{2} = cat(1,ephys_data2{2},...
+                    mean([ephys_data{2}(elec,1:120);ephys_data{2}(elec,inv_idx)],1));
+            end  
+            
         end
         
         % fit pRF -----
@@ -159,7 +170,7 @@ for Instance = 1%:8
         end
         
         % run analyzePRF tool
-        result = analyzePRF_modeltype(stimulus,ephys_data,TR,options,modeltype);
+        result = analyzePRF_modeltype(stimulus,ephys_data2,TR,options,modeltype);
         result.Chan = C;
         result.Pix2Deg = Pix2Deg;
         
@@ -261,7 +272,7 @@ for Instance = 1%:8
             end
             
             % run analyzePRF tool
-            result = analyzePRF_modeltype(stimulus,ephys_data,TR,options,modeltype);
+            result = analyzePRF_modeltype(stimulus,ephys_data2,TR,options,modeltype);
             result.Chan = C;
             result.Pix2Deg = Pix2Deg;
             
@@ -278,16 +289,17 @@ for Instance = 1%:8
 end
 
 %% print some results
-fprintf(['Angles: ' num2str(result.ang(1)) ' ' num2str(result.ang(2)) '\n'])
-fprintf(['Ecc: ' num2str(result.ecc(1)) ' ' num2str(result.ecc(2)) '\n'])
-fprintf(['R2: ' num2str(result.R2(1)) ' ' num2str(result.R2(2)) '\n'])
-fprintf(['Sz: ' num2str(result.rfsize(1)) ' ' num2str(result.rfsize(2)) '\n'])
-fprintf(['Gain: ' num2str(result.gain(1)) ' ' num2str(result.gain(2)) '\n'])
+c=9
+fprintf(['Angles: ' num2str(result.ang(c,1)) ' ' num2str(result.ang(c,2)) '\n'])
+fprintf(['Ecc: ' num2str(result.ecc(c,1)) ' ' num2str(result.ecc(c,2)) '\n'])
+fprintf(['R2: ' num2str(result.R2(c,1)) ' ' num2str(result.R2(c,2)) '\n'])
+fprintf(['Sz: ' num2str(result.rfsize(c,1)) ' ' num2str(result.rfsize(c,2)) '\n'])
+fprintf(['Gain: ' num2str(result.gain(c,1)) ' ' num2str(result.gain(c,2)) '\n'])
 
 %% plot the prediction and data
 % Perform some setup
 if 1
-    data = ephys_data;
+    data = ephys_data2;
     tr=TR;
     
     % Define some variables
@@ -330,7 +342,7 @@ if 1
     % Inspect the data and the model fit
     
     %% Which channel should we inspect? 
-    ch = 1;
+    ch = 4;
     
     % For each run, collect the data and the model fit.  We project out polynomials
     % from both the data and the model fit.  This deals with the problem of
@@ -347,7 +359,7 @@ if 1
     %set(gcf,'Units','points','Position',[100 100 1000 100]);
     plot(cat(1,datats{:}),'r-');
     plot(cat(1,modelts{:}),'b-');
-    straightline(240,'v','k-');
+    straightline(240/2,'v','k-');
     xlabel('Time (s)');
     ylabel('Signal');
     ax = axis;
