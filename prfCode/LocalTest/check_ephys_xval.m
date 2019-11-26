@@ -14,7 +14,7 @@ numWorkers=2;
 ephys_data0{1}=[];
 ephys_data{1}=[];ephys_data{2}=[];
 
-for Instance = 1:8
+for Instance = 1%:8
     fprintf(['Instance ' num2str(Instance) '\n'])
     
     %% These are fixed for this configuration =================================
@@ -86,8 +86,10 @@ for Instance = 1:8
         
         %ephys_data0{1} = [];
         for ch=1:128
+            %ephys_data0{1}=cat(1,ephys_data0{1},...
+            %    (RESP0.mMUA(ch).bar - RESP0.mMUA(ch).BL).*SignalGain);
             ephys_data0{1}=cat(1,ephys_data0{1},...
-                (RESP0.mMUA(ch).bar - RESP0.mMUA(ch).BL).*SignalGain);
+                (RESP0.mMUA(ch).bar).*SignalGain);
         end
         stimulus0{1}=[];
         for imgnr=1:length(STIM.img)/2
@@ -99,10 +101,14 @@ for Instance = 1:8
         
         %ephys_data{1}=[];ephys_data{2}=[];
         for ch=1:128
+%             ephys_data{1}=cat(1,ephys_data{1},...
+%                 (RESP.mMUA_odd(ch).bar - RESP.mMUA_odd(ch).BL)*SignalGain);
+%             ephys_data{2}=cat(1,ephys_data{2},...
+%                 (RESP.mMUA_even(ch).bar - RESP.mMUA_even(ch).BL)*SignalGain);
             ephys_data{1}=cat(1,ephys_data{1},...
-                (RESP.mMUA_odd(ch).bar - RESP.mMUA_odd(ch).BL)*SignalGain);
+                (RESP.mMUA_odd(ch).bar)*SignalGain);
             ephys_data{2}=cat(1,ephys_data{2},...
-                (RESP.mMUA_even(ch).bar - RESP.mMUA_even(ch).BL)*SignalGain);
+                (RESP.mMUA_even(ch).bar)*SignalGain);
         end
         stimulus{1}=[];stimulus{2}=[];
         for imgnr=1:length(STIM.img)
@@ -217,7 +223,7 @@ for elec = 1:size(ephys_data{1},1)
         mean([ephys_data0{1}(elec,1:120);ephys_data0{1}(elec,inv_idx)],1));
 end  
 
-for elec=1:size(ephys_data2{1},1)
+for elec=31%:size(ephys_data2{1},1)
     %fprintf(['Figure ' num2str(elec) '\n'])
     f=figure;
     hold on;
@@ -227,8 +233,8 @@ for elec=1:size(ephys_data2{1},1)
     title(['Electrode ' num2str(elec)])
     l=legend({'odd','even','all'});
     set(f,'Position',[ 50 50 600 400]);
-    saveas(f,['Elec_' num2str(elec) '.png'])
-    close(f);
+    %saveas(f,['Elec_' num2str(elec) '.png'])
+    %close(f);
 end
 cd ..
 

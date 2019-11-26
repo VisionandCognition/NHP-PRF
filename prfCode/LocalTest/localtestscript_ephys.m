@@ -7,7 +7,7 @@ Instance = 1;
 numWorkers = 2;
 modeltype = 'linear_ephys';
 cv = 1;
-resfld = ['linear_ephys_cv' num2str(cv) '_test'];
+resfld = ['linear_ephys_cv' num2str(cv) '_test_sweepcollapse'];
 AllowNegGain = false;
 TypicalGain = 1;
 MaxIter = 1000;
@@ -93,8 +93,10 @@ for Instance = 1%:8
         if cv == 0
             ephys_data{1} = [];
             for ch=1:4%128
+                %ephys_data{1}=cat(1,ephys_data{1},...
+                %    (RESP.mMUA(ch).bar - RESP.mMUA(ch).BL).*SignalGain);
                 ephys_data{1}=cat(1,ephys_data{1},...
-                    (RESP.mMUA(ch).bar - RESP.mMUA(ch).BL).*SignalGain);
+                    RESP.mMUA(ch).bar.*SignalGain);
             end
             stimulus{1}=[];
             for imgnr=1:length(STIM.img)
@@ -106,13 +108,17 @@ for Instance = 1%:8
         elseif cv == 1
             ephys_data{1}=[];ephys_data{2}=[];
             for ch=1:4%128
+%                 ephys_data{1}=cat(1,ephys_data{1},...
+%                     (RESP.mMUA_odd(ch).bar - RESP.mMUA_odd(ch).BL)*SignalGain);
+%                 ephys_data{2}=cat(1,ephys_data{2},...
+%                     (RESP.mMUA_even(ch).bar - RESP.mMUA_even(ch).BL)*SignalGain);
                 ephys_data{1}=cat(1,ephys_data{1},...
-                    (RESP.mMUA_odd(ch).bar - RESP.mMUA_odd(ch).BL)*SignalGain);
+                    RESP.mMUA_odd(ch).bar.*SignalGain);
                 ephys_data{2}=cat(1,ephys_data{2},...
-                    (RESP.mMUA_even(ch).bar - RESP.mMUA_even(ch).BL)*SignalGain);
+                    RESP.mMUA_even(ch).bar.*SignalGain);
             end
             stimulus{1}=[];stimulus{2}=[];
-            for imgnr=1:length(STIM.img)
+            for imgnr=1:length(STIM.img)/2
                 % RESAMPLE STIMULUS >> 295 x 295 means 10px = 1 deg
                 rsIMG = imresize(STIM.img{imgnr} ,[295 295]);
                 %stimulus{1}=cat(3,stimulus{1},rsIMG);
