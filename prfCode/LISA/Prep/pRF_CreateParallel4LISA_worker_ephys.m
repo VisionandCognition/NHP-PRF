@@ -150,7 +150,7 @@ for job_ind = 1:length(joblist.sessinc)
         fprintf(fid_single, '#!/bin/bash\n');
         % SLURM definitions
         fprintf(fid_single, '#SBATCH -N 1 --ntasks-per-node=16\n');
-        fprintf(fid_single, '#SBATCH -t 06:00:00\n');
+        fprintf(fid_single, '#SBATCH -t 05:00:00\n');
         fprintf(fid_single, '#SBATCH --mail-type=END\n');
         fprintf(fid_single, '#SBATCH --mail-user=p.c.klink@gmail.com\n');
         fprintf(fid_single, '\n');
@@ -165,6 +165,10 @@ for job_ind = 1:length(joblist.sessinc)
         fprintf(fid_single, 'echo submitted by $SLURM_JOB_ACCOUNT\n');
         fprintf(fid_single, 'echo from $SLURM_SUBMIT_DIR\n');
         fprintf(fid_single, 'echo the allocated nodes are: $SLURM_JOB_NODELIST\n');
+        
+        % SLURM requirements
+        fprintf(fid_single, '\nmodule load pre2019\n');
+
         
         % add a comment what this script does
         jobnameline = ['\n# INFO: ' job_name '_' joblist.sessions{...

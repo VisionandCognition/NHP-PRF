@@ -233,12 +233,21 @@ for Instance = 1%:8
                         RESP.mLFP_even(ch).freq(fb).BL);
                 end
                 stimulus{1}=[];stimulus{2}=[];
-                for imgnr=1:length(STIM.img)
+                for imgnr=1:length(STIM.img)/2
                     stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
                     stimulus{2}=stimulus{1};
                 end
+                
+                inv_idx = [150:-1:121 180:-1:151 210:-1:181 240:-1:211];
+                ephys_data2{1}=[]; ephys_data2{2}=[];
+                for elec = 1:size(ephys_data{1},1)
+                    ephys_data2{1} = cat(1,ephys_data2{1},...
+                        mean([ephys_data{1}(elec,1:120);ephys_data{1}(elec,inv_idx)],1));
+                    ephys_data2{2} = cat(1,ephys_data2{2},...
+                        mean([ephys_data{2}(elec,1:120);ephys_data{2}(elec,inv_idx)],1));
+                end
+                
             end
-            
             
             % fit pRF -----
             % get indices to mask voxels > 0

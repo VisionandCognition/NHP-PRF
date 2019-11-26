@@ -323,14 +323,14 @@ if Do.SaveMUA_perArray
                 mMUA_odd(c).bar(b) = mean(act_chunk_odd);
                 clear act_chunk_odd
                 
-                act_chunk_even = mMUA_even(c).mean(t1i:t2i);clear all
+                act_chunk_even = mMUA_even(c).mean(t1i:t2i);
                 mMUA_even(c).bar(b) = mean(act_chunk_even);
                 clear act_chunk_even
             end
         end
         fprintf('\n');
         fprintf('Saving the averaged MUA responses for array %d...\n', m);
-        warning off; mkdir(fullfile(save_fld,subj,sess,'MUA_blc')); warning on
+        warning off; [~,~]=mkdir(fullfile(save_fld,subj,sess,'MUA_blc')); warning on
         save(fullfile(save_fld,subj,sess,'MUA_blc',...
             [subj '_' sess '_array_' num2str(m) '_mMUA']),'mMUA','C','-v7.3');
         clear mMUA

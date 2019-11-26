@@ -245,7 +245,7 @@ end
 
 %% Get MUA responses for each stim-position / channel =====================
 if Do.SaveMUA_perArray
-    win = [0 B(1).Par.TR*B(1).StimObj.Stm.RetMap.TRsPerStep]; %[start stop] in sec
+    win = [0.05 B(1).Par.TR*B(1).StimObj.Stm.RetMap.TRsPerStep]; %[start stop] in sec
     fprintf('=== Getting MUA response per trial =====\n');
     for m=1:length(M) %>> while testing, do only 1 array
         fprintf('- Array %d -', m);
@@ -280,21 +280,74 @@ if Do.SaveMUA_perArray
                 end
             end
             
+%             % ----- OLD VERSION -------------------------------------------
+%             % average over runs
+%             mMUA(c).runs = M(m).ch(c).coll;
+%             mMUA(c).mean = mean(M(m).ch(c).coll);
+%             mMUA(c).std = std(M(m).ch(c).coll);
+%             mMUA(c).BL = mean(mean(M(m).ch(c).BL));
+%             
+%             mMUA_odd(c).runs = M(m).ch(c).coll_odd;
+%             mMUA_odd(c).mean = mean(M(m).ch(c).coll_odd);
+%             mMUA_odd(c).std = std(M(m).ch(c).coll_odd);
+%             mMUA_odd(c).BL = mean(mean(M(m).ch(c).BL_odd));
+%             
+%             mMUA_even(c).runs = M(m).ch(c).coll_even;
+%             mMUA_even(c).mean = mean(M(m).ch(c).coll_even);
+%             mMUA_even(c).std = std(M(m).ch(c).coll_even);
+%             mMUA_even(c).BL = mean(mean(M(m).ch(c).BL_even));
+%             
+%             % split by bar position
+%             for b=1:length(N(m).run(1).stim_sec)
+%                 t1i= find(M(m).run(1).tsec >= ...
+%                     N(m).run(1).stim_sec(b)+win(1),1,'first');
+%                 t2i= find(M(m).run(1).tsec <= ...
+%                     N(m).run(1).stim_sec(b)+win(2),1,'last');
+%                 
+%                 act_chunk = mMUA(c).mean(t1i:t2i);
+%                 mMUA(c).bar(b) = mean(act_chunk);
+%                 clear act_chunk
+%                 
+%                 act_chunk_odd = mMUA_odd(c).mean(t1i:t2i);
+%                 mMUA_odd(c).bar(b) = mean(act_chunk_odd);
+%                 clear act_chunk_odd
+%                 
+%                 act_chunk_even = mMUA_even(c).mean(t1i:t2i);
+%                 mMUA_even(c).bar(b) = mean(act_chunk_even);
+%                 clear act_chunk_even
+%             end
+%             % -------------------------------------------------------------
+            
             % average over runs
             mMUA(c).runs = M(m).ch(c).coll;
-            mMUA(c).mean = mean(M(m).ch(c).coll);
-            mMUA(c).std = std(M(m).ch(c).coll);
-            mMUA(c).BL = mean(mean(M(m).ch(c).BL));
+            SIG = [];
+            for r=1:size(M(m).ch(c).BL,1)
+                 SIG = [SIG; M(m).ch(c).coll(r,:)-...
+                     mean(M(m).ch(c).BL(r,:),2)];
+            end
+            mMUA(c).mean = mean(SIG);
+            mMUA(c).std = std(SIG);
+            mMUA(c).BL = mean(M(m).ch(c).BL);
             
             mMUA_odd(c).runs = M(m).ch(c).coll_odd;
-            mMUA_odd(c).mean = mean(M(m).ch(c).coll_odd);
-            mMUA_odd(c).std = std(M(m).ch(c).coll_odd);
-            mMUA_odd(c).BL = mean(mean(M(m).ch(c).BL_odd));
+            SIG_odd = [];
+            for r=1:size(M(m).ch(c).BL_odd,1)
+                 SIG_odd = [SIG_odd; M(m).ch(c).coll_odd(r,:)-...
+                     mean(M(m).ch(c).BL_odd(r,:),2)];
+            end
+            mMUA_odd(c).mean = mean(SIG_odd);
+            mMUA_odd(c).std = std(SIG_odd);
+            mMUA_odd(c).BL = mean(M(m).ch(c).BL_odd);
             
             mMUA_even(c).runs = M(m).ch(c).coll_even;
-            mMUA_even(c).mean = mean(M(m).ch(c).coll_even);
-            mMUA_even(c).std = std(M(m).ch(c).coll_even);
-            mMUA_even(c).BL = mean(mean(M(m).ch(c).BL_even));
+            SIG_even = [];
+            for r=1:size(M(m).ch(c).BL_even,1)
+                 SIG_even = [SIG_even; M(m).ch(c).coll_even(r,:)-...
+                     mean(M(m).ch(c).BL_even(r,:),2)];
+            end
+            mMUA_even(c).mean = mean(SIG_even);
+            mMUA_even(c).std = std(SIG_even);
+            mMUA_even(c).BL = mean(M(m).ch(c).BL_even);
             
             % split by bar position
             for b=1:length(N(m).run(1).stim_sec)
@@ -316,9 +369,10 @@ if Do.SaveMUA_perArray
                 clear act_chunk_even
             end
         end
+        
         fprintf('\n');
         fprintf('Saving the averaged MUA responses for array %d...\n', m);
-        warning off; mkdir(fullfile(save_fld,subj,sess,'MUA')); warning on
+        warning off; [~,~]=mkdir(fullfile(save_fld,subj,sess,'MUA')); warning on
         save(fullfile(save_fld,subj,sess,'MUA',...
             [subj '_' sess '_array_' num2str(m) '_mMUA']),'mMUA','C','-v7.3');
         clear mMUA
@@ -336,7 +390,7 @@ end
 %% Get LFP responses for each stim-position / channel =====================
 if Do.SaveLFP_perArray
     
-    win = [0 B(1).Par.TR*B(1).StimObj.Stm.RetMap.TRsPerStep]; %[start stop] in sec
+    win = [0.05 B(1).Par.TR*B(1).StimObj.Stm.RetMap.TRsPerStep]; %[start stop] in sec
     
     % chronux specs
     chron.tapers = [5 9];
@@ -409,7 +463,6 @@ if Do.SaveLFP_perArray
                             L(m).ch(c).freq(fb).trace(start_samp-500:start_samp)'];
                         
                     end
-                    
                     
                 end
                 L(m).run(r).tsec = L(m).spect(c).tsec(start_samp:start_samp+nsamp);
