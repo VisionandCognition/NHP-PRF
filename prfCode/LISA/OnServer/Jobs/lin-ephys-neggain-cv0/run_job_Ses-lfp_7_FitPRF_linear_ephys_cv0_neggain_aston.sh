@@ -13,6 +13,7 @@ echo job name $SLURM_JOB_NAME
 echo submitted by $SLURM_JOB_ACCOUNT
 echo from $SLURM_SUBMIT_DIR
 echo the allocated nodes are: $SLURM_JOB_NODELIST
+module load pre2019
 
 # INFO: FitPRF_linear_ephys_cv0_neggain_lfp_7
 

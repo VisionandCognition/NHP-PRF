@@ -103,12 +103,23 @@ if strcmp(Session, 'mua')
             %ephys_data{1}=cat(1,ephys_data{1},...
             %    RESP.mMUA(ch).bar - RESP.mMUA(ch).BL);
             ephys_data{1}=cat(1,ephys_data{1},...
-                    RESP.mMUA(ch).bar.*SignalGain);
+                    RESP.mMUA(ch).bar);
         end
         stimulus{1}=[];
-        for imgnr=1:length(STIM.img)
+        for imgnr=1:length(STIM.img)/2
             stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
         end
+
+        inv_idx = [150:-1:121 180:-1:151 210:-1:181 240:-1:211];
+        ephys_data2{1}=[];
+        for elec = 1:size(ephys_data{1},1)
+            ephys_data2{1} = cat(1,ephys_data2{1},...
+                mean([ephys_data{1}(elec,1:120);ephys_data{1}(elec,inv_idx)],1));
+        end
+            
+        ephys_data_org = ephys_data;
+        ephys_data = ephys_data2; clear ephys_data2
+
     elseif cv == 1
         ephys_data{1}=[];ephys_data{2}=[];
         for ch=1:128
@@ -117,9 +128,9 @@ if strcmp(Session, 'mua')
 %             ephys_data{2}=cat(1,ephys_data{2},...
 %                 RESP.mMUA_even(ch).bar - RESP.mMUA_even(ch).BL);
             ephys_data{1}=cat(1,ephys_data{1},...
-                    RESP.mMUA_odd(ch).bar.*SignalGain);
+                    RESP.mMUA_odd(ch).bar);
             ephys_data{2}=cat(1,ephys_data{2},...
-                    RESP.mMUA_even(ch).bar.*SignalGain);
+                    RESP.mMUA_even(ch).bar);
         end
         stimulus{1}=[];stimulus{2}=[];
         for imgnr=1:length(STIM.img)/2
@@ -217,9 +228,20 @@ elseif strcmp(Session,'lfp')
                     RESP.mLFP(ch).freq(fb).BL);
             end
             stimulus{1}=[];
-            for imgnr=1:length(STIM.img)
+            for imgnr=1:length(STIM.img)/2
                 stimulus{1}=cat(3,stimulus{1},STIM.img{imgnr});
             end
+
+            inv_idx = [150:-1:121 180:-1:151 210:-1:181 240:-1:211];
+            ephys_data2{1}=[];
+            for elec = 1:size(ephys_data{1},1)
+                ephys_data2{1} = cat(1,ephys_data2{1},...
+                    mean([ephys_data{1}(elec,1:120);ephys_data{1}(elec,inv_idx)],1));
+            end
+            
+            ephys_data_org = ephys_data;
+            ephys_data = ephys_data2; clear ephys_data2
+
         elseif cv == 1
             ephys_data{1}=[];ephys_data{2}=[];
             for ch=1:128
