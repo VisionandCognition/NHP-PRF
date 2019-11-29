@@ -12,7 +12,7 @@ fprintf('Done!\n')
 model=['linear_ephys_' CVMODE];
 monkey='lick';
 
-RT = [0 100];
+RT = [70 100];
 
 %% R2 =====================================================================
 figure; 
