@@ -1,26 +1,51 @@
-% The problem lies in the xval data where the two traces are too dissinilar
-% 1) look at trace generation
-%   a) Baseline/normalization
-%   b) Fixation breaks
+function ck_Prep_Xval_median(subj, sess, Do)
+% loads the (Blackroack) ephys PRF data and organizes it in trials
+% c.klink@nin.knaw.nl
 
-% biggest diversion even @ bar position 200-220
-% also a peak in even around 170
+%% init ===================================================================
+if nargin<3
+    fprintf('Not specified what to do. Taking defaults\n')
+    Do.Load.Any         = true;
+    Do.Load.DigChan     = false; % new files
+    Do.Load.MUA         = false; % new files
+    Do.Load.LFP         = false; % new files
+    Do.Load.Behavior    = false; % new files
+    
+    Do.Load.ProcMUA     = true;
+    Do.Load.ProcLFP     = false;
+    Do.Load.ProcBEH     = true;
+    
+    Do.SyncTimes        = true;
+    Do.SaveUncut        = false;
+    
+    Do.SaveMUA_perArray = true;
+    Do.SaveLFP_perArray = false;
+    
+    Do.CreatePrediction = false;
+    
+    Do.FitPRF           = false;
+    Do.FitMUA           = false; % MUA data
+    Do.FitLFP           = false; % LFP data (split by freq band)
+    
+    Do.PlotPRF_MUA      = false;
+    Do.PlotPRF_LFP      = false;
+end
 
+if nargin<2
+    subj = 'Lick';
+    sess = '20180807_B2';
+    fprintf(['Using defaults, SUBJ: ' subj ', SESS: ' sess '\n\n']);
+end
+setup = 'NIN';
 
-%% Init ===================================================================
-Do.Load.Any         = true;
-Do.Load.ProcMUA     = true;
-Do.Load.ProcLFP     = false;
-Do.Load.ProcBEH     = true;
-Do.SaveMUA_perArray = true;
-Do.SaveLFP_perArray = false;
-
+fprintf('=============================================================\n');
+fprintf(' Loading and processing data for %s, %s\n', subj, sess);
+fprintf('=============================================================\n');
 
 %% data location ==========================================================
 base_path = pwd;
 if ismac % laptop & portable HDD
-    %data_path = '/Volumes/MRI_2/PRF_EPHYS';
-    data_path = '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/Data/ephys';
+    data_path = '/Volumes/MRI_2/PRF_EPHYS';
     home_path = '/Users/chris';
 else %
     data_path = '/media/NETDISKS/VS02/VandC/PRF_EPHYS';
@@ -29,16 +54,123 @@ end
 raw_fld = fullfile(data_path,'Data_raw');
 pp_fld = fullfile(data_path,'Data_preproc');
 beh_fld = fullfile(data_path,'Log_pRF');
-save_fld = fullfile(data_path,'Data_check');
+save_fld = fullfile(data_path,'Data_proc');
 ch_fld = fullfile(data_path,'Channelmaps');
-
-[~,~] = mkdir(save_fld);
 
 %% load blackrock tools ===================================================
 addpath(genpath(fullfile(home_path,'Documents','CODE','NPMK')));
 
 %% load chronux for lfp analysis ==========================================
 addpath(genpath(fullfile(home_path,'Dropbox','MATLAB_NONGIT','TOOLBOX','chronux')));
+
+%% Get digital channel contents ===========================================
+if Do.Load.DigChan
+    cd(fullfile(raw_fld,subj,sess));
+    nev_files = dir('*.nev');
+    fprintf('=== Loading digital channel info ===\n');
+    for i=1:length(nev_files)
+        NEV=openNEV(fullfile(nev_files(i).folder,nev_files(i).name));
+        N(i).TimeStamp = NEV.Data.SerialDigitalIO.TimeStamp;
+        N(i).t0 = N(i).TimeStamp(1);
+        
+        N(i).DigData = NEV.Data.SerialDigitalIO.UnparsedData;
+        N(i).bits = log2(single(N(i).DigData));
+        
+        N(i).sf = 30e3;
+        N(i).fp_i = find(N(i).bits==1,1,'first');
+        N(i).t_fp = N(i).TimeStamp(N(i).fp_i);
+        clear NEV
+    end
+    fprintf('Done!\n');
+    cd(base_path);
+end
+
+% get the channelmapping
+if strcmp(subj,'Lick')
+    C=load(fullfile(ch_fld,'channel_area_mapping_lick'));
+elseif strcmp(subj,'Aston')
+    C=load(fullfile(ch_fld,'channel_area_mapping_aston'));
+end
+
+%% Get MUA ================================================================
+if Do.Load.MUA
+    cd(fullfile(pp_fld,subj,sess));
+    mua_files = dir('MUA*.mat');
+    fprintf('=== Loading preprocessed MUA ===\n');
+    for i=1:length(mua_files)
+        fprintf([num2str(i) '/' num2str(length(mua_files)) '\n']);
+        load(fullfile(mua_files(i).folder,mua_files(i).name));
+        M(i).chan=channelDataMUA;% (1:128);
+        M(i).sf = 1e3;
+        % create timeline based on digital channel
+        M(i).tsec = 0:1/M(i).sf:(1/M(i).sf)*length(M(i).chan{1});
+        M(i).tsec(end)=[];
+        clear channelDataMUA
+    end
+    fprintf('Done!\n');
+    cd(base_path);
+end
+
+%% Get LFP ================================================================
+if Do.Load.LFP
+    cd(fullfile(pp_fld,subj,sess));
+    lfp_files = dir('LFP*.mat');
+    fprintf('=== Loading preprocessed LFP ===\n');
+    for i=1:length(lfp_files)
+        fprintf([num2str(i) '/' num2str(length(lfp_files)) '\n']);
+        load(fullfile(lfp_files(i).folder,lfp_files(i).name));
+        L(i).chan=channelDataLFP(1:128);
+        L(i).t = M(i).tsec(1):1/L(i).chan{1}.LFPsamplerate:M(i).tsec(end);
+        clear channelDataLFP
+    end
+    fprintf('Done!\n');
+    cd(base_path);
+end
+
+%% Get behavioral log =====================================================
+if Do.Load.Behavior
+    cd(fullfile(beh_fld,setup,subj))
+    temp_fld=dir(['*' sess(1:8) '*']);
+    cd(fullfile(temp_fld(1).folder,temp_fld(1).name));
+    temp_fld=dir(['*' sess(1:8) '*']);
+    fprintf('=== Loading Behavioral logs ===\n');
+    for recn = 1:length(temp_fld)
+        cd(fullfile(temp_fld(recn).folder,temp_fld(recn).name));
+        mat_fn = dir('Log*Run*.mat');
+        for m=1:length(mat_fn)
+            fprintf([mat_fn(m).name '\n']);
+            B(recn,m)=load(fullfile(mat_fn(m).folder,mat_fn(m).name));
+            MTi = find(arrayfun(@(x) strcmp(x.type,'MRITrigger'),...
+                B(recn,m).Log.Events)==1,1,'first');
+            if m==1
+                triggertime=B(recn,m).Log.Events(MTi).t;
+            end
+            for tt=1:length(B(recn,m).Log.Events)
+                B(recn,m).Log.Events(tt).t_mri = B(recn,m).Log.Events(tt).t - ...
+                    triggertime;
+            end
+        end
+        % also get the stimulus
+        S = load('RetMap_Stimulus.mat');
+        S = S.ret_vid;
+        
+        for j=1:size(S,2)
+            ori = S(j).orient(1);
+            imnr = mod(j,B(recn).StimObj.Stm.RetMap.nSteps/8);
+            if imnr==0; imnr=B(recn).StimObj.Stm.RetMap.nSteps/8;end
+            img = S(imnr).img{1};
+            img(img==255 | img==0)=1;
+            img(img~=1)=0;
+            STIM.img{j}=imrotate(img,-ori,'nearest','crop');
+        end
+        STIM.blank = uint8(zeros(size(STIM.img{j})));
+        fprintf(['Saving ' fullfile(save_fld,[subj '_' sess '_STIM\n'])]);
+        warning off; mkdir(fullfile(save_fld,subj,sess)); warning on
+        save(fullfile(save_fld,subj,sess,[subj '_' sess '_STIM']),'STIM','B','-v7.3');
+    end
+    fprintf('Done!\n');
+    cd(base_path);
+end
 
 %% Load already processed files ===========================================
 warning off
@@ -95,9 +227,25 @@ if Do.SyncTimes
     fprintf('Done!\n');
 end
 
+%% Saving the (rawish) MUA & LFP data =====================================
+if Do.SaveUncut
+    fprintf('=== Saving the un-cut data =====\n');
+    fprintf(fullfile(save_fld,subj,sess,'MUA',...
+        [subj '_' sess '_uncut_MUA\n']));
+    warning off; mkdir(fullfile(save_fld,subj,sess,'MUA')); warning on
+    save(fullfile(save_fld,subj,sess,'MUA',...
+        [subj '_' sess '_uncut_MUA']),'M','B','N','C','-v7.3');
+    fprintf(fullfile(save_fld,subj,sess,'LFP',...
+        [subj '_' sess '_uncut_LFP\n']));
+    warning off; mkdir(fullfile(save_fld,subj,sess,'LFP')); warning on
+    save(fullfile(save_fld,subj,sess,'LFP',...
+        [subj '_' sess '_uncut_LFP']),'L','B','N','C','-v7.3');
+    fprintf('Done!\n');
+end
+
 %% Get MUA responses for each stim-position / channel =====================
 if Do.SaveMUA_perArray
-    win = [0 B(1).Par.TR*B(1).StimObj.Stm.RetMap.TRsPerStep]; %[start stop] in sec
+    win = [0.05 B(1).Par.TR*B(1).StimObj.Stm.RetMap.TRsPerStep]; %[start stop] in sec
     fprintf('=== Getting MUA response per trial =====\n');
     for m=1:length(M) %>> while testing, do only 1 array
         fprintf('- Array %d -', m);
@@ -134,19 +282,31 @@ if Do.SaveMUA_perArray
             
             % average over runs
             mMUA(c).runs = M(m).ch(c).coll;
-            mMUA(c).mean = mean(M(m).ch(c).coll);
-            mMUA(c).std = std(M(m).ch(c).coll);
-            mMUA(c).BL = mean(mean(M(m).ch(c).BL));
+            SIG = [];
+            for r=1:size(M(m).ch(c).BL,1)
+                 SIG = [SIG; M(m).ch(c).coll(r,:)-mean(M(m).ch(c).BL(r,:),2)];
+            end
+            mMUA(c).mean = mean(SIG);
+            mMUA(c).std = std(SIG);
+            mMUA(c).BL = mean(M(m).ch(c).BL);
             
             mMUA_odd(c).runs = M(m).ch(c).coll_odd;
-            mMUA_odd(c).mean = mean(M(m).ch(c).coll_odd);
-            mMUA_odd(c).std = std(M(m).ch(c).coll_odd);
-            mMUA_odd(c).BL = mean(mean(M(m).ch(c).BL_odd));
+            SIG_odd = [];
+            for r=1:size(M(m).ch(c).BL_odd,1)
+                 SIG_odd = [SIG_odd; M(m).ch(c).coll_odd(r,:)-mean(M(m).ch(c).BL_odd(r,:),2)];
+            end
+            mMUA_odd(c).mean = mean(SIG_odd);
+            mMUA_odd(c).std = std(SIG_odd);
+            mMUA_odd(c).BL = mean(M(m).ch(c).BL_odd);
             
             mMUA_even(c).runs = M(m).ch(c).coll_even;
-            mMUA_even(c).mean = mean(M(m).ch(c).coll_even);
-            mMUA_even(c).std = std(M(m).ch(c).coll_even);
-            mMUA_even(c).BL = mean(mean(M(m).ch(c).BL_even));
+            SIG_even = [];
+            for r=1:size(M(m).ch(c).BL_even,1)
+                 SIG_even = [SIG_even; M(m).ch(c).coll_even(r,:)-mean(M(m).ch(c).BL_even(r,:),2)];
+            end
+            mMUA_even(c).mean = mean(SIG_even);
+            mMUA_even(c).std = std(SIG_even);
+            mMUA_even(c).BL = mean(M(m).ch(c).BL_even);
             
             % split by bar position
             for b=1:length(N(m).run(1).stim_sec)
@@ -170,14 +330,14 @@ if Do.SaveMUA_perArray
         end
         fprintf('\n');
         fprintf('Saving the averaged MUA responses for array %d...\n', m);
-        warning off; mkdir(fullfile(save_fld,subj,sess,'MUA')); warning on
-        save(fullfile(save_fld,subj,sess,'MUA',...
+        warning off; [~,~]=mkdir(fullfile(save_fld,subj,sess,'MUA_blc')); warning on
+        save(fullfile(save_fld,subj,sess,'MUA_blc',...
             [subj '_' sess '_array_' num2str(m) '_mMUA']),'mMUA','C','-v7.3');
         clear mMUA
-        save(fullfile(save_fld,subj,sess,'MUA',...
+        save(fullfile(save_fld,subj,sess,'MUA_blc',...
             [subj '_' sess '_array_' num2str(m) '_mMUA_odd']),'mMUA_odd','C','-v7.3');
         clear mMUA_odd
-        save(fullfile(save_fld,subj,sess,'MUA',...
+        save(fullfile(save_fld,subj,sess,'MUA_blc',...
             [subj '_' sess '_array_' num2str(m) '_mMUA_even']),'mMUA_even','C','-v7.3');
         clear mMUA_even
     end
