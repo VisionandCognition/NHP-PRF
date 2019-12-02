@@ -9,7 +9,7 @@ MUA1=MUA;
 load(fullfile(base,'FitResults','MultiModal',CVMODE{2},'MUA_Struct'));
 MUA2=MUA;
 fprintf('Done!\n')
-xvalsel = 'RTEm';
+xvalsel = 'RTEmx';
 
 %% set R2 window to look at ===============================================
 model1=['linear_ephys_' CVMODE{1}];
@@ -61,18 +61,18 @@ aSz2 = MUA2.(xvalsel).rfs(...
     strcmp(MUA2.(xvalsel).Model,model2)...
     );
 
-plot([0 5],[0 5],'k');
-xlabel(CVMODE{1}); ylabel(CVMODE{2});
-scatter(aSz1(S0),aSz2(S0));
-axis([0 5 0 5])
-title('size')
-
 %% Universal selection ====================================================
 S0 = (aR1>RT(1) & aR1<RT(2) & aR2>RT(1) & aR2<RT(2));
 S = (aR1>RT(1) & aR1<RT(2) & aR2>RT(1) & aR2<RT(2) & aSz1<maxSz);
 LRF = aSz1<maxSz;
 
 dSz = abs( aSz1(S) - aSz2(S) );
+
+plot([0 5],[0 5],'k');
+xlabel(CVMODE{1}); ylabel(CVMODE{2});
+scatter(aSz1(S0),aSz2(S0));
+axis([0 5 0 5])
+title('size')
 
 %% position ===============================================================
 subplot(2,2,3);hold on;

@@ -124,7 +124,6 @@ for r = 1:length(R_EPHYS) % animals
                 for f=1:length(F)
                     if isfield(R_EPHYS(r).model(m).MUA(i), F{f})
                         R_EPHYS(r).model(m).MUA(i).avg.(F{f}) = mean(R_EPHYS(r).model(m).MUA(i).(F{f}),2);
- 
                     end
                 end
                 
