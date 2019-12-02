@@ -157,21 +157,24 @@ for r = 1:length(R_EPHYS) % animals
                 
                 % get maximum R2 version of some values
                 [R_EPHYS(r).model(m).MUA(i).max.R2, R_EPHYS(r).model(m).MUA(i).max.R2_idx] = ...
-                    max(R_EPHYS(r).model(m).MUA(i).R2,[],2);
+                    max(R_EPHYS(r).model(m).MUA(i).R2,[],2);                
                 R_EPHYS(r).model(m).MUA(i).max.R2_idx = ...
-                     [R_EPHYS(r).model(m).MUA(i).max.R2_idx==1;...
-                      R_EPHYS(r).model(m).MUA(i).max.R2_idx==2];
+                     [R_EPHYS(r).model(m).MUA(i).max.R2_idx==1,...
+                      R_EPHYS(r).model(m).MUA(i).max.R2_idx==2]';
                 
                 F={'rfs','gain','ecc','ang','fwhm','sdratio','normamp','expt'};
                 for f=1:length(F)
                     if isfield(R_EPHYS(r).model(m).MUA(i), F{f}) && ~isempty(R_EPHYS(r).model(m).MUA(i).(F{f}))
-                        R_EPHYS(r).model(m).MUA(i).max.(F{f}) = ...
-                            R_EPHYS(r).model(m).MUA(i).(F{f})(R_EPHYS(r).model(m).MUA(i).max.R2_idx);
+                       TEMP = R_EPHYS(r).model(m).MUA(i).(F{f})'; 
+                       R_EPHYS(r).model(m).MUA(i).max.(F{f}) = ...
+                            TEMP(R_EPHYS(r).model(m).MUA(i).max.R2_idx);
                     end
                 end
-                R_EPHYS(r).model(m).MUA(i).max.X = R_EPHYS(r).model(m).MUA(i).X(R_EPHYS(r).model(m).MUA(i).max.R2_idx);
-                R_EPHYS(r).model(m).MUA(i).max.Y = R_EPHYS(r).model(m).MUA(i).Y(R_EPHYS(r).model(m).MUA(i).max.R2_idx);
-
+                TEMPX = R_EPHYS(r).model(m).MUA(i).X';
+                R_EPHYS(r).model(m).MUA(i).max.X = TEMPX(R_EPHYS(r).model(m).MUA(i).max.R2_idx);
+                TEMPY = R_EPHYS(r).model(m).MUA(i).Y';
+                R_EPHYS(r).model(m).MUA(i).max.Y = TEMPY(R_EPHYS(r).model(m).MUA(i).max.R2_idx);
+                
             end
             if isfield(R_EPHYS(r).model(m).MUA,'rfsize')
                 R_EPHYS(r).model(m).MUA = rmfield(R_EPHYS(r).model(m).MUA,'rfsize');
@@ -233,18 +236,22 @@ for r = 1:length(R_EPHYS) % animals
                     [R_EPHYS(r).model(m).LFP(i,fb).max.R2, R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx] = ...
                         max(R_EPHYS(r).model(m).LFP(i,fb).R2,[],2);
                     R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx = ...
-                        [R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx==1;...
-                        R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx==2];
+                        [R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx==1,...
+                        R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx==2]';
                     
                     F={'rfs','gain','ecc','ang','fwhm','sdratio','normamp','expt'};
                     for f=1:length(F)
                         if isfield(R_EPHYS(r).model(m).LFP(i,fb), F{f}) && ~isempty(R_EPHYS(r).model(m).LFP(i,fb).(F{f}))
+                            TEMP = R_EPHYS(r).model(m).LFP(i,fb).(F{f})';
                             R_EPHYS(r).model(m).LFP(i,fb).max.(F{f}) = ...
-                                R_EPHYS(r).model(m).LFP(i,fb).(F{f})(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx);
+                                TEMP(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx);
                         end
                     end
-                    R_EPHYS(r).model(m).LFP(i,fb).max.X = R_EPHYS(r).model(m).LFP(i,fb).X(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx);
-                    R_EPHYS(r).model(m).LFP(i,fb).max.Y = R_EPHYS(r).model(m).LFP(i,fb).Y(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx);
+                    TEMPX = R_EPHYS(r).model(m).LFP(i,fb).X';
+                    R_EPHYS(r).model(m).LFP(i,fb).max.X = TEMPX(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx);
+                    TEMPY = R_EPHYS(r).model(m).LFP(i,fb).Y';
+                    R_EPHYS(r).model(m).LFP(i,fb).max.Y = TEMPY(R_EPHYS(r).model(m).LFP(i,fb).max.R2_idx);
+                    
                 end
             end
             if isfield(R_EPHYS(r).model(m).LFP,'rfsize')
