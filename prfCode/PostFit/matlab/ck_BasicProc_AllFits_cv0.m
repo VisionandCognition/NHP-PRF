@@ -529,9 +529,9 @@ for r = 1:length(R_EPHYS) % animals
         RTE.SigType = cat(1,RTE.SigType,RTE_SigType);
         %--
         if m==1
-            RTEm_Array=[];
-            RTEm_Chan=[];
-            RTEm_Area=[];
+            RTE_Array=[];
+            RTE_Chan=[];
+            RTE_Area=[];
             for f=1:nFB
                 RTE_Array=[RTE_Array; R_EPHYS(r).cm(:,3)];
                 RTE_Chan=[RTE_Chan; R_EPHYS(r).cm(:,4)];
