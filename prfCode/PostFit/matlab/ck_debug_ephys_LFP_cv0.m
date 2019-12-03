@@ -12,7 +12,7 @@ fprintf('Done!\n')
 model=['linear_ephys_' CVMODE];
 monkey='lick';
 
-RT = [70 100];
+RT = [50 100];
 maxSz = 1000;
 SigTypes = {'Theta','Alpha','Beta','lGamma','hGamma'};
 
@@ -24,6 +24,12 @@ for fb=1:5
         mR = [mR; RetMap(1).LFP(i,fb).rcrf(1:128)'];
     end
     
+    aR = LFP.RTE.R2(strcmp(...
+        LFP.RTE.Monkey,monkey) & ...
+        strcmp(LFP.RTE.Model,model) & ...
+        strcmp(LFP.RTE.SigType,SigTypes{fb}) ...
+        );
+    
     figure;
     subplot(1,2,1);
     histogram(mR*100,0:100);
@@ -34,13 +40,6 @@ for fb=1:5
     
     figure;
     subplot(2,2,1);hold on;
-        
-    aR = LFP.RTE.R2(strcmp(...
-        LFP.RTE.Monkey,monkey) & ...
-        strcmp(LFP.RTE.Model,model) & ...
-        strcmp(LFP.RTE.SigType,SigTypes{fb}) ...
-        );
-    
     plot([0 100],[0 100],'k');
     xlabel('manual fit'); ylabel('analyzePRF');
     scatter(mR*100,aR);

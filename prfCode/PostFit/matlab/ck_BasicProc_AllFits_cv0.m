@@ -518,9 +518,9 @@ for r = 1:length(R_EPHYS) % animals
         RTE.Model = cat(1,RTE.Model,RTE_Model);
         %--
         RTE_SigType = cell(nChan*nInst,1); i=1;
-        for ni = 1:nInst
-            for n=1:nChan
-                for f=1:nFB
+        for f=1:nFB
+            for ni = 1:nInst
+                for n=1:nChan
                     RTE_SigType{i} = LFPlabels{f};
                     i=i+1;
                 end
@@ -532,15 +532,15 @@ for r = 1:length(R_EPHYS) % animals
             RTE_Array=[];
             RTE_Chan=[];
             RTE_Area=[];
-            idx=1;
-            for ni = 1:nInst
-                for n=1:nChan
-                    for f=1:nFB
+            for f=1:nFB
+                idx=1;
+                for ni = 1:nInst
+                    for n=1:nChan
                         RTE_Array =[RTE_Array; R_EPHYS(r).cm(idx,3)];
                         RTE_Chan = [RTE_Chan; R_EPHYS(r).cm(idx,4)];   
                         RTE_Area = [RTE_Area; R_EPHYS(r).cm(idx,5)];
+                        idx=idx+1;
                     end
-                    idx=idx+1;
                 end
             end
             RTE.Array = [RTE.Array; repmat(RTE_Array,nMod,1)];

@@ -1,4 +1,5 @@
 function ck_BasicProc_AllFits_cv1
+
 % this script will do some basic processing like calculate 
 % - X,Y coordinates from polar coordinates
 
@@ -1007,9 +1008,9 @@ for r = 1:length(R_EPHYS) % animals
         RTEm.Model = cat(1,RTEm.Model,RTEm_Model);
         %--
         RTEm_SigType = cell(nChan*nInst,1); i=1;
-        for ni = 1:nInst
-            for n=1:nChan
-                for f=1:nFB
+        for f=1:nFB
+            for ni = 1:nInst
+                for n=1:nChan
                     RTEm_SigType{i} = LFPlabels{f};
                     i=i+1;
                 end
@@ -1021,15 +1022,15 @@ for r = 1:length(R_EPHYS) % animals
             RTEm_Array=[];
             RTEm_Chan=[];
             RTEm_Area=[];
-            idx=1;
-            for ni = 1:nInst
-                for n=1:nChan
-                    for f=1:nFB
+            for f=1:nFB
+                idx=1;
+                for ni = 1:nInst
+                    for n=1:nChan
                         RTEm_Array =[RTEm_Array; R_EPHYS(r).cm(idx,3)];
                         RTEm_Chan = [RTEm_Chan; R_EPHYS(r).cm(idx,4)];   
                         RTEm_Area = [RTEm_Area; R_EPHYS(r).cm(idx,5)];
+                        idx=idx+1;
                     end
-                    idx=idx+1;
                 end
             end
             RTEm.Array = [RTEm.Array; repmat(RTEm_Array,nMod,1)];

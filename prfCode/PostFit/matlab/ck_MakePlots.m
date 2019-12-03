@@ -4,7 +4,7 @@
 %% Paths ==================================================================
 BaseFld = pwd;
 ResFld = ...
-    '/Users/chris/Documents/MRI_ANALYSIS/NHP-PRF/FitResults/MultiModal';
+    '/Users/chris/Documents/MRI_ANALYSIS/NHP-PRF/FitResults/MultiModal/cv1';
 T='Tables_max';
 
 %% Load ===================================================================
@@ -20,7 +20,6 @@ for mi = 1:length(m)
     T(mi).mod = M;
     T(mi).name = m{mi};
 end
-
 
 %% scatter plots & differences -----
 figure;
@@ -77,7 +76,7 @@ set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
 %s_R2 = T(7).mod.R2>0;
 %roi={'V1','V2_merged','V3_merged','V4_merged','MT','TEO'};
 
-figure;
+%figure;
 %subplot(2,3,4); hold on;
 
 diffmat{1}=[];
@@ -246,16 +245,6 @@ figure; hold on
 bar(1:length(diffmat2{1}),diffmat2{1}(:,1));
 errorbar(1:length(diffmat2{1}),diffmat2{1}(:,1),diffmat2{1}(:,3),'Linestyle','none')
 
-
-
-
-
-
-
-
-
-
-
 %% ECC vs Size plot s -----
 figure;
 
@@ -336,7 +325,7 @@ end
 set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
 
 %% Ephys VFC ----
-% MUA
+% LFP Low Gamma
 s=tLFP_max.R2>10;
 
 model='css_ephys_cv1';
@@ -474,7 +463,7 @@ C=[C tMUA_max.X(s)./668.745 tMUA_max.Y(s)./668.745 tMUA_max.rfs(s)./2];
 
 model='css_ephys_cv1';
 s = strcmp(tLFP_max.Model,model);
-sig=unique(tLFP_max.SigType)
+sig=unique(tLFP_max.SigType);
 for i=[2 5 4]
     b=strcmp(tLFP_max.SigType,sig{i});
     C=[C tLFP_max.R2(s & b) tLFP_max.X(s & b) tLFP_max.Y(s & b) tLFP_max.rfs(s & b)];
