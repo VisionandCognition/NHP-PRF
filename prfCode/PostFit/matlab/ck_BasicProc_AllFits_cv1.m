@@ -1023,15 +1023,9 @@ for r = 1:length(R_EPHYS) % animals
             RTEm_Chan=[];
             RTEm_Area=[];
             for f=1:nFB
-                idx=1;
-                for ni = 1:nInst
-                    for n=1:nChan
-                        RTEm_Array =[RTEm_Array; R_EPHYS(r).cm(idx,3)];
-                        RTEm_Chan = [RTEm_Chan; R_EPHYS(r).cm(idx,4)];   
-                        RTEm_Area = [RTEm_Area; R_EPHYS(r).cm(idx,5)];
-                        idx=idx+1;
-                    end
-                end
+                RTEm_Array=[RTEm_Array; R_EPHYS(r).cm(:,3)];
+                RTEm_Chan=[RTEm_Chan; R_EPHYS(r).cm(:,4)];
+                RTEm_Area=[RTEm_Area; R_EPHYS(r).cm(:,5)];
             end
             RTEm.Array = [RTEm.Array; repmat(RTEm_Array,nMod,1)];
             RTEm.Chan = [RTEm.Chan; repmat(RTEm_Chan,nMod,1)];
@@ -1039,8 +1033,8 @@ for r = 1:length(R_EPHYS) % animals
         end
         
         %-- 
-        for i=1:nInst
-            for f=1:nFB
+        for f=1:nFB
+            for i=1:nInst
                 % standard fields
                 RTEm.rfs = cat(1,RTEm.rfs,R_EPHYS(r).model(m).LFP(i,f).avg.rfs);
                 RTEm.fwhm = cat(1,RTEm.fwhm,R_EPHYS(r).model(m).LFP(i,f).avg.fwhm);
@@ -1097,8 +1091,8 @@ for r = 1:length(R_EPHYS) % animals
         RTEmx.Area = RTEm.Area;
         
         %-- 
-        for i=1:nInst
-            for f=1:nFB
+        for f=1:nFB
+            for i=1:nInst
                 % standard fields
                 RTEmx.rfs = cat(1,RTEmx.rfs,R_EPHYS(r).model(m).LFP(i,f).max.rfs);
                 RTEmx.fwhm = cat(1,RTEmx.fwhm,R_EPHYS(r).model(m).LFP(i,f).max.fwhm);
@@ -1147,8 +1141,8 @@ for r = 1:length(R_EPHYS) % animals
         
         % diff ====    
         %--
-        for i=1:nInst % exclude classic RF here (no point in adding)
-            for f=1:nFB
+        for f=1:nFB
+            for i=1:nInst 
                 % standard fields
                 RTE.rfs_1 = cat(1,RTE.rfs_1,R_EPHYS(r).model(m).LFP(i,f).rfs(:,1));
                 RTE.fwhm_1 = cat(1,RTE.fwhm_1,R_EPHYS(r).model(m).LFP(i,f).fwhm(:,1));

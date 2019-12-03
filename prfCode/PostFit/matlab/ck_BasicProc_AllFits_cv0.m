@@ -529,19 +529,13 @@ for r = 1:length(R_EPHYS) % animals
         RTE.SigType = cat(1,RTE.SigType,RTE_SigType);
         %--
         if m==1
-            RTE_Array=[];
-            RTE_Chan=[];
-            RTE_Area=[];
+            RTEm_Array=[];
+            RTEm_Chan=[];
+            RTEm_Area=[];
             for f=1:nFB
-                idx=1;
-                for ni = 1:nInst
-                    for n=1:nChan
-                        RTE_Array =[RTE_Array; R_EPHYS(r).cm(idx,3)];
-                        RTE_Chan = [RTE_Chan; R_EPHYS(r).cm(idx,4)];   
-                        RTE_Area = [RTE_Area; R_EPHYS(r).cm(idx,5)];
-                        idx=idx+1;
-                    end
-                end
+                RTE_Array=[RTE_Array; R_EPHYS(r).cm(:,3)];
+                RTE_Chan=[RTE_Chan; R_EPHYS(r).cm(:,4)];
+                RTE_Area=[RTE_Area; R_EPHYS(r).cm(:,5)];
             end
             RTE.Array = [RTE.Array; repmat(RTE_Array,nMod,1)];
             RTE.Chan = [RTE.Chan; repmat(RTE_Chan,nMod,1)];
@@ -549,8 +543,8 @@ for r = 1:length(R_EPHYS) % animals
         end
         
         %-- 
-        for i=1:nInst
-            for f=1:nFB
+        for f=1:nFB
+            for i=1:nInst
                 % standard fields
                 RTE.rfs = cat(1,RTE.rfs,R_EPHYS(r).model(m).LFP(i,f).rfs);
                 RTE.fwhm = cat(1,RTE.fwhm,R_EPHYS(r).model(m).LFP(i,f).fwhm);
