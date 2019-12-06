@@ -259,7 +259,7 @@ for r=1:length(roi)
         T(2).mod.rfs(s_R2 & T(2).mod.(roi{r})),'Marker','.');
 end
 title('ecc vs rfs'); xlabel('ecc');ylabel('rfs');
-set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+set(gca, 'Box','off', 'xlim', [0 20], 'ylim',[0 20]);
 
 %% Ephys VFC ----
 % MUA
@@ -333,7 +333,7 @@ b = 'lGamma';
 figure;
 
 subplot(2,2,1);hold on;
-szm=tLFP_max.rfs<5;
+szm=tLFP_max.rfs<50;
 m=strcmp(tLFP_max.Monkey,'lick') & ...
     strcmp(tLFP_max.Model, model) & ...
     strcmp(tLFP_max.SigType, b);
@@ -348,7 +348,7 @@ end
 set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
 
 subplot(2,2,3);hold on;
-szm=tLFP_max.rfs<5;
+szm=tLFP_max.rfs<50;
 m=strcmp(tLFP_max.Monkey,'lick') & strcmp(tLFP_max.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
@@ -362,91 +362,31 @@ end
 set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
 
 subplot(2,2,2);hold on;
-m=strcmp(tMUA_max.Monkey,'aston') & strcmp(tMUA_max.Model,model);
+m=strcmp(tLFP_max.Monkey,'aston') & strcmp(tLFP_max.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==1;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v),...
-        tMUA_max.Y(s & m & a & v),'Marker','*' )
+v=tLFP_max.Area==1;
+for r=unique(tLFP_max.Array)'
+    a=tLFP_max.Array==r;
+    scatter(tLFP_max.X(s & m & a & v),...
+        tLFP_max.Y(s & m & a & v),'Marker','*' )
 
 end
 set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
 
 subplot(2,2,4);hold on;
-m=strcmp(tMUA_max.Monkey,'aston') & strcmp(tMUA_max.Model,model);
+m=strcmp(tLFP_max.Monkey,'aston') & strcmp(tLFP_max.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==4;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v),...
-        tMUA_max.Y(s & m & a & v),'Marker','*' )
+v=tLFP_max.Area==4;
+for r=unique(tLFP_max.Array)'
+    a=tLFP_max.Array==r;
+    scatter(tLFP_max.X(s & m & a & v),...
+        tLFP_max.Y(s & m & a & v),'Marker','*' )
 
 end
 set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
 
-
-
-%% Ephys VFC ----
-% LFP gamma
-s=tMUA_max.SNR>2;
-model='classicRF';
-
-figure;
-
-subplot(2,2,1);hold on;
-m=strcmp(tMUA_max.Monkey,'lick') & strcmp(tMUA_max.Model,model);
-plot([-10 20],[0 0],'k');
-plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==1;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v)./668.745,...
-        tMUA_max.Y(s & m & a & v)./668.745,'Marker','*' )
-    sum(s & m & a & v)
-end
-%set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
-
-subplot(2,2,3);hold on;
-m=strcmp(tMUA_max.Monkey,'lick') & strcmp(tMUA_max.Model,model);
-plot([-10 20],[0 0],'k');
-plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==4;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v)./668.745,...
-        tMUA_max.Y(s & m & a & v)./668.745,'Marker','*' )
-
-end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
-
-subplot(2,2,2);hold on;
-m=strcmp(tMUA_max.Monkey,'aston') & strcmp(tMUA_max.Model,model);
-plot([-10 20],[0 0],'k');
-plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==1;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v)./668.745,...
-        tMUA_max.Y(s & m & a & v)./668.745,'Marker','*' )
-
-end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
-
-subplot(2,2,4);hold on;
-m=strcmp(tMUA_max.Monkey,'aston') & strcmp(tMUA_max.Model,model);
-plot([-10 20],[0 0],'k');
-plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==4;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v)./668.745,...
-        tMUA_max.Y(s & m & a & v)./668.745,'Marker','*' )
-
-end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
 
 %% Ephys location difference & size difference  ---
 C=[];R2m=[];SZ=[];
@@ -464,7 +404,8 @@ C=[C tMUA_max.X(s)./668.745 tMUA_max.Y(s)./668.745 tMUA_max.rfs(s)./2];
 model='css_ephys_cv1';
 s = strcmp(tLFP_max.Model,model);
 sig=unique(tLFP_max.SigType);
-for i=[2 5 4]
+for i=[1 2 3 5 4]
+    %fprintf([num2str(i) '\n'])
     b=strcmp(tLFP_max.SigType,sig{i});
     C=[C tLFP_max.R2(s & b) tLFP_max.X(s & b) tLFP_max.Y(s & b) tLFP_max.rfs(s & b)];
     R2m=[R2m tLFP_max.R2(s & b)];
@@ -515,23 +456,32 @@ plot([0 100],[0 100],'k');
 scatter(R2(:,4), R2(:,2),'Marker','.',...
     'MarkerEdgeColor',[.3 .3 .3]);
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+xlabel(m{4},'interpreter','none'); ylabel(m{2},'interpreter','none');
+title('MUA');
 
 subplot(1,3,2); hold on;
 plot([0 100],[0 100],'k');
 scatter(R2(:,4), R2(:,3),'Marker','.',...
     'MarkerEdgeColor',[.3 .3 .3]);
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+xlabel(m{4},'interpreter','none'); ylabel(m{3},'interpreter','none');
+title('MUA');
 
 subplot(1,3,3); hold on;
 plot([0 100],[0 100],'k');
 scatter(R2(:,2), R2(:,3),'Marker','.',...
     'MarkerEdgeColor',[.3 .3 .3]);
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+xlabel(m{2},'interpreter','none'); ylabel(m{3},'interpreter','none');
+title('MUA');
 
 %% LFP model comparison ---
+figure; 
+
 l=unique(tLFP_max.SigType);
+spn=1;
 for fb=1:length(l)
-    
+   
     m=unique(tLFP_max.Model);
     R2=[];
     for i=1:length(m)
@@ -540,64 +490,61 @@ for fb=1:length(l)
             strcmp(tLFP_max.SigType,l{fb}))];
     end
     
-    figure;
-    subplot(1,3,1); hold on;
+    subplot(length(l),3,spn); hold on;
     plot([0 100],[0 100],'k');
-    scatter(R2(:,4), R2(:,2),'Marker','.',...
+    scatter(R2(:,3), R2(:,1),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+    xlabel(m{3},'interpreter','none');ylabel(m{1},'interpreter','none')
+    title(l{fb})
+    spn=spn+1;
     
-    subplot(1,3,2); hold on;
+    subplot(length(l),3,spn); hold on;
     plot([0 100],[0 100],'k');
-    scatter(R2(:,4), R2(:,3),'Marker','.',...
+    scatter(R2(:,3), R2(:,2),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+    xlabel(m{3},'interpreter','none');ylabel(m{2},'interpreter','none')
+    title(l{fb})
+    spn=spn+1;
     
-    subplot(1,3,3); hold on;
+    subplot(length(l),3,spn); hold on;
     plot([0 100],[0 100],'k');
-    scatter(R2(:,2), R2(:,3),'Marker','.',...
+    scatter(R2(:,1), R2(:,2),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+    xlabel(m{1},'interpreter','none');ylabel(m{2},'interpreter','none')
+    title(l{fb})
+    spn=spn+1;
 end
 
 %%
+% SZ is [ MUA_R2(1) MUA_RFS(2) ALPHA_R2(3) ALPHA_RFS(4) BETA_R2(5) BETA_RFS(6) THETA_R2(7)
+% THETA_RFS(8) LGAM_R2(9) LG_RFS(10) HGAM_R2(11) HGAM_RFS(12)]
+
+LAB=['MUA';l];
+
+figure;
 r2th=50;
-c=0;
-for ref=1:2:7
+
+c=0;d=0;
+for ref=1:2:12
     c=c+1;
-    figure;
-    d=0;
     SS(c).nSZ =[];
-    for fb=1:2:9
+    for fb=1:2:12
         d=d+1;
-        s=(SZ(:,ref)>r2th & SZ(:,fb)>r2th & SZ(:,ref+1)<10 & SZ(:,fb+1)<10);
-        subplot(1,5,d); hold on; plot([0 10],[0 10],'k');
+        s=(SZ(:,ref)>r2th & SZ(:,fb)>r2th);
+        
+        subplot(6,6,d); hold on; plot([0 100],[0 100],'k');
+        
         scatter(SZ(s,ref+1),SZ(s,fb+1))
+        xlabel(LAB{(ref+1)/2});ylabel(LAB{(fb+1)/2});
+        title('pRF size')
+        
+        set(gca,'xlim',[0 10],'ylim',[0 10]);
+        
         SS(c).nSZ = [SS(c).nSZ ; ...
             median(diff(SZ(s,[ref+1 fb+1]),1,2)) std(diff(SZ(s,[ref+1 fb+1]),1,2))./sqrt(sum(s)) ...
             mean(  SZ(s,fb+1)./SZ(s,ref+1) ) std(  SZ(s,fb+1)./SZ(s,ref+1) )./sqrt(sum(s))];
     end
 end
-
-
-
-%%
-s=(SZ(:,1)>20 & SZ(:,3)>20 & SZ(:,2)<10 & SZ(:,6)<10);
-nSZ = [nSZ ; ...
-    mean(diff(SZ(s,[2 6]),1,2)) std(diff(SZ(s,[2 6]),1,2))./sqrt(sum(s)) ...
-    mean(  SZ(s,6)./SZ(s,2) ) std(  SZ(s,6)./SZ(s,2) )./sqrt(sum(s))];
-
-s=(SZ(:,1)>20 & SZ(:,5)>20 & SZ(:,2)<10 & SZ(:,6)<10);
-nSZ = [nSZ ; ...
-    mean(diff(SZ(s,[2 6]),1,2)) std(diff(SZ(s,[2 6]),1,2))./sqrt(sum(s)) ...
-    mean(  SZ(s,6)./SZ(s,2) ) std(  SZ(s,6)./SZ(s,2) )./sqrt(sum(s))];
-
-s=(SZ(:,1)>20 & SZ(:,7)>20 & SZ(:,2)<10 & SZ(:,6)<10);
-nSZ = [nSZ ; ...
-    mean(diff(SZ(s,[2 6]),1,2)) std(diff(SZ(s,[2 6]),1,2))./sqrt(sum(s)) ...
-    mean(  SZ(s,6)./SZ(s,2) ) std(  SZ(s,6)./SZ(s,2) )./sqrt(sum(s))];
-
-s=(SZ(:,1)>20 & SZ(:,9)>20 & SZ(:,2)<10 & SZ(:,6)<10);
-nSZ = [nSZ ; ...
-    mean(diff(SZ(s,[2 6]),1,2)) std(diff(SZ(s,[2 6]),1,2))./sqrt(sum(s)) ...
-    mean(  SZ(s,6)./SZ(s,2) ) std(  SZ(s,6)./SZ(s,2) )./sqrt(sum(s))];
