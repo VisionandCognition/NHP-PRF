@@ -279,45 +279,7 @@ if Do.SaveMUA_perArray
                         M(m).chan{c}(start_samp-1000:start_samp)'];
                 end
             end
-            
-%             % ----- OLD VERSION -------------------------------------------
-%             % average over runs
-%             mMUA(c).runs = M(m).ch(c).coll;
-%             mMUA(c).mean = mean(M(m).ch(c).coll);
-%             mMUA(c).std = std(M(m).ch(c).coll);
-%             mMUA(c).BL = mean(mean(M(m).ch(c).BL));
-%             
-%             mMUA_odd(c).runs = M(m).ch(c).coll_odd;
-%             mMUA_odd(c).mean = mean(M(m).ch(c).coll_odd);
-%             mMUA_odd(c).std = std(M(m).ch(c).coll_odd);
-%             mMUA_odd(c).BL = mean(mean(M(m).ch(c).BL_odd));
-%             
-%             mMUA_even(c).runs = M(m).ch(c).coll_even;
-%             mMUA_even(c).mean = mean(M(m).ch(c).coll_even);
-%             mMUA_even(c).std = std(M(m).ch(c).coll_even);
-%             mMUA_even(c).BL = mean(mean(M(m).ch(c).BL_even));
-%             
-%             % split by bar position
-%             for b=1:length(N(m).run(1).stim_sec)
-%                 t1i= find(M(m).run(1).tsec >= ...
-%                     N(m).run(1).stim_sec(b)+win(1),1,'first');
-%                 t2i= find(M(m).run(1).tsec <= ...
-%                     N(m).run(1).stim_sec(b)+win(2),1,'last');
-%                 
-%                 act_chunk = mMUA(c).mean(t1i:t2i);
-%                 mMUA(c).bar(b) = mean(act_chunk);
-%                 clear act_chunk
-%                 
-%                 act_chunk_odd = mMUA_odd(c).mean(t1i:t2i);
-%                 mMUA_odd(c).bar(b) = mean(act_chunk_odd);
-%                 clear act_chunk_odd
-%                 
-%                 act_chunk_even = mMUA_even(c).mean(t1i:t2i);
-%                 mMUA_even(c).bar(b) = mean(act_chunk_even);
-%                 clear act_chunk_even
-%             end
-%             % -------------------------------------------------------------
-            
+                       
             % average over runs
             mMUA(c).runs = M(m).ch(c).coll;
             SIG = [];

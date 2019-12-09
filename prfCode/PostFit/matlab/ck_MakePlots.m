@@ -14,257 +14,310 @@ fprintf(['Loading took ' num2str(t_load) ' s\n']);
 
 %% Split by model =========================================================
 clear T
-m = unique(tMRI_max.Model);
+m = unique(tMRI_max.Model); 
 for mi = 1:length(m)
     M = tMRI_max(strcmp(tMRI_max.Model,m{mi}),:);
     T(mi).mod = M;
     T(mi).name = m{mi};
+    modidx.(m{mi}) = mi;
 end
 
-%% scatter plots & differences -----
-figure;
-
-s_R2 = T(7).mod.R2>0;
+%% scatter plots & differences R2 -----
+f=figure;
+set(f,'Position',[100 100 1600 1000]);
+s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>0;
 roi={'V1','V2_merged','V3_merged','V4_merged','MT','MST','TEO','LIP_merged'};
+roilabels={'V1','V2','V3','V4','MT','MST','TEO','LIP'};
 
-
-subplot(1,3,1); hold on;
-plot([0 100],[0 100],'k');
-scatter(T(7).mod.R2(s_R2),T(2).mod.R2(s_R2),'Marker','.',...
-    'MarkerEdgeColor',[.3 .3 .3]);
+subplot(2,3,1); hold on;
+plot([0 100],[0 100],'k','Linewidth',2);
+% scatter(T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2),...
+%     T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2),'Marker','.',...
+%     'MarkerEdgeColor',[.3 .3 .3]);
 for r=1:length(roi)
-    scatter(T(7).mod.R2(s_R2 & T(7).mod.(roi{r})),...
-        T(2).mod.R2(s_R2 & T(2).mod.(roi{r})),'Marker','.');
+    scatter(T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
+        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),'Marker','.');
 end
 title('linear vs css'); xlabel('linear');ylabel('css');
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
 
-subplot(1,3,2); hold on;
-plot([0 100],[0 100],'k'); 
-scatter(T(7).mod.R2(s_R2),T(4).mod.R2(s_R2),'Marker','.',...
-    'MarkerEdgeColor',[.3 .3 .3]);
+subplot(2,3,2); hold on;
+plot([0 100],[0 100],'k','Linewidth',2); 
+% scatter(T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2),...
+%     T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2),'Marker','.',...
+%     'MarkerEdgeColor',[.3 .3 .3]);
 for r=1:length(roi)
-    scatter(T(7).mod.R2(s_R2 & T(7).mod.(roi{r})),...
-        T(4).mod.R2(s_R2 & T(4).mod.(roi{r})),'Marker','.');
+    scatter(T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
+        T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r})),'Marker','.');
 end
 title('linear vs dog'); xlabel('linear');ylabel('dog');
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
 
-% subplot(2,2,3); hold on;
-% plot([0 100],[0 100],'k'); 
-% scatter(T(7).mod.R2(s_R2),T(8).mod.R2(s_R2),'Marker','.',...
+subplot(2,3,3); hold on;
+plot([0 100],[0 100],'k','Linewidth',2); 
+% scatter(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2),...
+%     T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2),'Marker','.',...
 %     'MarkerEdgeColor',[.3 .3 .3]);
-% for r=1:length(roi)
-%     scatter(T(7).mod.R2(s_R2 & T(7).mod.(roi{r})),...
-%         T(8).mod.R2(s_R2 & T(8).mod.(roi{r})),'Marker','.');
-% end
-% title('linear vs linear_neg'); xlabel('linear');ylabel('linear_neg');
-% set(gca, 'Box','on', 'xlim', [0 100], 'ylim',[0 100]);
-
-subplot(1,3,3); hold on;
-plot([0 100],[0 100],'k'); 
-scatter(T(2).mod.R2(s_R2),T(4).mod.R2(s_R2),'Marker','.',...
-    'MarkerEdgeColor',[.3 .3 .3]);
 for r=1:length(roi)
-    scatter(T(2).mod.R2(s_R2 & T(2).mod.(roi{r})),...
-        T(4).mod.R2(s_R2 & T(4).mod.(roi{r})),'Marker','.');
+    scatter(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),...
+        T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r})),'Marker','.');
 end
 title('css vs dog'); xlabel('css');ylabel('dog');
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+legend(['XY' roi],'interpreter','none','Location','SouthEast');
 
-%% diff distrutions plots -----
-%s_R2 = T(7).mod.R2>0;
-%roi={'V1','V2_merged','V3_merged','V4_merged','MT','TEO'};
-
-%figure;
-%subplot(2,3,4); hold on;
-
+% diff distrutions plots -----
 diffmat{1}=[];
 for r=1:length(roi)
     [n,x] = hist(...
-        T(2).mod.R2(s_R2 & T(2).mod.(roi{r}))-...
-        T(7).mod.R2(s_R2 & T(7).mod.(roi{r})),...
+        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
         100);
-    f = n./sum(s_R2 & T(2).mod.(roi{r}));
+    f = n./sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r}));
     
-    m = mean(T(2).mod.R2(s_R2 & T(2).mod.(roi{r}))-...
-        T(7).mod.R2(s_R2 & T(7).mod.(roi{r})));
-    sd = std(T(2).mod.R2(s_R2 & T(2).mod.(roi{r}))-...
-        T(7).mod.R2(s_R2 & T(7).mod.(roi{r})));
-    se = sd ./ sqrt(sum(s_R2 & T(2).mod.(roi{r})));
+    m = mean(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})));
+    sd = std(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})));
+    se = sd ./ sqrt(sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
     diffmat{1} = [diffmat{1}; m sd se];
-    
-    %bar(x,f);
 end
-
-%subplot(2,2,2); hold on;
 
 diffmat{2}=[];
 for r=1:length(roi)
     [n,x] = hist(...
-        T(4).mod.R2(s_R2 & T(4).mod.(roi{r}))-...
-        T(7).mod.R2(s_R2 & T(7).mod.(roi{r})),...
+        T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
         100);
-    f = n./sum(s_R2 & T(4).mod.(roi{r}));
+    f = n./sum(s_R2 & T(modidx.doghrf_cv1_mhrf).mod.(roi{r}));
     
-    m = mean(T(4).mod.R2(s_R2 & T(4).mod.(roi{r}))-...
-        T(7).mod.R2(s_R2 & T(7).mod.(roi{r})));
-    sd = std(T(4).mod.R2(s_R2 & T(4).mod.(roi{r}))-...
-        T(7).mod.R2(s_R2 & T(7).mod.(roi{r})));
-    se = sd ./ sqrt(sum(s_R2 & T(4).mod.(roi{r})));
-    diffmat{2} = [diffmat{2}; m sd se];
-    
-    %bar(x,f);
+    m = mean(T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})));
+    sd = std(T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})));
+    se = sd ./ sqrt(sum(s_R2 & T(modidx.doghrf_cv1_mhrf).mod.(roi{r})));
+    diffmat{2} = [diffmat{2}; m sd se];   
 end
-
-%subplot(2,2,3); hold on;
 
 diffmat{3}=[];
 for r=1:length(roi)
     [n,x] = hist(...
-        T(8).mod.R2(s_R2 & T(8).mod.(roi{r}))-...
-        T(7).mod.R2(s_R2 & T(7).mod.(roi{r})),...
+        T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),...
         100);
-    f = n./sum(s_R2 & T(8).mod.(roi{r}));
+    f = n./sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r}));
     
-    m = mean(T(8).mod.R2(s_R2 & T(8).mod.(roi{r}))-...
-        T(7).mod.R2(s_R2 & T(7).mod.(roi{r})));
-    sd = std(T(8).mod.R2(s_R2 & T(8).mod.(roi{r}))-...
-        T(7).mod.R2(s_R2 & T(7).mod.(roi{r})));
-    se = sd ./ sqrt(sum(s_R2 & T(8).mod.(roi{r})));
+    m = mean(T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
+    sd = std(T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
+    se = sd ./ sqrt(sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
     diffmat{3} = [diffmat{3}; m sd se];
     
     %bar(x,f);
 end
 
-%subplot(2,2,4); hold on;
-
-diffmat{3}=[];
-for r=1:length(roi)
-    [n,x] = hist(...
-        T(4).mod.R2(s_R2 & T(4).mod.(roi{r}))-...
-        T(2).mod.R2(s_R2 & T(2).mod.(roi{r})),...
-        100);
-    f = n./sum(s_R2 & T(2).mod.(roi{r}));
-    
-    m = mean(T(4).mod.R2(s_R2 & T(4).mod.(roi{r}))-...
-        T(2).mod.R2(s_R2 & T(2).mod.(roi{r})));
-    sd = std(T(4).mod.R2(s_R2 & T(4).mod.(roi{r}))-...
-        T(2).mod.R2(s_R2 & T(2).mod.(roi{r})));
-    se = sd ./ sqrt(sum(s_R2 & T(2).mod.(roi{r})));
-    diffmat{3} = [diffmat{3}; m sd se];
-    
-    %bar(x,f);
-end
-
-figure;
+TITLES={...
+    'CSS - LINEAR',...
+    'DOG - LINEAR',...
+    'DOG - CSS'};
 for cc = 1:length(diffmat)
-    subplot(1,3,cc); hold on;
-    bar(1:length(diffmat{cc}),diffmat{cc}(:,1));
-    errorbar(1:length(diffmat{cc}),diffmat{cc}(:,1),diffmat{cc}(:,3),'Linestyle','none')
+    subplot(2,3,3+cc); hold on;
+    for xval=1:length(diffmat{cc})
+        bar(xval,diffmat{cc}(xval,1));
+    end
+    for xval=1:length(diffmat{cc})
+        errorbar(xval,diffmat{cc}(xval,1),diffmat{cc}(xval,3),...
+            'k-','Linestyle','none');
+    end
+    set(gca,'xticklabels',[],'ylim',[-1.5 2]);
+    xlabel('ROI'); ylabel('Diff R2');
+    title(TITLES{cc});
+    if cc==3
+        legend(roilabels,'interpreter','none','Location','NorthEast');
+    end
 end
-
 
 
 %% scatter plot HRF & differences -----
-figure;
+f2=figure;
+set(f2,'Position',[100 100 1000 400]);
 
-s_R2 = T(7).mod.R2>0;
-roi={'V1','V2_merged','V3_merged','V4_merged','MT','MST','TEO','LIP_merged'};
-
-hold on;
-plot([0 100],[0 100],'k');
-scatter(T(1).mod.R2(s_R2),T(2).mod.R2(s_R2),'Marker','.',...
-    'MarkerEdgeColor',[.3 .3 .3]);
+subplot(1,2,1); hold on;
+plot([0 100],[0 100],'k','LineWidth',2);
+% scatter(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2),...
+%     T(modidx.csshrf_cv1_dhrf).mod.R2(s_R2),'Marker','.',...
+%     'MarkerEdgeColor',[.3 .3 .3]);
 for r=1:length(roi)
-    scatter(T(1).mod.R2(s_R2 & T(1).mod.(roi{r})),...
-        T(2).mod.R2(s_R2 & T(2).mod.(roi{r})),'Marker','.');
+    scatter(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),...
+        T(modidx.csshrf_cv1_dhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_dhrf).mod.(roi{r})),'Marker','.');
 end
-title('Canonical vs monkey HRF'); xlabel('Monkey HRF R2');ylabel('Canonical HRF R2');
+title('Monkey vs Canonical HRF'); xlabel('Monkey HRF R2');ylabel('Canonical HRF R2');
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
 
 diffmat2{1}=[];
 for r=1:length(roi)
     [n,x] = hist(...
-        T(2).mod.R2(s_R2 & T(2).mod.(roi{r}))-...
-        T(1).mod.R2(s_R2 & T(1).mod.(roi{r})),...
-        100);
-    f = n./sum(s_R2 & T(2).mod.(roi{r}));
+        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.csshrf_cv1_dhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_dhrf).mod.(roi{r})),100);
+    f = n./sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r}));
     
-    m = mean(T(2).mod.R2(s_R2 & T(2).mod.(roi{r}))-...
-        T(1).mod.R2(s_R2 & T(1).mod.(roi{r})));
-    sd = std(T(2).mod.R2(s_R2 & T(2).mod.(roi{r}))-...
-        T(1).mod.R2(s_R2 & T(1).mod.(roi{r})));
-    se = sd ./ sqrt(sum(s_R2 & T(2).mod.(roi{r})));
+    m = mean(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.csshrf_cv1_dhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_dhrf).mod.(roi{r})));
+    sd = std(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r}))-...
+        T(modidx.csshrf_cv1_dhrf).mod.R2(s_R2 & ...
+        T(modidx.csshrf_cv1_dhrf).mod.(roi{r})));
+    se = sd ./ sqrt(sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
     diffmat2{1} = [diffmat2{1}; m sd se];
-    
-    %bar(x,f);
 end
 
-figure; hold on
-bar(1:length(diffmat2{1}),diffmat2{1}(:,1));
-errorbar(1:length(diffmat2{1}),diffmat2{1}(:,1),diffmat2{1}(:,3),'Linestyle','none')
+subplot(1,2,2); hold on
+for xval=1:length(diffmat2{1})
+    bar(xval,diffmat2{1}(xval,1));
+end
+for xval=1:length(diffmat2{1})
+    errorbar(xval,diffmat2{1}(xval,1),diffmat2{1}(xval,3),...
+    'k-','Linestyle','none')
+end
+set(gca,'xticklabels',[],'ylim',[-0.5 1]);
+xlabel('ROI'); ylabel('Diff R2');
+title('Mon.HRF - Can.HRF');
+legend(roilabels,'interpreter','none','Location','NorthEast');
+
 
 %% rf size =====
-figure;
-s_R2 = T(2).mod.R2>5;
-roi={'V1','V2_merged','V3_merged','V4_merged','MT','MST','TEO','LIP_merged'};
+f3=figure;
+set(f3,'Position',[100 100 1000 400]);
 
-hold on;
-plot([0 100],[0 100],'k');
-scatter(T(1).mod.rfs(s_R2),T(2).mod.rfs(s_R2),'Marker','.',...
-    'MarkerEdgeColor',[.3 .3 .3]);
+s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > 5;
+
+MOD={'csshrf_cv1_mhrf','csshrf_cv1_dhrf'};
+%MOD={'linhrf_cv1_mhrf','linhrf_cv1_dhrf'};
+
+subplot(1,2,1);hold on;
+plot([0 100],[0 100],'k','LineWidth',2);
+% scatter(T(modidx.csshrf_cv1_mhrf).mod.rfs(s_R2),...
+%     T(modidx.csshrf_cv1_dhrf).mod.rfs(s_R2),'Marker','.',...
+%     'MarkerEdgeColor',[.3 .3 .3]);
 for r=1:length(roi)
-    scatter(T(1).mod.rfs(s_R2 & T(1).mod.(roi{r})),...
-        T(2).mod.rfs(s_R2 & T(2).mod.(roi{r})),'Marker','.');
+    scatter(T(modidx.(MOD{1})).mod.rfs(s_R2 & ...
+        T(modidx.(MOD{1})).mod.(roi{r})),...
+        T(modidx.csshrf_cv1_dhrf).mod.rfs(s_R2 & ...
+        T(modidx.csshrf_cv1_dhrf).mod.(roi{r})),'Marker','.');
 end
-title('Canonical vs monkey HRF'); xlabel('Canonical HRF sz');ylabel('Monkey HRF sz');
-set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+title('Monkey HRF vs Canonical HRF'); 
+xlabel('Monkey HRF sz');ylabel('Canonical HRF sz');
+set(gca, 'Box','off', 'xlim', [0 15], 'ylim',[0 15]);
 
 diffmat2{1}=[];
 for r=1:length(roi)
     [n,x] = hist(...
-        T(2).mod.rfs(s_R2 & T(2).mod.(roi{r}))-...
-        T(1).mod.rfs(s_R2 & T(1).mod.(roi{r})),...
+        T(modidx.(MOD{1})).mod.rfs(s_R2 & ...
+        T(modidx.(MOD{1})).mod.(roi{r}))-...
+        T(modidx.(MOD{2})).mod.rfs(s_R2 & ...
+        T(modidx.(MOD{2})).mod.(roi{r})),...
         100);
-    f = n./sum(s_R2 & T(2).mod.(roi{r}));
+    f = n./sum(s_R2 & T(modidx.(MOD{1})).mod.(roi{r}));
     
-    dsz = T(2).mod.rfs-T(1).mod.rfs;
-    dsz = dsz(s_R2 & T(2).mod.(roi{r}));
+    dsz = T(modidx.(MOD{1})).mod.rfs-T(modidx.(MOD{2})).mod.rfs;
+    dsz = dsz(s_R2 & T(modidx.(MOD{1})).mod.(roi{r}));
     dsz = dsz(isfinite(dsz));
     
     m = mean(dsz);
     sd = std(dsz);
     se = sd ./ sqrt(length(dsz));
     diffmat2{1} = [diffmat2{1}; m sd se];
-    
-    %bar(x,f);
 end
 
-figure; hold on
-bar(1:length(diffmat2{1}),diffmat2{1}(:,1));
-errorbar(1:length(diffmat2{1}),diffmat2{1}(:,1),diffmat2{1}(:,3),'Linestyle','none')
+
+subplot(1,2,2); hold on
+for xval=1:length(diffmat2{1})
+    bar(xval,diffmat2{1}(xval,1));
+end
+for xval=1:length(diffmat2{1})
+    errorbar(xval,diffmat2{1}(xval,1),diffmat2{1}(xval,3),...
+    'k-','Linestyle','none')
+end
+set(gca,'xticklabels',[],'ylim',[-0.5 1.5]);
+xlabel('ROI'); ylabel('Diff pRF size');
+title('Mon.HRF - Can.HRF');
+legend(roilabels,'interpreter','none','Location','NorthEast');
+
 
 %% ECC vs Size plot s -----
-figure;
+f4=figure;
+subplot(1,2,1);hold on;
+set(f4,'Position',[100 100 1000 400]);
 
-s_R2 = T(2).mod.R2>4;
-roi={'V1','V2_merged','V3_merged','V4_merged','MT','MST','TEO','LIP_merged'};
+s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > 10;
+% scatter(T(modidx.csshrf_cv1_mhrf).mod.ecc(s_R2),...
+%     T(modidx.csshrf_cv1_mhrf).mod.rfs(s_R2),'Marker','.',...
+%     'MarkerEdgeColor',[.3 .3 .3]);
+EccBin = 0.5:1:30.5;
 
-hold on;
-scatter(T(2).mod.ecc(s_R2),T(2).mod.rfs(s_R2),'Marker','.',...
-    'MarkerEdgeColor',[.3 .3 .3]);
 for r=1:length(roi)
-    scatter(T(2).mod.ecc(s_R2 & T(2).mod.(roi{r})),...
-        T(2).mod.rfs(s_R2 & T(2).mod.(roi{r})),'Marker','.');
+    ES{r}=[];
+    scatter(T(modidx.csshrf_cv1_mhrf).mod.ecc(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),...
+        T(modidx.csshrf_cv1_mhrf).mod.rfs(s_R2 & ...
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),'Marker','.');
+    for b=1:length(EccBin) 
+        bb=[EccBin(b)-0.5 EccBin(b)+0.5];
+        PSZ=T(modidx.csshrf_cv1_mhrf).mod.rfs(s_R2 & ...
+            T(modidx.csshrf_cv1_mhrf).mod.(roi{r}));
+        ECC=T(modidx.csshrf_cv1_mhrf).mod.ecc(s_R2 & ...
+            T(modidx.csshrf_cv1_mhrf).mod.(roi{r}));
+        ES{r}=[ES{r}; EccBin(b) mean(PSZ(ECC>=bb(1) & ECC<=bb(2)))];
+    end    
 end
-title('ecc vs rfs'); xlabel('ecc');ylabel('rfs');
-set(gca, 'Box','off', 'xlim', [0 20], 'ylim',[0 20]);
+title('Eccentricity vs pRF size'); xlabel('Eccentricity');ylabel('pRF size');
+set(gca, 'Box','off', 'xlim', [0 15], 'ylim',[0 10]);
+%legend(roilabels,'interpreter','none','Location','NorthEast');
+
+subplot(1,2,2);hold on;
+for r=1:length(roi)
+    h=plot(ES{r}(:,1),ES{r}(:,2),'o');
+    set(h,'MarkerSize',6,'markerfacecolor', get(h, 'color'));
+end
+title('Eccentricity vs pRF size'); xlabel('Eccentricity');ylabel('pRF size');
+set(gca, 'Box','off', 'xlim', [0 15], 'ylim',[0 10]);
+legend(roilabels,'interpreter','none','Location','NorthWest');
 
 %% Ephys VFC ----
 % MUA
-s=tMUA_max.R2>50;
-szm=tMUA_max.rfs<5;
+s=tMUA_max.R2>25;
+szm=tMUA_max.rfs<200;
 
 model='css_ephys_cv1';
 
@@ -282,7 +335,8 @@ for r=unique(tMUA_max.Array)'
         tMUA_max.Y(s & m & a & v),'Marker','*' )
 
 end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
+set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
+title('Lick V1 MUA')
 
 subplot(2,2,3);hold on;
 szm=tMUA_max.rfs<5;
@@ -296,7 +350,8 @@ for r=unique(tMUA_max.Array)'
         tMUA_max.Y(s & m & a & v),'Marker','*' )
 
 end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
+set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
+title('Lick V4 MUA')
 
 subplot(2,2,2);hold on;
 m=strcmp(tMUA_max.Monkey,'aston') & strcmp(tMUA_max.Model,model);
@@ -309,7 +364,8 @@ for r=unique(tMUA_max.Array)'
         tMUA_max.Y(s & m & a & v),'Marker','*' )
 
 end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
+set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
+title('Aston V1 MUA')
 
 subplot(2,2,4);hold on;
 m=strcmp(tMUA_max.Monkey,'aston') & strcmp(tMUA_max.Model,model);
@@ -322,11 +378,12 @@ for r=unique(tMUA_max.Array)'
         tMUA_max.Y(s & m & a & v),'Marker','*' )
 
 end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
+set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
+title('Aston V4 MUA')
 
 %% Ephys VFC ----
 % LFP Low Gamma
-s=tLFP_max.R2>10;
+s=tLFP_max.R2>25;
 
 model='css_ephys_cv1';
 b = 'lGamma';
@@ -345,7 +402,8 @@ for r=unique(tLFP_max.Array)'
     scatter(tLFP_max.X(s & m & a & v),...
         tLFP_max.Y(s & m & a & v),'Marker','*' )
 end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
+set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
+title('Lick V1 LFP (lGAM)')
 
 subplot(2,2,3);hold on;
 szm=tLFP_max.rfs<50;
@@ -359,7 +417,8 @@ for r=unique(tLFP_max.Array)'
         tLFP_max.Y(s & m & a & v),'Marker','*' )
 
 end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
+set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
+title('Lick V4 LFP (lGAM)')
 
 subplot(2,2,2);hold on;
 m=strcmp(tLFP_max.Monkey,'aston') & strcmp(tLFP_max.Model,model);
@@ -372,7 +431,8 @@ for r=unique(tLFP_max.Array)'
         tLFP_max.Y(s & m & a & v),'Marker','*' )
 
 end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
+set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
+title('Aston V1 LFP (lGAM)')
 
 subplot(2,2,4);hold on;
 m=strcmp(tLFP_max.Monkey,'aston') & strcmp(tLFP_max.Model,model);
@@ -385,8 +445,8 @@ for r=unique(tLFP_max.Array)'
         tLFP_max.Y(s & m & a & v),'Marker','*' )
 
 end
-set(gca, 'Box','off', 'xlim', [-10 20], 'ylim',[-30 10]);
-
+set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
+title('Aston V4 LFP (lGAM)')
 
 %% Ephys location difference & size difference  ---
 C=[];R2m=[];SZ=[];
@@ -451,29 +511,18 @@ for i=1:length(m)
 end
 
 figure;
-subplot(1,3,1); hold on;
-plot([0 100],[0 100],'k');
-scatter(R2(:,4), R2(:,2),'Marker','.',...
-    'MarkerEdgeColor',[.3 .3 .3]);
-set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-xlabel(m{4},'interpreter','none'); ylabel(m{2},'interpreter','none');
-title('MUA');
-
-subplot(1,3,2); hold on;
-plot([0 100],[0 100],'k');
-scatter(R2(:,4), R2(:,3),'Marker','.',...
-    'MarkerEdgeColor',[.3 .3 .3]);
-set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-xlabel(m{4},'interpreter','none'); ylabel(m{3},'interpreter','none');
-title('MUA');
-
-subplot(1,3,3); hold on;
-plot([0 100],[0 100],'k');
-scatter(R2(:,2), R2(:,3),'Marker','.',...
-    'MarkerEdgeColor',[.3 .3 .3]);
-set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-xlabel(m{2},'interpreter','none'); ylabel(m{3},'interpreter','none');
-title('MUA');
+for row=1:4
+    for column=1:4
+        subplot(4,4,((row-1)*4)+column); hold on;
+        plot([0 100],[0 100],'k');
+        scatter(R2(:,row+1), R2(:,column+1),'Marker','.',...
+            'MarkerEdgeColor',[.3 .3 .3]);
+        set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+        xlabel(m{row+1},'interpreter','none'); 
+        ylabel(m{column+1},'interpreter','none');
+        title('MUA');
+    end
+end
 
 %% LFP model comparison ---
 figure; 
@@ -490,7 +539,7 @@ for fb=1:length(l)
             strcmp(tLFP_max.SigType,l{fb}))];
     end
     
-    subplot(length(l),3,spn); hold on;
+    subplot(length(l),4,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(:,3), R2(:,1),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
@@ -499,7 +548,7 @@ for fb=1:length(l)
     title(l{fb})
     spn=spn+1;
     
-    subplot(length(l),3,spn); hold on;
+    subplot(length(l),4,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(:,3), R2(:,2),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
@@ -508,12 +557,21 @@ for fb=1:length(l)
     title(l{fb})
     spn=spn+1;
     
-    subplot(length(l),3,spn); hold on;
+    subplot(length(l),4,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(:,1), R2(:,2),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
     xlabel(m{1},'interpreter','none');ylabel(m{2},'interpreter','none')
+    title(l{fb})
+    spn=spn+1;
+    
+    subplot(length(l),4,spn); hold on;
+    plot([0 100],[0 100],'k');
+    scatter(R2(:,3), R2(:,4),'Marker','.',...
+        'MarkerEdgeColor',[.3 .3 .3]);
+    set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+    xlabel(m{3},'interpreter','none');ylabel(m{4},'interpreter','none')
     title(l{fb})
     spn=spn+1;
 end
@@ -525,7 +583,7 @@ end
 LAB=['MUA';l];
 
 figure;
-r2th=50;
+r2th=25;
 
 c=0;d=0;
 for ref=1:2:12
@@ -548,3 +606,11 @@ for ref=1:2:12
             mean(  SZ(s,fb+1)./SZ(s,ref+1) ) std(  SZ(s,fb+1)./SZ(s,ref+1) )./sqrt(sum(s))];
     end
 end
+
+%% What's specific about the good DoG fits?
+
+
+
+%% Pattern space Size
+
+

@@ -1,4 +1,4 @@
-function ck_Load_Median2(subj, sess, Do)
+function ck_Load_Median_firstavgperbar(subj, sess, Do)
 % loads the (Blackroack) ephys PRF data and organizes it in trials
 % c.klink@nin.knaw.nl
 
@@ -314,18 +314,18 @@ if Do.SaveMUA_perArray
             
         end
         
-%         fprintf('\n');
-%         fprintf('Saving the median MUA responses for array %d...\n', m);
-%         warning off; [~,~]=mkdir(fullfile(save_fld,subj,sess,'MUA')); warning on
-%         save(fullfile(save_fld,subj,sess,'MUA',...
-%             [subj '_' sess '_array_' num2str(m) '_medMUA']),'mMUA','C','-v7.3');
-%         clear mMUA
-%         save(fullfile(save_fld,subj,sess,'MUA',...
-%             [subj '_' sess '_array_' num2str(m) '_medMUA_odd']),'mMUA_odd','C','-v7.3');
-%         clear mMUA_odd
-%         save(fullfile(save_fld,subj,sess,'MUA',...
-%             [subj '_' sess '_array_' num2str(m) '_medMUA_even']),'mMUA_even','C','-v7.3');
-%         clear mMUA_even
+        fprintf('\n');
+        fprintf('Saving the median MUA responses for array %d...\n', m);
+        warning off; [~,~]=mkdir(fullfile(save_fld,subj,sess,'MUA')); warning on
+        save(fullfile(save_fld,subj,sess,'MUA',...
+            [subj '_' sess '_array_' num2str(m) '_medMUA2']),'mMUA','C','-v7.3');
+        clear mMUA
+        save(fullfile(save_fld,subj,sess,'MUA',...
+            [subj '_' sess '_array_' num2str(m) '_medMUA_odd2']),'mMUA_odd','C','-v7.3');
+        clear mMUA_odd
+        save(fullfile(save_fld,subj,sess,'MUA',...
+            [subj '_' sess '_array_' num2str(m) '_medMUA_even2']),'mMUA_even','C','-v7.3');
+        clear mMUA_even
     end
     clear M
     fprintf('All done!\n');
@@ -453,15 +453,15 @@ if Do.SaveLFP_perArray
         fprintf('Saving the median LFP responses for array %d...\n', m);
         warning off; mkdir(fullfile(save_fld,subj,sess,'LFP')); warning on
         save(fullfile(save_fld,subj,sess,'LFP',...
-            [subj '_' sess '_array_' num2str(m) '_medLFP']),'mLFP','C','-v7.3');
+            [subj '_' sess '_array_' num2str(m) '_medLFP2']),'mLFP','C','-v7.3');
         clear mLFP
         warning off; mkdir(fullfile(save_fld,subj,sess,'LFP')); warning on
         save(fullfile(save_fld,subj,sess,'LFP',...
-            [subj '_' sess '_array_' num2str(m) '_medLFP_odd']),'mLFP_odd','C','-v7.3');
+            [subj '_' sess '_array_' num2str(m) '_medLFP_odd2']),'mLFP_odd','C','-v7.3');
         clear mLFP_odd
         warning off; mkdir(fullfile(save_fld,subj,sess,'LFP')); warning on
         save(fullfile(save_fld,subj,sess,'LFP',...
-            [subj '_' sess '_array_' num2str(m) '_medLFP_even']),'mLFP_even','C','-v7.3');
+            [subj '_' sess '_array_' num2str(m) '_medLFP_even2']),'mLFP_even','C','-v7.3');
         clear mLFP_even
     end
     clear L

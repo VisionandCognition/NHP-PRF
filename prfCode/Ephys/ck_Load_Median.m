@@ -2,6 +2,9 @@ function ck_Load_Median(subj, sess, Do)
 % loads the (Blackroack) ephys PRF data and organizes it in trials
 % c.klink@nin.knaw.nl
 
+% THIS VERSION FIRST AVERAGES THE TRACES, THAN TAKES THE AVERAGE RESPONSE
+% PER STIMULUS POSITION
+
 %% init ===================================================================
 if nargin<3
     fprintf('Not specified what to do. Taking defaults\n')
