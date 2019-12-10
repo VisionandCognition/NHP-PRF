@@ -7,6 +7,10 @@ ResFld = ...
     '/Users/chris/Documents/MRI_ANALYSIS/NHP-PRF/FitResults/MultiModal/cv1';
 T='Tables_max';
 
+% add colorbrewer
+addpath('/home/chris/Documents/MATLAB_NONGIT/TOOLBOX/BrewerMap')
+def_cmap = 'Spectral';
+
 %% Load ===================================================================
 fprintf('Loading results table. Please be patient, this will take a while..\n');
 tic; load(fullfile(ResFld,T)); t_load=toc;
@@ -24,6 +28,8 @@ end
 
 %% scatter plots & differences R2 =========================================
 f=figure;
+set(f,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+
 set(f,'Position',[100 100 1600 1000]);
 s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>0;
 roi={'V1','V2_merged','V3_merged','V4_merged','MT','MST','TEO','LIP_merged'};
@@ -38,7 +44,7 @@ for r=1:length(roi)
     scatter(T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
         T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
         T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),'Marker','.');
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),100,'Marker','.');
 end
 title('linear vs css'); xlabel('linear');ylabel('css');
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
@@ -52,7 +58,7 @@ for r=1:length(roi)
     scatter(T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
         T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
         T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r})),'Marker','.');
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r})),100,'Marker','.');
 end
 title('linear vs dog'); xlabel('linear');ylabel('dog');
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
@@ -66,11 +72,11 @@ for r=1:length(roi)
     scatter(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
         T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),...
         T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r})),'Marker','.');
+        T(modidx.doghrf_cv1_mhrf).mod.(roi{r})),100,'Marker','.');
 end
 title('css vs dog'); xlabel('css');ylabel('dog');
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-legend(['XY' roi],'interpreter','none','Location','SouthEast');
+legend(['XY' roilabels],'interpreter','none','Location','SouthEast');
 
 % diff distrutions plots -----
 diffmat{1}=[];
@@ -145,6 +151,7 @@ TITLES={...
     'DOG - CSS'};
 for cc = 1:length(diffmat)
     subplot(2,3,3+cc); hold on;
+
     for xval=1:length(diffmat{cc})
         bar(xval,diffmat{cc}(xval,1));
     end
@@ -163,6 +170,9 @@ end
 %% scatter plot HRF & differences =========================================
 f2=figure;
 set(f2,'Position',[100 100 1000 400]);
+set(f2,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+
+s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>0;
 
 subplot(1,2,1); hold on;
 plot([0 100],[0 100],'k','LineWidth',2);
@@ -173,7 +183,7 @@ for r=1:length(roi)
     scatter(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
         T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),...
         T(modidx.csshrf_cv1_dhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_dhrf).mod.(roi{r})),'Marker','.');
+        T(modidx.csshrf_cv1_dhrf).mod.(roi{r})),100,'Marker','.');
 end
 title('Monkey vs Canonical HRF'); 
 xlabel('Monkey HRF R2'); ylabel('Canonical HRF R2');
@@ -216,6 +226,7 @@ legend(roilabels,'interpreter','none','Location','NorthEast');
 %% rf size depending on HRF ===============================================
 f3=figure;
 set(f3,'Position',[100 100 1000 400]);
+set(f3,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 
 s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > 5;
 
@@ -231,7 +242,7 @@ for r=1:length(roi)
     scatter(T(modidx.(MOD{1})).mod.rfs(s_R2 & ...
         T(modidx.(MOD{1})).mod.(roi{r})),...
         T(modidx.csshrf_cv1_dhrf).mod.rfs(s_R2 & ...
-        T(modidx.csshrf_cv1_dhrf).mod.(roi{r})),'Marker','.');
+        T(modidx.csshrf_cv1_dhrf).mod.(roi{r})),100,'Marker','.');
 end
 title('Monkey HRF vs Canonical HRF'); 
 xlabel('Monkey HRF sz');ylabel('Canonical HRF sz');
@@ -273,31 +284,33 @@ legend(roilabels,'interpreter','none','Location','NorthEast');
 
 %% ECC vs PRF Size ========================================================
 f4=figure;
-subplot(1,2,1);hold on;
 set(f4,'Position',[100 100 1000 400]);
-
-s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > 10;
+set(f4,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+Rth=15;
+s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > Rth;
 % scatter(T(modidx.csshrf_cv1_mhrf).mod.ecc(s_R2),...
 %     T(modidx.csshrf_cv1_mhrf).mod.rfs(s_R2),'Marker','.',...
 %     'MarkerEdgeColor',[.3 .3 .3]);
 EccBin = 0.5:1:30.5;
 
+
+subplot(1,2,1);hold on;
 for r=1:length(roi)
     ES{r}=[];
     scatter(T(modidx.csshrf_cv1_mhrf).mod.ecc(s_R2 & ...
         T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),...
         T(modidx.csshrf_cv1_mhrf).mod.rfs(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),'Marker','.');
+        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),100,'Marker','.');
     for b=1:length(EccBin) 
         bb=[EccBin(b)-0.5 EccBin(b)+0.5];
         PSZ=T(modidx.csshrf_cv1_mhrf).mod.rfs(s_R2 & ...
             T(modidx.csshrf_cv1_mhrf).mod.(roi{r}));
         ECC=T(modidx.csshrf_cv1_mhrf).mod.ecc(s_R2 & ...
             T(modidx.csshrf_cv1_mhrf).mod.(roi{r}));
-        ES{r}=[ES{r}; EccBin(b) mean(PSZ(ECC>=bb(1) & ECC<=bb(2)))];
+        ES{r}=[ES{r}; EccBin(b) median(PSZ(ECC>=bb(1) & ECC<=bb(2)))];
     end    
 end
-title('Eccentricity vs pRF size'); 
+title(['Eccentricity vs pRF size [R>' num2str(Rth) ']']); 
 xlabel('Eccentricity');ylabel('pRF size');
 set(gca, 'Box','off', 'xlim', [0 15], 'ylim',[0 10]);
 %legend(roilabels,'interpreter','none','Location','NorthEast');
@@ -307,7 +320,7 @@ for r=1:length(roi)
     h=plot(ES{r}(:,1),ES{r}(:,2),'o');
     set(h,'MarkerSize',6,'markerfacecolor', get(h, 'color'));
 end
-title('Eccentricity vs pRF size'); 
+title(['Eccentricity vs pRF size [R>' num2str(Rth) ']']); 
 xlabel('Eccentricity');ylabel('pRF size');
 set(gca, 'Box','off', 'xlim', [0 15], 'ylim',[0 10]);
 legend(roilabels,'interpreter','none','Location','NorthWest');
@@ -321,10 +334,13 @@ model='css_ephys_cv1';
 
 fm=figure;
 set(fm,'Position',[100 100 800 800]);
+%[cmap,~,~] = brewermap(length(unique(tMUA_max.Array)),'Dark2');
+%set(fm,'DefaultAxesColorOrder',cmap);
 
 subplot(2,2,1);hold on;
+
 szm=tMUA_max.rfs<5;
-m=strcmp(tMUA_max.Monkey,'lick') & strcmp(tMUA_max.Model,model);;
+m=strcmp(tMUA_max.Monkey,'lick') & strcmp(tMUA_max.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
 v=tMUA_max.Area==1;
@@ -332,7 +348,6 @@ for r=unique(tMUA_max.Array)'
     a=tMUA_max.Array==r;
     scatter(tMUA_max.X(s & m & a & v),...
         tMUA_max.Y(s & m & a & v),'Marker','*' )
-
 end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Lick V1 MUA')
@@ -509,18 +524,26 @@ for i=1:length(m)
     R2 = [R2 tMUA_max.R2(strcmp(tMUA_max.Model,m{i}))];
 end
 
+v1=tLFP_max.Area(strcmp(tMUA_max.Model,m{1}))==1;
+v4=tLFP_max.Area(strcmp(tMUA_max.Model,m{1}))==4;
+
 f=figure;
 set(f,'Position',[100 100 1200 1200]);
 for row=1:4
     for column=1:4
         subplot(4,4,((row-1)*4)+column); hold on;
         plot([0 100],[0 100],'k');
-        scatter(R2(:,row+1), R2(:,column+1),'Marker','.',...
+        scatter(R2(v1,row+1), R2(v1,column+1),60,'Marker','.',...
             'MarkerEdgeColor',[.3 .3 .3]);
+        scatter(R2(v4,row+1), R2(v4,column+1),60,'Marker','.',...
+            'MarkerEdgeColor',[.3 .8 .3]);
         set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
         xlabel(m{row+1},'interpreter','none'); 
         ylabel(m{column+1},'interpreter','none');
         title('MUA');
+        if row==1 && column==1
+            legend({'','V1','V4'},'location','NorthWest');
+        end
     end
 end
 
@@ -542,17 +565,24 @@ for fb=lfp_order
     
     subplot(length(sig),4,spn); hold on;
     plot([0 100],[0 100],'k');
-    scatter(R2(:,3), R2(:,1),'Marker','.',...
+    scatter(R2(v1,3), R2(v1,1),60,'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
+    scatter(R2(v4,3), R2(v4,1),60,'Marker','.',...
+        'MarkerEdgeColor',[.3 .8 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
     xlabel(m{3},'interpreter','none');ylabel(m{1},'interpreter','none')
     title(sig{fb})
+    if spn==1
+        legend({'','V1','V4'},'location','SouthEast');
+    end
     spn=spn+1;
     
     subplot(length(sig),4,spn); hold on;
     plot([0 100],[0 100],'k');
-    scatter(R2(:,3), R2(:,2),'Marker','.',...
+    scatter(R2(v1,3), R2(v1,2),60,'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
+    scatter(R2(v4,3), R2(v4,2),60,'Marker','.',...
+        'MarkerEdgeColor',[.3 .8 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
     xlabel(m{3},'interpreter','none');ylabel(m{2},'interpreter','none')
     title(sig{fb})
@@ -560,8 +590,10 @@ for fb=lfp_order
     
     subplot(length(sig),4,spn); hold on;
     plot([0 100],[0 100],'k');
-    scatter(R2(:,1), R2(:,2),'Marker','.',...
+    scatter(R2(v1,1), R2(v1,2),60,'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
+    scatter(R2(v4,1), R2(v4,2),60,'Marker','.',...
+        'MarkerEdgeColor',[.3 .8 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
     xlabel(m{1},'interpreter','none');ylabel(m{2},'interpreter','none')
     title(sig{fb})
@@ -569,12 +601,14 @@ for fb=lfp_order
     
     subplot(length(sig),4,spn); hold on;
     plot([0 100],[0 100],'k');
-    scatter(R2(:,3), R2(:,4),'Marker','.',...
+    scatter(R2(v1,3), R2(v1,4),60,'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
+    scatter(R2(v4,3), R2(v4,4),60,'Marker','.',...
+        'MarkerEdgeColor',[.3 .8 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
     xlabel(m{3},'interpreter','none');ylabel(m{4},'interpreter','none')
     title(sig{fb})
-    spn=spn+1;
+    spn=spn+1;    
 end
 
 %% pRF size for different ephys signals ===================================
@@ -588,7 +622,7 @@ end
 LAB=['MUA';sig(lfp_order)];
 
 f=figure; set(f,'Position',[100 100 1300 1200]);
-r2th=25;
+r2th=20;
 
 c=0;d=0;
 for ref=1:2:12
@@ -600,7 +634,7 @@ for ref=1:2:12
         
         subplot(6,6,d); hold on; plot([0 100],[0 100],'k');
         
-        scatter(SZ(s,ref+1),SZ(s,fb+1),'MarkerEdgeColor','k')
+        scatter(SZ(s,ref+1),SZ(s,fb+1),120,[0.3 0.3 0.3],'Marker','.')
         xlabel(LAB{(ref+1)/2});ylabel(LAB{(fb+1)/2});
         title('pRF size')
         
@@ -609,15 +643,60 @@ for ref=1:2:12
         SS(c).nSZ = [SS(c).nSZ ; ...
             median(diff(SZ(s,[ref+1 fb+1]),1,2)) ...
             std(diff(SZ(s,[ref+1 fb+1]),1,2))./sqrt(sum(s)) ...
-            mean(  SZ(s,fb+1)./SZ(s,ref+1) ) ...
+            median(  SZ(s,fb+1)./SZ(s,ref+1) ) ...
             std(  SZ(s,fb+1)./SZ(s,ref+1) )./sqrt(sum(s))];
     end
 end
 
-%% What's specific about the good DoG fits=================================
+%% Distance from diagonal =================================================
+% dDIAG = sind(45)*(Y-X) 
+% so this is basically a scaled difference >> take diff
+% SZ is [ MUA_R2(1) MUA_RFS(2) 
+%         THETA_R2(3) THETA_RFS(4) 
+%         ALPHA_R2(5) ALPHA_RFS(6) 
+%         BETA_R2(7) BETA_RFS8) 
+%         LGAM_R2(9) LG_RFS(10) 
+%         HGAM_R2(11) HGAM_RFS(12)]
+
+f=figure; set(f,'Position',[100 100 1300 1200]);
+r2th=20;
+
+c=0;d=0;
+for ref=1:2:12
+    c=c+1;
+    SS(c).nSZ =[];
+    for fb=1:2:12
+        d=d+1;
+        s=(SZ(:,ref)>r2th & SZ(:,fb)>r2th);
+        
+        subplot(6,6,d); hold on; 
+        dSz = SZ(s,fb+1)-SZ(s,ref+1);
+        h = histogram(dSz,-5:0.1:5,'FaceColor','k','FaceAlpha',1);
+        YY = get(gca,'ylim');
+        plot([0 0],YY,'Color',[0.5 0.5 0.5],'LineWidth',2)
+        plot([mean(dSz) mean(dSz)],YY,'r','LineWidth',2)
+        plot([median(dSz) median(dSz)],YY,'b','LineWidth',2)
+        set(gca,'xlim',[-6 6])
+        xlabel('dPRF_size','interpreter','none');
+        ylabel('cnt','interpreter','none');
+        title(['dPRF_size ' LAB{(fb+1)/2} '-' LAB{(ref+1)/2} ],...
+            'interpreter','none')
+        
+        if ref ==1 && fb ==1
+            legend({'HIST','0','MEAN','MEDIAN'});
+        end
+        
+    end
+end
+
+%% What's specific about the good DoG fits ================================
+% - find these channels/voxels
+% - plot their location
+% - plot their size
+% - plot their prf profile
 
 
-
-%% Pattern space Size
-
+%% Pattern Space-Size =====================================================
+% - classify all pRFs by their location and get their size
+% - correlate across modailities
 
