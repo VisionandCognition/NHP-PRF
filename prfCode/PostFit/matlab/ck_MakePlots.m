@@ -22,7 +22,7 @@ for mi = 1:length(m)
     modidx.(m{mi}) = mi;
 end
 
-%% scatter plots & differences R2 -----
+%% scatter plots & differences R2 =========================================
 f=figure;
 set(f,'Position',[100 100 1600 1000]);
 s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>0;
@@ -137,8 +137,6 @@ for r=1:length(roi)
         T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
     se = sd ./ sqrt(sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
     diffmat{3} = [diffmat{3}; m sd se];
-    
-    %bar(x,f);
 end
 
 TITLES={...
@@ -162,8 +160,7 @@ for cc = 1:length(diffmat)
     end
 end
 
-
-%% scatter plot HRF & differences -----
+%% scatter plot HRF & differences =========================================
 f2=figure;
 set(f2,'Position',[100 100 1000 400]);
 
@@ -178,7 +175,8 @@ for r=1:length(roi)
         T(modidx.csshrf_cv1_dhrf).mod.R2(s_R2 & ...
         T(modidx.csshrf_cv1_dhrf).mod.(roi{r})),'Marker','.');
 end
-title('Monkey vs Canonical HRF'); xlabel('Monkey HRF R2');ylabel('Canonical HRF R2');
+title('Monkey vs Canonical HRF'); 
+xlabel('Monkey HRF R2'); ylabel('Canonical HRF R2');
 set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
 
 diffmat2{1}=[];
@@ -215,8 +213,7 @@ xlabel('ROI'); ylabel('Diff R2');
 title('Mon.HRF - Can.HRF');
 legend(roilabels,'interpreter','none','Location','NorthEast');
 
-
-%% rf size =====
+%% rf size depending on HRF ===============================================
 f3=figure;
 set(f3,'Position',[100 100 1000 400]);
 
@@ -274,8 +271,7 @@ xlabel('ROI'); ylabel('Diff pRF size');
 title('Mon.HRF - Can.HRF');
 legend(roilabels,'interpreter','none','Location','NorthEast');
 
-
-%% ECC vs Size plot s -----
+%% ECC vs PRF Size ========================================================
 f4=figure;
 subplot(1,2,1);hold on;
 set(f4,'Position',[100 100 1000 400]);
@@ -301,7 +297,8 @@ for r=1:length(roi)
         ES{r}=[ES{r}; EccBin(b) mean(PSZ(ECC>=bb(1) & ECC<=bb(2)))];
     end    
 end
-title('Eccentricity vs pRF size'); xlabel('Eccentricity');ylabel('pRF size');
+title('Eccentricity vs pRF size'); 
+xlabel('Eccentricity');ylabel('pRF size');
 set(gca, 'Box','off', 'xlim', [0 15], 'ylim',[0 10]);
 %legend(roilabels,'interpreter','none','Location','NorthEast');
 
@@ -310,18 +307,20 @@ for r=1:length(roi)
     h=plot(ES{r}(:,1),ES{r}(:,2),'o');
     set(h,'MarkerSize',6,'markerfacecolor', get(h, 'color'));
 end
-title('Eccentricity vs pRF size'); xlabel('Eccentricity');ylabel('pRF size');
+title('Eccentricity vs pRF size'); 
+xlabel('Eccentricity');ylabel('pRF size');
 set(gca, 'Box','off', 'xlim', [0 15], 'ylim',[0 10]);
 legend(roilabels,'interpreter','none','Location','NorthWest');
 
-%% Ephys VFC ----
+%% Ephys VFC ==============================================================
 % MUA
 s=tMUA_max.R2>25;
 szm=tMUA_max.rfs<200;
 
 model='css_ephys_cv1';
 
-figure;
+fm=figure;
+set(fm,'Position',[100 100 800 800]);
 
 subplot(2,2,1);hold on;
 szm=tMUA_max.rfs<5;
@@ -381,13 +380,14 @@ end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Aston V4 MUA')
 
-%% Ephys VFC ----
+%% Ephys VFC ==============================================================
 % LFP Low Gamma
 s=tLFP_max.R2>25;
 
 model='css_ephys_cv1';
 b = 'lGamma';
-figure;
+fm=figure;
+set(fm,'Position',[100 100 800 800]);
 
 subplot(2,2,1);hold on;
 szm=tLFP_max.rfs<50;
@@ -449,6 +449,7 @@ set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Aston V4 LFP (lGAM)')
 
 %% Ephys location difference & size difference  ---
+rth=25;
 C=[];R2m=[];SZ=[];
 
 model='css_ephys_cv1';
@@ -464,16 +465,15 @@ C=[C tMUA_max.X(s)./668.745 tMUA_max.Y(s)./668.745 tMUA_max.rfs(s)./2];
 model='css_ephys_cv1';
 s = strcmp(tLFP_max.Model,model);
 sig=unique(tLFP_max.SigType);
-for i=[1 2 3 5 4]
-    %fprintf([num2str(i) '\n'])
+lfp_order = [3 1 2 5 4];
+for i=lfp_order
     b=strcmp(tLFP_max.SigType,sig{i});
     C=[C tLFP_max.R2(s & b) tLFP_max.X(s & b) tLFP_max.Y(s & b) tLFP_max.rfs(s & b)];
     R2m=[R2m tLFP_max.R2(s & b)];
     SZ=[SZ tLFP_max.R2(s & b) tLFP_max.rfs(s & b)];
 end
 
-
-s= sum(R2m>50,2)==size(R2m,2);
+s= sum(R2m>rth,2)==size(R2m,2);
 distRF = [...
     sqrt(((C(s,2)-C(s,5)).^2) + ((C(s,3)-C(s,6)).^2)) ...
     sqrt(((C(s,2)-C(s,9)).^2) + ((C(s,3)-C(s,10)).^2)) ...
@@ -502,15 +502,15 @@ normSz = [...
     C(s,19)./C(s,4) ...
     C(s,23)./C(s,4) ];
 
-
-%% MUA model comparison ---
+%% MUA model comparison ===================================================
 m=unique(tMUA_max.Model);
 R2=[];
 for i=1:length(m)
     R2 = [R2 tMUA_max.R2(strcmp(tMUA_max.Model,m{i}))];
 end
 
-figure;
+f=figure;
+set(f,'Position',[100 100 1200 1200]);
 for row=1:4
     for column=1:4
         subplot(4,4,((row-1)*4)+column); hold on;
@@ -524,65 +524,70 @@ for row=1:4
     end
 end
 
-%% LFP model comparison ---
-figure; 
+%% LFP model comparison ===================================================
+f=figure; 
+set(f,'Position',[100 100 1200 1200]);
 
-l=unique(tLFP_max.SigType);
+sig=unique(tLFP_max.SigType);
+lfp_order = [3 1 2 5 4];
 spn=1;
-for fb=1:length(l)
-   
+for fb=lfp_order
     m=unique(tLFP_max.Model);
     R2=[];
     for i=1:length(m)
         R2 = [R2 tLFP_max.R2(...
             strcmp(tLFP_max.Model,m{i}) & ...
-            strcmp(tLFP_max.SigType,l{fb}))];
+            strcmp(tLFP_max.SigType,sig{fb}))];
     end
     
-    subplot(length(l),4,spn); hold on;
+    subplot(length(sig),4,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(:,3), R2(:,1),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
     xlabel(m{3},'interpreter','none');ylabel(m{1},'interpreter','none')
-    title(l{fb})
+    title(sig{fb})
     spn=spn+1;
     
-    subplot(length(l),4,spn); hold on;
+    subplot(length(sig),4,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(:,3), R2(:,2),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
     xlabel(m{3},'interpreter','none');ylabel(m{2},'interpreter','none')
-    title(l{fb})
+    title(sig{fb})
     spn=spn+1;
     
-    subplot(length(l),4,spn); hold on;
+    subplot(length(sig),4,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(:,1), R2(:,2),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
     xlabel(m{1},'interpreter','none');ylabel(m{2},'interpreter','none')
-    title(l{fb})
+    title(sig{fb})
     spn=spn+1;
     
-    subplot(length(l),4,spn); hold on;
+    subplot(length(sig),4,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(:,3), R2(:,4),'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
     xlabel(m{3},'interpreter','none');ylabel(m{4},'interpreter','none')
-    title(l{fb})
+    title(sig{fb})
     spn=spn+1;
 end
 
-%%
-% SZ is [ MUA_R2(1) MUA_RFS(2) ALPHA_R2(3) ALPHA_RFS(4) BETA_R2(5) BETA_RFS(6) THETA_R2(7)
-% THETA_RFS(8) LGAM_R2(9) LG_RFS(10) HGAM_R2(11) HGAM_RFS(12)]
+%% pRF size for different ephys signals ===================================
+% SZ is [ MUA_R2(1) MUA_RFS(2) 
+%         THETA_R2(3) THETA_RFS(4) 
+%         ALPHA_R2(5) ALPHA_RFS(6) 
+%         BETA_R2(7) BETA_RFS8) 
+%         LGAM_R2(9) LG_RFS(10) 
+%         HGAM_R2(11) HGAM_RFS(12)]
 
-LAB=['MUA';l];
+LAB=['MUA';sig(lfp_order)];
 
-figure;
+f=figure; set(f,'Position',[100 100 1300 1200]);
 r2th=25;
 
 c=0;d=0;
@@ -595,19 +600,21 @@ for ref=1:2:12
         
         subplot(6,6,d); hold on; plot([0 100],[0 100],'k');
         
-        scatter(SZ(s,ref+1),SZ(s,fb+1))
+        scatter(SZ(s,ref+1),SZ(s,fb+1),'MarkerEdgeColor','k')
         xlabel(LAB{(ref+1)/2});ylabel(LAB{(fb+1)/2});
         title('pRF size')
         
         set(gca,'xlim',[0 10],'ylim',[0 10]);
         
         SS(c).nSZ = [SS(c).nSZ ; ...
-            median(diff(SZ(s,[ref+1 fb+1]),1,2)) std(diff(SZ(s,[ref+1 fb+1]),1,2))./sqrt(sum(s)) ...
-            mean(  SZ(s,fb+1)./SZ(s,ref+1) ) std(  SZ(s,fb+1)./SZ(s,ref+1) )./sqrt(sum(s))];
+            median(diff(SZ(s,[ref+1 fb+1]),1,2)) ...
+            std(diff(SZ(s,[ref+1 fb+1]),1,2))./sqrt(sum(s)) ...
+            mean(  SZ(s,fb+1)./SZ(s,ref+1) ) ...
+            std(  SZ(s,fb+1)./SZ(s,ref+1) )./sqrt(sum(s))];
     end
 end
 
-%% What's specific about the good DoG fits?
+%% What's specific about the good DoG fits=================================
 
 
 
