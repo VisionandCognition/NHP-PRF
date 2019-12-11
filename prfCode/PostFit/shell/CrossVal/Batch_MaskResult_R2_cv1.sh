@@ -2,6 +2,13 @@
 MONKEY=eddy
 
 declare -a sessions=(
+    'doghrf_cv1_dhrf'
+    'doghrf_cv1_mhrf'
+    'linhrf_cv1_dhrf_neggain'
+    'linhrf_cv1_mhrf_neggain'
+)
+
+declare -a sessions2=(
     'csshrf_cv1_dhrf'
     'csshrf_cv1_mhrf'
     'doghrf_cv1_dhrf'

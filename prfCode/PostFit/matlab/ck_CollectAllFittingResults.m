@@ -1,8 +1,10 @@
-CV='cv0'; %'cv0'/'cv1'
+clear all; clc;
 
-Do.MRI = false;
-Do.EPHYS = true;
-Do.COMBINE = true;
+CV='cv1'; %'cv0'/'cv1'
+
+Do.MRI = true;
+Do.EPHYS = false;
+Do.COMBINE = false;
 
 %% MRI ====================================================================
 if Do.MRI

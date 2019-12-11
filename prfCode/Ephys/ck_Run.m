@@ -3,26 +3,30 @@
 addpath(genpath('../../prfCode'));
 
 %% SETTINGS ###############################################################
-Subj = {'Lick','Aston'}; % Lick / Aston
-Sess = {'20180807_B2','20181004_B1'}; % 20180807_B2 / 20181004_B1
+Subj = {'Lick','Lick','Lick','Aston','Aston','Aston'}; % Lick / Aston
+Sess = {'20191203_B1','20191203_B2','20191203_B3',...
+    '20191205_B1','20191205_B2','20191205_B3'}; % 20180807_B2 / 20181004_B1
 
 for s=1:length(Subj)
+    subj = Subj{s};
+    sess = Sess{s};
+    
     % MORE SETTINGS #######################################################
     Do.Load.Any         = true; 
-    Do.Load.DigChan     = false; % new files
-    Do.Load.MUA         = false; % new files
-    Do.Load.LFP         = false; % new files
-    Do.Load.Behavior    = false; % new files
+    Do.Load.DigChan     = true; % new files
+    Do.Load.MUA         = true; % new files
+    Do.Load.LFP         = true; % new files
+    Do.Load.Behavior    = true; % new files
 
-    Do.Load.ProcMUA     = true;
+    Do.Load.ProcMUA     = false;
     Do.Load.ProcLFP     = false;
-    Do.Load.ProcBEH     = true;
+    Do.Load.ProcBEH     = false;
 
     Do.SyncTimes        = true;
-    Do.SaveUncut        = false;
+    Do.SaveUncut        = true;
 
     Do.SaveMUA_perArray = true;
-    Do.SaveLFP_perArray = false;
+    Do.SaveLFP_perArray = true;
 
     Do.CreatePrediction = false; % Switched to AnalyzePRF, do not use this
 
@@ -34,7 +38,7 @@ for s=1:length(Subj)
     Do.PlotPRF_LFP      = false;
 
     %% load data ==========================================================
-    This preprocess the data so it can be used in fits.
+    %This preprocess the data so it can be used in fits.
     if Do.Load.Any
         ck_Load(subj, sess, Do)
         %ck_Load_Median(subj, sess, Do)

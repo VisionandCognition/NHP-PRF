@@ -69,7 +69,8 @@ if Do.Load.DigChan
     nev_files = dir('*.nev');
     fprintf('=== Loading digital channel info ===\n');
     for i=1:length(nev_files)
-        NEV=openNEV(fullfile(nev_files(i).folder,nev_files(i).name));
+        NEV=openNEV(fullfile(nev_files(i).folder,nev_files(i).name),...
+            'overwrite');
         N(i).TimeStamp = NEV.Data.SerialDigitalIO.TimeStamp;
         N(i).t0 = N(i).TimeStamp(1);
         
@@ -129,45 +130,41 @@ end
 
 %% Get behavioral log =====================================================
 if Do.Load.Behavior
-    cd(fullfile(beh_fld,setup,subj))
-    temp_fld=dir(['*' sess(1:8) '*']);
-    cd(fullfile(temp_fld(1).folder,temp_fld(1).name));
-    temp_fld=dir(['*' sess(1:8) '*']);
+    cd(fullfile(beh_fld,setup,subj,[subj '_' sess]))
     fprintf('=== Loading Behavioral logs ===\n');
-    for recn = 1:length(temp_fld)
-        cd(fullfile(temp_fld(recn).folder,temp_fld(recn).name));
-        mat_fn = dir('Log*Run*.mat');
-        for m=1:length(mat_fn)
-            fprintf([mat_fn(m).name '\n']);
-            B(recn,m)=load(fullfile(mat_fn(m).folder,mat_fn(m).name));
-            MTi = find(arrayfun(@(x) strcmp(x.type,'MRITrigger'),...
-                B(recn,m).Log.Events)==1,1,'first');
-            if m==1
-                triggertime=B(recn,m).Log.Events(MTi).t;
-            end
-            for tt=1:length(B(recn,m).Log.Events)
-                B(recn,m).Log.Events(tt).t_mri = B(recn,m).Log.Events(tt).t - ...
-                    triggertime;
-            end
+    recn = 1;     
+    mat_fn = dir('Log*Run*.mat');
+    for m=1:length(mat_fn)
+        fprintf([mat_fn(m).name '\n']);
+        B(recn,m)=load(fullfile(mat_fn(m).folder,mat_fn(m).name));
+        MTi = find(arrayfun(@(x) strcmp(x.type,'MRITrigger'),...
+            B(recn,m).Log.Events)==1,1,'first');
+        if m==1
+            triggertime=B(recn,m).Log.Events(MTi).t;
         end
-        % also get the stimulus
-        S = load('RetMap_Stimulus.mat');
-        S = S.ret_vid;
-        
-        for j=1:size(S,2)
-            ori = S(j).orient(1);
-            imnr = mod(j,B(recn).StimObj.Stm.RetMap.nSteps/8);
-            if imnr==0; imnr=B(recn).StimObj.Stm.RetMap.nSteps/8;end
-            img = S(imnr).img{1};
-            img(img==255 | img==0)=1;
-            img(img~=1)=0;
-            STIM.img{j}=imrotate(img,-ori,'nearest','crop');
+        for tt=1:length(B(recn,m).Log.Events)
+            B(recn,m).Log.Events(tt).t_mri = B(recn,m).Log.Events(tt).t - ...
+                triggertime;
         end
-        STIM.blank = uint8(zeros(size(STIM.img{j})));
-        fprintf(['Saving ' fullfile(save_fld,[subj '_' sess '_STIM\n'])]);
-        warning off; mkdir(fullfile(save_fld,subj,sess)); warning on
-        save(fullfile(save_fld,subj,sess,[subj '_' sess '_STIM']),'STIM','B','-v7.3');
     end
+    % also get the stimulus
+    S = load('RetMap_Stimulus.mat');
+    S = S.ret_vid;
+    
+    for j=1:size(S,2)
+        ori = S(j).orient(1);
+        imnr = mod(j,B(recn).StimObj.Stm.RetMap.nSteps/8);
+        if imnr==0; imnr=B(recn).StimObj.Stm.RetMap.nSteps/8;end
+        img = S(imnr).img{1};
+        img(img==255 | img==0)=1;
+        img(img~=1)=0;
+        STIM.img{j}=imrotate(img,-ori,'nearest','crop');
+    end
+    STIM.blank = uint8(zeros(size(STIM.img{j})));
+    fprintf(['Saving ' fullfile(save_fld,[subj '_' sess '_STIM\n'])]);
+    warning off; mkdir(fullfile(save_fld,subj,sess)); warning on
+    save(fullfile(save_fld,subj,sess,[subj '_' sess '_STIM']),'STIM','B','-v7.3');
+    
     fprintf('Done!\n');
     cd(base_path);
 end
