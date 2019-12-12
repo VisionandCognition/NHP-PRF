@@ -1,13 +1,14 @@
 %% ck_Run
 % use this file to run subfunctions
+clc;
 addpath(genpath('../../prfCode'));
+addpath(fullfile('/home','chris','Documents','MATLAB','GENERAL_FUNCTIONS'));
 
 %% SETTINGS ###############################################################
-Subj = {'Lick','Lick','Lick','Aston','Aston','Aston'}; % Lick / Aston
-Sess = {'20191203_B1','20191203_B2','20191203_B3',...
-    '20191205_B1','20191205_B2','20191205_B3'}; % 20180807_B2 / 20181004_B1
+Subj = {'Aston','Aston','Aston'}; % Lick / Aston
+Sess = {'20191205_B1','20191205_B2','20191205_B3'}; % 20180807_B2 / 20181004_B1
 
-for s=1:length(Subj)
+for s=1%:length(Subj)
     subj = Subj{s};
     sess = Sess{s};
     
@@ -51,19 +52,19 @@ for s=1:length(Subj)
     % NB1! Switched to using the adapted AnalyzePRF toolbox.
     % >> This is no longer used. 
 
-    %% create pRF prediction ==============================================
+    % create pRF prediction ==============================================
     % NB2! Should be done in parallel and will take days.
     if Do.CreatePrediction
         ck_CreatePRFPrediction(subj, sess) 
     end
 
-    %% do the fitting procedure ===========================================
+    % do the fitting procedure ===========================================
 
     if Do.FitPRF
         ck_FitPRF(subj, sess, Do)
     end
 
-    %% plot some results ==================================================
+    % plot some results ==================================================
     if Do.PlotPRF_MUA
         ck_PlotPRF_MUA(subj,sess)
     end

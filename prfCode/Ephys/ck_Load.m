@@ -348,6 +348,15 @@ end
 
 %% Get LFP responses for each stim-position / channel =====================
 if Do.SaveLFP_perArray
+    HasLicense = CheckLicenseAvailable('Signal_Toolbox',5,600);
+end
+
+if ~HasLicense
+    fprintf('Cannot do LFP analysis right now due to lack of licenses\n');
+    fprintf('Try again later (an/or send email to other users..)\n');
+end
+
+if Do.SaveLFP_perArray && HasLicense
     
     win = [0.05 B(1).Par.TR*B(1).StimObj.Stm.RetMap.TRsPerStep]; %[start stop] in sec
     
