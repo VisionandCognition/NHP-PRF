@@ -7,6 +7,7 @@ function ck_BasicProc_AllFits_cv1
 % clear all;
 clc;
 CVMODE='cv1';
+dataset='NEW'; % AVG / NEW / ORG
 
 %% LOAD DATA ==============================================================
 fitres_path = ...
@@ -14,13 +15,14 @@ fitres_path = ...
 
 fprintf('==============================\n')
 fprintf('Loading data...');
-load(fullfile(fitres_path,'MultiModal',['AllFits_' CVMODE]),'R_MRI','R_EPHYS');
+load(fullfile(fitres_path,'MultiModal',dataset,...
+    ['AllFits_' CVMODE]),'R_MRI','R_EPHYS');
 fprintf('DONE\n')
 fprintf('==============================\n')
 
-output_path = [...
-    '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/'...
-    'Projects/pRF/FitResults/MultiModal/' CVMODE];
+output_path = fullfile(...
+    ['/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/'...
+    'Projects/pRF/FitResults/MultiModal'], dataset, CVMODE);
 [~,~] = mkdir(output_path);
 
 %% MRI --------------------------------------------------------------------
@@ -683,7 +685,8 @@ for r = 1:length(R_EPHYS) % animals
         end
         %-- 
         for i=1:nInst
-            if m==5 % classic RF
+            if strcmp(R_EPHYS(r).model(m).prfmodel,'classicRF')
+            %if m==5 % classic RF  
                 % standard fields
                 RTEm.rfs = cat(1,RTEm.rfs,R_EPHYS(r).model(m).MUA(i).rfs);
                 RTEm.fwhm = cat(1,RTEm.fwhm,R_EPHYS(r).model(m).MUA(i).fwhm);
@@ -756,7 +759,8 @@ for r = 1:length(R_EPHYS) % animals
         
         %-- 
         for i=1:nInst
-            if m==5 % classic RF
+            if strcmp(R_EPHYS(r).model(m).prfmodel,'classicRF')
+            %if m==5 % classic RF
                 % standard fields
                 RTEmx.rfs = cat(1,RTEmx.rfs,R_EPHYS(r).model(m).MUA(i).rfs);
                 RTEmx.fwhm = cat(1,RTEmx.fwhm,R_EPHYS(r).model(m).MUA(i).fwhm);
@@ -821,7 +825,7 @@ for r = 1:length(R_EPHYS) % animals
         % diff ====    
         %--
         for i=1:nInst % exclude classic RF here (no point in adding)
-            if m<5
+            if ~strcmp(R_EPHYS(r).model(m).prfmodel,'classicRF')
                 % standard fields
                 RTE.rfs_1 = cat(1,RTE.rfs_1,R_EPHYS(r).model(m).MUA(i).rfs(:,1));
                 RTE.fwhm_1 = cat(1,RTE.fwhm_1,R_EPHYS(r).model(m).MUA(i).fwhm(:,1));

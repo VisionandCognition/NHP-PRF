@@ -2,10 +2,11 @@
 
 %% Load ===================================================================
 CVMODE='cv1';
+dataset='ORG';
 fprintf('Loading results...\n');
 base='/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF';
-load(fullfile(base,'FitResults','MultiModal',CVMODE,'MUA_Struct'));
-load(fullfile(base,'FitResults','MultiModal','old','pRF_estimates_ephys'));
+load(fullfile(base,'FitResults','MultiModal',dataset,CVMODE,'MUA_Struct'));
+load(fullfile(base,'FitResults','MultiModal','OLD','pRF_estimates_ephys'));
 fprintf('Done!\n')
 
 %% set R2 window to look at ===============================================

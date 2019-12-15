@@ -1,4 +1,4 @@
-function ck_GetEphys_pRF(monkeys,models,output,dataset)
+function ck_GetEphys_pRF2(monkeys,models,output,dataset)
 
 if nargin < 2
     fprintf('ERROR: Not enough arguments specified\n');
@@ -9,7 +9,10 @@ clc;
 %% data location ==========================================================
 fitres_path = ...
     ['/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/' ...
-    'pRF/FitResults/ephys/' dataset]);
+    'pRF/FitResults/ephys/Results_' dataset];
+save_path = ...
+    ['/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/' ...
+    'pRF/FitResults/ephys/Combined'];
 chanmap_path = ...
     '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/Data/ephys';
 start_fld=pwd;
@@ -70,5 +73,5 @@ end
 
 %% Save the combined results ==============================================
 fprintf('Saving the combined ephys result-file\n');
-[~,~,~] = mkdir(fullfile(fitres_path,'Combined'));
-save(fullfile(fitres_path,'Combined',output),'R')
+[~,~,~] = mkdir(fullfile(save_path,dataset));
+save(fullfile(save_path,dataset,output),'R')

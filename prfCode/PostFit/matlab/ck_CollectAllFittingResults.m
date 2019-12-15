@@ -2,9 +2,11 @@ clear all; clc;
 
 CV='cv1'; %'cv0'/'cv1'
 
-Do.MRI = true;
-Do.EPHYS = false;
-Do.COMBINE = false;
+Do.MRI = false;
+Do.EPHYS = true;
+Do.COMBINE = true;
+
+dataset = 'NEW';
 
 %% MRI ====================================================================
 if Do.MRI
@@ -25,15 +27,21 @@ end
 if Do.EPHYS
     monkeys = {'lick','aston'};
     
+%     models = {...
+%         ['linear_ephys_' CV],...
+%         ['linear_ephys_' CV '_neggain'],...
+%         ['dog_ephys_' CV],...
+%         ['css_ephys_' CV],...
+%         'classicRF'};
     models = {...
         ['linear_ephys_' CV],...
-        ['linear_ephys_' CV '_neggain'],...
         ['dog_ephys_' CV],...
         ['css_ephys_' CV],...
         'classicRF'};
     output = ['AllFits_ephys_' CV];
     
-    ck_GetEphys_pRF(monkeys,models,output);
+    %ck_GetEphys_pRF(monkeys,models,output);
+    ck_GetEphys_pRF2(monkeys,models,output,dataset);
 end
 
 %% COMBINE ================================================================
@@ -47,10 +55,10 @@ if Do.COMBINE
     R_MRI = R_MRI.R;
     % load ephys
     fprintf('Loading EPHYS\n');
-    R_EPHYS = load(fullfile(fitres_path,'ephys','Combined',['AllFits_ephys_' CV]));
+    R_EPHYS = load(fullfile(fitres_path,'ephys','Combined',dataset,['AllFits_ephys_' CV]));
     R_EPHYS = R_EPHYS.R;
     
     % save
     fprintf('Saving results from both modalities\n');
-    save(fullfile(fitres_path,'MultiModal',['AllFits_' CV]),'R_MRI','R_EPHYS');
+    save(fullfile(fitres_path,'MultiModal',dataset,['AllFits_' CV]),'R_MRI','R_EPHYS');
 end
