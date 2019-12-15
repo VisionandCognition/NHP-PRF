@@ -3,12 +3,14 @@
 
 %% Paths ==================================================================
 BaseFld = pwd;
+DS='ORG';
 ResFld = ...
-    '/Users/chris/Documents/MRI_ANALYSIS/NHP-PRF/FitResults/MultiModal/cv1';
+    ['/Users/chris/Documents/MRI_ANALYSIS/NHP-PRF/FitResults/MultiModal/'...
+    DS '/cv1'];
 T='Tables_max';
 
 % add colorbrewer
-addpath('/home/chris/Documents/MATLAB_NONGIT/TOOLBOX/BrewerMap')
+addpath('/Users/chris/Dropbox/MATLAB_NONGIT/TOOLBOX/BrewerMap')
 def_cmap = 'Spectral';
 
 %% Load ===================================================================
@@ -27,13 +29,14 @@ for mi = 1:length(m)
 end
 
 %% scatter plots & differences R2 =========================================
+roi={'V1','V2_merged','V3_merged','V4_merged','MT','MST','TEO','LIP_merged'};
+roilabels={'V1','V2','V3','V4','MT','MST','TEO','LIP'};
+
 f=figure;
 set(f,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 
 set(f,'Position',[100 100 1600 1000]);
 s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>0;
-roi={'V1','V2_merged','V3_merged','V4_merged','MT','MST','TEO','LIP_merged'};
-roilabels={'V1','V2','V3','V4','MT','MST','TEO','LIP'};
 
 subplot(2,3,1); hold on;
 plot([0 100],[0 100],'k','Linewidth',2);
@@ -529,9 +532,9 @@ v4=tLFP_max.Area(strcmp(tMUA_max.Model,m{1}))==4;
 
 f=figure;
 set(f,'Position',[100 100 1200 1200]);
-for row=1:4
-    for column=1:4
-        subplot(4,4,((row-1)*4)+column); hold on;
+for row=1:3
+    for column=1:3
+        subplot(3,3,((row-1)*3)+column); hold on;
         plot([0 100],[0 100],'k');
         scatter(R2(v1,row+1), R2(v1,column+1),60,'Marker','.',...
             'MarkerEdgeColor',[.3 .3 .3]);
@@ -557,13 +560,13 @@ spn=1;
 for fb=lfp_order
     m=unique(tLFP_max.Model);
     R2=[];
-    for i=1:length(m)
+    for i=1:length(m)-1
         R2 = [R2 tLFP_max.R2(...
             strcmp(tLFP_max.Model,m{i}) & ...
             strcmp(tLFP_max.SigType,sig{fb}))];
     end
     
-    subplot(length(sig),4,spn); hold on;
+    subplot(length(sig),3,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(v1,3), R2(v1,1),60,'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
@@ -577,7 +580,7 @@ for fb=lfp_order
     end
     spn=spn+1;
     
-    subplot(length(sig),4,spn); hold on;
+    subplot(length(sig),3,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(v1,3), R2(v1,2),60,'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
@@ -588,7 +591,7 @@ for fb=lfp_order
     title(sig{fb})
     spn=spn+1;
     
-    subplot(length(sig),4,spn); hold on;
+    subplot(length(sig),3,spn); hold on;
     plot([0 100],[0 100],'k');
     scatter(R2(v1,1), R2(v1,2),60,'Marker','.',...
         'MarkerEdgeColor',[.3 .3 .3]);
@@ -598,17 +601,7 @@ for fb=lfp_order
     xlabel(m{1},'interpreter','none');ylabel(m{2},'interpreter','none')
     title(sig{fb})
     spn=spn+1;
-    
-    subplot(length(sig),4,spn); hold on;
-    plot([0 100],[0 100],'k');
-    scatter(R2(v1,3), R2(v1,4),60,'Marker','.',...
-        'MarkerEdgeColor',[.3 .3 .3]);
-    scatter(R2(v4,3), R2(v4,4),60,'Marker','.',...
-        'MarkerEdgeColor',[.3 .8 .3]);
-    set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-    xlabel(m{3},'interpreter','none');ylabel(m{4},'interpreter','none')
-    title(sig{fb})
-    spn=spn+1;    
+      
 end
 
 %% pRF size for different ephys signals ===================================
