@@ -94,7 +94,9 @@ echo "Job finished with Exit code $EXIT, returning"
 echo "Copy results from scratch back to home " 2>&1
 echo
 
-mkdir -p $HOME/PRF/Results/$MONKEY/$RESFLD
-cp -r $TMPDIR/PRF/Results/$MONKEY/$RESFLD/Instance* $HOME/PRF/Results/$MONKEY/$RESFLD/
+#mkdir -p $HOME/PRF/Results/$MONKEY/$RESFLD
+#cp -r $TMPDIR/PRF/Results/$MONKEY/$RESFLD/Instance* $HOME/PRF/Results/$MONKEY/$RESFLD/
+mkdir -p $HOME/PRF/Results_AVG/$MONKEY/$RESFLD
+cp -r $TMPDIR/PRF/Results_AVG/$MONKEY/$RESFLD/Instance* $HOME/PRF/Results_AVG/$MONKEY/$RESFLD/
 
 exit $EXIT

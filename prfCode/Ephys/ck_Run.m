@@ -8,7 +8,7 @@ addpath(fullfile('/home','chris','Documents','MATLAB','GENERAL_FUNCTIONS'));
 Subj = {'Aston','Aston','Aston'}; % Lick / Aston
 Sess = {'20191205_B1','20191205_B2','20191205_B3'}; % 20180807_B2 / 20181004_B1
 
-for s=1%:length(Subj)
+for s=2:length(Subj)
     subj = Subj{s};
     sess = Sess{s};
     
