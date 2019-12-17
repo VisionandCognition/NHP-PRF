@@ -604,6 +604,43 @@ for fb=lfp_order
       
 end
 
+%% R2 for different ephys signals =========================================
+RR=[];
+ephys_MOD={'linear_ephys_cv1','css_ephys_cv1','dog_ephys_cv1'};
+
+for m=1:length(ephys_MOD)
+    model=ephys_MOD{m};
+    s = strcmp(tMUA_max.Model,model);
+    RR=[RR tMUA_max.R2(s)];
+    
+    s = strcmp(tLFP_max.Model,model);
+    sig=unique(tLFP_max.SigType);
+    lfp_order = [3 1 2 5 4];
+    for i=lfp_order
+        b=strcmp(tLFP_max.SigType,sig{i});
+        RR=[RR tLFP_max.R2(s & b)];
+    end
+    LAB=['MUA';sig(lfp_order)];
+    
+    f=figure; set(f,'Position',[100 100 1300 1200]);
+    r2th=0;
+    
+    c=0;d=0;
+    for ref=1:6
+        c=c+1;
+        for fb=1:6
+            d=d+1;
+            s=(RR(:,ref)>r2th & RR(:,fb)>r2th);
+            
+            subplot(6,6,d); hold on; plot([0 100],[0 100],'k');
+            scatter(RR(s,ref),RR(s,fb),120,[0.3 0.3 0.3],'Marker','.')
+            xlabel(LAB{ref});ylabel(LAB{fb});
+            title(['R2 ' model],'interpreter','none');
+            set(gca,'xlim',[0 100],'ylim',[0 100]);
+        end
+    end
+end
+
 %% pRF size for different ephys signals ===================================
 % SZ is [ MUA_R2(1) MUA_RFS(2) 
 %         THETA_R2(3) THETA_RFS(4) 
