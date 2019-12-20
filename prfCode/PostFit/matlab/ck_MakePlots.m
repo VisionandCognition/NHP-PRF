@@ -167,14 +167,14 @@ end
 
 %% scatter plot HRF & differences =========================================
 f2=figure;
-set(f2,'Position',[100 100 1000 1200]);
+set(f2,'Position',[100 100 1500 1200]);
 set(f2,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>0;
 
 
 for mm = 1:size(MRI_MODELS,1)
 
-    subplot(3,2,(mm-1)*2 +1); hold on;
+    subplot(3,3,(mm-1)*3 +1); hold on;
     plot([0 100],[0 100],'k','LineWidth',2);
     for r=1:length(roi)
         scatter(T(modidx.(MRI_MODELS{mm,1})).mod.R2(s_R2 & ...
@@ -203,11 +203,12 @@ for mm = 1:size(MRI_MODELS,1)
             T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}))-...
             T(modidx.(MRI_MODELS{mm,2})).mod.R2(s_R2 & ...
             T(modidx.(MRI_MODELS{mm,2})).mod.(roi{r})));
-        se = sd ./ sqrt(sum(s_R2 & T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r})));
-        diffmat2{1} = [diffmat2{1}; m sd se];
+        nvox = sum(s_R2 & T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}));
+        se = sd ./ sqrt(nvox);
+        diffmat2{1} = [diffmat2{1}; m sd se nvox];
     end
 
-    subplot(3,2,(mm-1)*2 +2); hold on
+    subplot(3,3,(mm-1)*3 +2); hold on
     for xval=1:length(diffmat2{1})
         bar(xval,diffmat2{1}(xval,1));
     end
@@ -215,16 +216,28 @@ for mm = 1:size(MRI_MODELS,1)
         errorbar(xval,diffmat2{1}(xval,1),diffmat2{1}(xval,3),...
         'k-','Linestyle','none')
     end
+    % mean (taking nvox into account)
+    mAll = sum((diffmat2{1}(:,1).*diffmat2{1}(:,4)))./...
+        sum(diffmat2{1}(:,4));    
+    text(0.5, -0.4,num2str(mAll))
     set(gca,'xticklabels',[],'ylim',[-0.65 1]);
     xlabel('ROI'); ylabel('Diff R2');
     title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
     legend(roilabels,'interpreter','none','Location','NorthEast');
+    
+    subplot(3,3,(mm-1)*3 +3); hold on
+    for xval=1:length(diffmat2{1})
+        bar(xval,diffmat2{1}(xval,4));
+    end
+    set(gca,'xticklabels',[]);
+    xlabel('ROI'); ylabel('# voxels');
+    title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
+    legend(roilabels,'interpreter','none','Location','NorthEast');
 end
-
 
 %% rf size depending on HRF ===============================================
 f3=figure;
-set(f3,'Position',[100 100 1000 1200]);
+set(f3,'Position',[100 100 1500 1200]);
 set(f3,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 
 R2th=10;
@@ -232,7 +245,7 @@ s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > R2th;
 
 for mm = 1:size(MRI_MODELS,1)
     
-    sp=subplot(3,2,(mm-1)*2 +1);hold on;
+    sp=subplot(3,3,(mm-1)*3 +1);hold on;
     plot([0 100],[0 100],'k','LineWidth',2);
     for r=1:length(roi)
         scatter(T(modidx.(MRI_MODELS{mm,1})).mod.rfs(s_R2 & ...
@@ -252,28 +265,28 @@ for mm = 1:size(MRI_MODELS,1)
     for r=1:length(roi)
         [n,x] = hist(...
             T(modidx.(MRI_MODELS{mm,1})).mod.rfs(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}))-...
+              T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r})) - ...
             T(modidx.(MRI_MODELS{mm,2})).mod.rfs(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,2})).mod.(roi{r})),...
-            100);
+              T(modidx.(MRI_MODELS{mm,2})).mod.(roi{r})), 100);
         f = n./sum(s_R2 & T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}));
         
-        dsz = T(modidx.(MRI_MODELS{mm,1})).mod.rfs-T(modidx.(MRI_MODELS{mm,2})).mod.rfs;
+        dsz = T(modidx.(MRI_MODELS{mm,1})).mod.rfs - ...
+            T(modidx.(MRI_MODELS{mm,2})).mod.rfs;
         dsz = dsz(s_R2 & T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}));
         dsz = dsz(isfinite(dsz));
         
         m = mean(dsz);
         sd = std(dsz);
         se = sd ./ sqrt(length(dsz));
-        diffmat2{1} = [diffmat2{1}; m sd se];
+        diffmat2{1} = [diffmat2{1}; m sd se size(dsz,1)];
     end
     
     
-    subplot(3,2,(mm-1)*2 +2); hold on
-    for xval=1:length(diffmat2{1})
+    subplot(3,3,(mm-1)*3 +2); hold on
+    for xval=1:size(diffmat2{1},1)
         bar(xval,diffmat2{1}(xval,1));
     end
-    for xval=1:length(diffmat2{1})
+    for xval=1:size(diffmat2{1},1)
         errorbar(xval,diffmat2{1}(xval,1),diffmat2{1}(xval,3),...
             'k-','Linestyle','none')
     end
@@ -281,7 +294,18 @@ for mm = 1:size(MRI_MODELS,1)
     xlabel('ROI'); ylabel('Diff pRF size');
     title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
     legend(roilabels,'interpreter','none','Location','NorthEast');
+    
+    
+    subplot(3,3,(mm-1)*3 +3); hold on
+    for xval=1:size(diffmat2{1},1)
+        bar(xval,diffmat2{1}(xval,4));
+    end
+
+    set(gca,'xticklabels',[]);
+    xlabel('ROI'); ylabel('Number of voxels');
+    title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
 end
+
 %% ECC vs PRF Size ========================================================
 f4=figure;
 set(f4,'Position',[100 100 1000 1200]);
@@ -513,6 +537,7 @@ for m=1:length(ephys_MOD)
         C{m}(s,19)./C{m}(s,4) ...
         C{m}(s,23)./C{m}(s,4) ];
 end
+
 %% MUA model comparison ===================================================
 m=unique(tMUA_max.Model);
 R2=[];
@@ -756,3 +781,41 @@ end
 % - classify all pRFs by their location and get their size
 % - correlate across modailities
 
+Rth=2; 
+MRI_MODEL={'linhrf_cv1_mhrf','csshrf_cv1_mhrf','doghrf_cv1_mhrf'};
+
+for m=1%:length(MRI_MODEL)
+    s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth;
+    
+    for r=1%:length(roi)
+      
+        temp_X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+        temp_Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+        temp_S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+
+    end
+end
+
+% create raster
+x_edge = [-1 6]; y_edge=[-6 1];
+stepsize = 0.2;
+
+xrange = x_edge(1):stepsize:x_edge(2);
+yrange = y_edge(1):stepsize:y_edge(2);
+
+
+mri_map = NaN(length(xrange),length(yrange));
+
+for yi = 1:length(yrange)
+    yyi = yrange(yi);
+    for xi = 1:length(xrange)
+        xxi = xrange(xi);
+        si = temp_X > xxi-(stepsize/2) & temp_X < xxi+(stepsize/2) & ...
+            temp_Y > yyi-(stepsize/2) & temp_Y < yyi+(stepsize/2);
+        mri_map(yi,xi) = mean(temp_S(si));
+     end
+end
+
+
+%%
+stem3(temp_X,temp_Y,temp_S)
