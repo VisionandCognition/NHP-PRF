@@ -817,5 +817,5 @@ for yi = 1:length(yrange)
 end
 
 
-%%
-stem3(temp_X,temp_Y,temp_S)
+%% Correlate MRI-ephys
+

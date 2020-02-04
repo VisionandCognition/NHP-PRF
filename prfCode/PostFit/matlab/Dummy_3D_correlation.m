@@ -14,24 +14,32 @@ S = 3.6 + ...
     sqrt(X.^2 + Y.^2)*0.24 + ...
     1.2*(rand(N,1)-0.5);
 
-figure;
-hold on;
-scatter3(x,y,s)
-scatter3(X,Y,S)
-
-%%
-[BETA,SIGMA,RESID] = mvregress([X Y],S);
-[beta,sigma,resid] = mvregress([x y],s);
-
-
-%%
-mdl=fitlm([X Y],S)
-
-mdl=fitlm([x y],s)
-
-%% 
+%% interpolate x,y,s surfaces
 [xq,yq] = meshgrid(0:.1:10,-10:.1:0);
-vq = griddata(x,y,s,xq,yq);
+Xq=xq; Yq=yq;
 
-mesh(xq,yq,vq); hold on;
-plot3(x,y,s,'o')
+sq = griddata(x,y,s,xq,yq,'cubic');
+Sq = griddata(X,Y,S,Xq,Yq,'cubic');
+
+
+%% plot interpolated surfaces through the data
+subplot(1,2,1);hold on;
+contourf(xq,yq,sq,'LevelStep',0.1,'LineStyle','none');
+plot(xq,yq,'k.')
+
+subplot(1,2,2)
+contourf(Xq,Yq,Sq,'LevelStep',0.1,'LineStyle','none');
+plot(Xq,Yq,'k.')
+
+%% bootstrap the correlation analysis
+np=100; nb=100;
+v = find(~isnan(sq));
+cc=[]; 
+figure; hold on;
+for i=1:nb
+    V=v(randperm(length(v)));
+    [r,p]=corrcoef(sq(V(1:np)), Sq(V(1:np)));
+    scatter(sq(V(1:np)), Sq(V(1:np)),'o');
+    cc=[cc; r(2)]; 
+end
+[mean(cc) std(cc)]
