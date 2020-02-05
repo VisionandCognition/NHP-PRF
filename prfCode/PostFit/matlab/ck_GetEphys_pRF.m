@@ -1,4 +1,4 @@
-function ck_GetEphys_pRF(monkeys,models,output,dataset)
+function ck_GetEphys_pRF(monkeys,models,output)
 
 if nargin < 2
     fprintf('ERROR: Not enough arguments specified\n');
@@ -9,10 +9,10 @@ clc;
 %% data location ==========================================================
 fitres_path = ...
     ['/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/' ...
-    'pRF/FitResults/ephys/' dataset]);
+    'pRF/FitResults/ephys/'];
 chanmap_path = ...
     '/Users/chris/Dropbox/CURRENT_PROJECTS/NHP_MRI/Projects/pRF/Data/ephys';
-start_fld=pwd;
+start_fld = pwd;
 
 %% Collect EPHYS ==========================================================
 fprintf('Collecting ephys retinotopic maps...\n');

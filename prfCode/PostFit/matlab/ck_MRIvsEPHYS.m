@@ -2,6 +2,7 @@ addpath(genpath('../../FitResults/MultiModal'));
 
 load pRF_estimates_MRI_inFunc
 load pRF_estimates_ephys
+
 %%
 MUA=[RetMap(1).table_mua;RetMap(2).table_mua];
 LFP=[RetMap(1).table_lfp;RetMap(2).table_lfp];

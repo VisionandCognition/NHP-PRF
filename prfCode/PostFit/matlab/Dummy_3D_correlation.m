@@ -27,7 +27,7 @@ subplot(1,2,1);hold on;
 contourf(xq,yq,sq,'LevelStep',0.1,'LineStyle','none');
 plot(xq,yq,'k.')
 
-subplot(1,2,2)
+subplot(1,2,2);hold on;
 contourf(Xq,Yq,Sq,'LevelStep',0.1,'LineStyle','none');
 plot(Xq,Yq,'k.')
 

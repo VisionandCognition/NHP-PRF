@@ -5,30 +5,43 @@
 BaseFld = pwd;
 DS='ORG';
 ResFld = ...
-    ['/Users/chris/Documents/MRI_ANALYSIS/NHP-PRF/FitResults/MultiModal/'...
-    DS '/cv1'];
-T='Tables_max';
+    ['/Users/chris/Documents/MRI_ANALYSIS/NHP-PRF/'...
+    'FitResults/MultiModal/' DS '/cv1'];
+TT='Tables_mean';
 
 % add colorbrewer
 addpath('/Users/chris/Dropbox/MATLAB_NONGIT/TOOLBOX/BrewerMap')
 def_cmap = 'Spectral';
 
+ResType = 'mean'; % max / mean
+TT = ['Tables_' ResType];
+
 %% Load ===================================================================
-fprintf('Loading results table. Please be patient, this will take a while..\n');
-tic; load(fullfile(ResFld,T)); t_load=toc;
+fprintf(['Loading results table. '...
+    'Please be patient, this will take a while..\n']);
+tic; load(fullfile(ResFld,TT)); t_load=toc;
 fprintf(['Loading took ' num2str(t_load) ' s\n']);
 
-%% Split by model =========================================================
-clear T
-m = unique(tMRI_max.Model); 
+%% Correct for result type ================================================
+fprintf('Generalizing variable names...\n');
+fprintf('MRI...'); 
+eval(['tMRI = tMRI_' ResType '; clear tMRI_' ResType ';']);
+fprintf('MUA...'); 
+eval(['tMUA = tMUA_' ResType '; clear tMUA_' ResType ';']);
+fprintf('LFP...'); 
+eval(['tLFP = tLFP_' ResType '; clear tLFP_' ResType ';']);
+fprintf('>> DONE\n');
+
+%% Split MRI table by model ===============================================
+m = unique(tMRI.Model);
 for mi = 1:length(m)
-    M = tMRI_max(strcmp(tMRI_max.Model,m{mi}),:);
+    M = tMRI(strcmp(tMRI.Model,m{mi}),:);
     T(mi).mod = M;
     T(mi).name = m{mi};
     modidx.(m{mi}) = mi;
 end
 
-%% scatter plots & differences R2 =========================================
+%% MRI scatter plots & differences R2 =====================================
 roi={'V1','V2_merged','V3_merged','V4_merged','MT','MST','TEO','LIP_merged'};
 roilabels={'V1','V2','V3','V4','MT','MST','TEO','LIP'};
 MRI_MODELS={...
@@ -165,12 +178,11 @@ for cc = 1:length(diffmat)
     end
 end
 
-%% scatter plot HRF & differences =========================================
+%% MRI scatter plot HRF & differences =====================================
 f2=figure;
 set(f2,'Position',[100 100 1500 1200]);
 set(f2,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>0;
-
 
 for mm = 1:size(MRI_MODELS,1)
 
@@ -235,12 +247,13 @@ for mm = 1:size(MRI_MODELS,1)
     legend(roilabels,'interpreter','none','Location','NorthEast');
 end
 
-%% rf size depending on HRF ===============================================
+%% MRI rf size depending on HRF ===========================================
+R2th=10;
+
 f3=figure;
 set(f3,'Position',[100 100 1500 1200]);
 set(f3,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 
-R2th=10;
 s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > R2th;
 
 for mm = 1:size(MRI_MODELS,1)
@@ -306,11 +319,12 @@ for mm = 1:size(MRI_MODELS,1)
     title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
 end
 
-%% ECC vs PRF Size ========================================================
+%% MRI ECC vs PRF Size ====================================================
+Rth=15; 
+
 f4=figure;
 set(f4,'Position',[100 100 1000 1200]);
 set(f4,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
-Rth=15; 
 MRI_MODEL={'linhrf_cv1_mhrf','csshrf_cv1_mhrf','doghrf_cv1_mhrf'};
 
 for m=1:length(MRI_MODEL)
@@ -349,71 +363,71 @@ for m=1:length(MRI_MODEL)
     legend(roilabels,'interpreter','none','Location','NorthWest');
 end
 
-%% Ephys VFC ==============================================================
+%% EPHYS VFC ==============================================================
 % MUA
-s=tMUA_max.R2>25;
-szm=tMUA_max.rfs<200;
+s=tMUA.R2>25;
+szm=tMUA.rfs<200;
 
 model='css_ephys_cv1';
 
 fm=figure;
 set(fm,'Position',[100 100 800 800]);
-%[cmap,~,~] = brewermap(length(unique(tMUA_max.Array)),'Dark2');
+%[cmap,~,~] = brewermap(length(unique(tMUA.Array)),'Dark2');
 %set(fm,'DefaultAxesColorOrder',cmap);
 
 subplot(2,2,1);hold on;
 
-szm=tMUA_max.rfs<5;
-m=strcmp(tMUA_max.Monkey,'lick') & strcmp(tMUA_max.Model,model);
+szm=tMUA.rfs<5;
+m=strcmp(tMUA.Monkey,'lick') & strcmp(tMUA.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==1;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v),...
-        tMUA_max.Y(s & m & a & v),'Marker','*' )
+v=tMUA.Area==1;
+for r=unique(tMUA.Array)'
+    a=tMUA.Array==r;
+    scatter(tMUA.X(s & m & a & v),...
+        tMUA.Y(s & m & a & v),'Marker','*' )
 end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Lick V1 MUA')
 
 subplot(2,2,3);hold on;
-szm=tMUA_max.rfs<5;
-m=strcmp(tMUA_max.Monkey,'lick') & strcmp(tMUA_max.Model,model);
+szm=tMUA.rfs<5;
+m=strcmp(tMUA.Monkey,'lick') & strcmp(tMUA.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==4;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v),...
-        tMUA_max.Y(s & m & a & v),'Marker','*' )
+v=tMUA.Area==4;
+for r=unique(tMUA.Array)'
+    a=tMUA.Array==r;
+    scatter(tMUA.X(s & m & a & v),...
+        tMUA.Y(s & m & a & v),'Marker','*' )
 
 end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Lick V4 MUA')
 
 subplot(2,2,2);hold on;
-m=strcmp(tMUA_max.Monkey,'aston') & strcmp(tMUA_max.Model,model);
+m=strcmp(tMUA.Monkey,'aston') & strcmp(tMUA.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==1;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v),...
-        tMUA_max.Y(s & m & a & v),'Marker','*' )
+v=tMUA.Area==1;
+for r=unique(tMUA.Array)'
+    a=tMUA.Array==r;
+    scatter(tMUA.X(s & m & a & v),...
+        tMUA.Y(s & m & a & v),'Marker','*' )
 
 end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Aston V1 MUA')
 
 subplot(2,2,4);hold on;
-m=strcmp(tMUA_max.Monkey,'aston') & strcmp(tMUA_max.Model,model);
+m=strcmp(tMUA.Monkey,'aston') & strcmp(tMUA.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tMUA_max.Area==4;
-for r=unique(tMUA_max.Array)'
-    a=tMUA_max.Array==r;
-    scatter(tMUA_max.X(s & m & a & v),...
-        tMUA_max.Y(s & m & a & v),'Marker','*' )
+v=tMUA.Area==4;
+for r=unique(tMUA.Array)'
+    a=tMUA.Array==r;
+    scatter(tMUA.X(s & m & a & v),...
+        tMUA.Y(s & m & a & v),'Marker','*' )
 
 end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
@@ -421,7 +435,7 @@ title('Aston V4 MUA')
 
 %% Ephys VFC ==============================================================
 % LFP Low Gamma
-s=tLFP_max.R2>25;
+s=tLFP.R2>25;
 
 model='css_ephys_cv1';
 b = 'lGamma';
@@ -429,65 +443,65 @@ fm=figure;
 set(fm,'Position',[100 100 800 800]);
 
 subplot(2,2,1);hold on;
-szm=tLFP_max.rfs<50;
-m=strcmp(tLFP_max.Monkey,'lick') & ...
-    strcmp(tLFP_max.Model, model) & ...
-    strcmp(tLFP_max.SigType, b);
+szm=tLFP.rfs<50;
+m=strcmp(tLFP.Monkey,'lick') & ...
+    strcmp(tLFP.Model, model) & ...
+    strcmp(tLFP.SigType, b);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tLFP_max.Area==1;
-for r=unique(tLFP_max.Array)'
-    a=tLFP_max.Array==r;
-    scatter(tLFP_max.X(s & m & a & v),...
-        tLFP_max.Y(s & m & a & v),'Marker','*' )
+v=tLFP.Area==1;
+for r=unique(tLFP.Array)'
+    a=tLFP.Array==r;
+    scatter(tLFP.X(s & m & a & v),...
+        tLFP.Y(s & m & a & v),'Marker','*' )
 end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Lick V1 LFP (lGAM)')
 
 subplot(2,2,3);hold on;
-szm=tLFP_max.rfs<50;
-m=strcmp(tLFP_max.Monkey,'lick') & strcmp(tLFP_max.Model,model);
+szm=tLFP.rfs<50;
+m=strcmp(tLFP.Monkey,'lick') & strcmp(tLFP.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tLFP_max.Area==4;
-for r=unique(tLFP_max.Array)'
-    a=tLFP_max.Array==r;
-    scatter(tLFP_max.X(s & m & a & v),...
-        tLFP_max.Y(s & m & a & v),'Marker','*' )
+v=tLFP.Area==4;
+for r=unique(tLFP.Array)'
+    a=tLFP.Array==r;
+    scatter(tLFP.X(s & m & a & v),...
+        tLFP.Y(s & m & a & v),'Marker','*' )
 
 end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Lick V4 LFP (lGAM)')
 
 subplot(2,2,2);hold on;
-m=strcmp(tLFP_max.Monkey,'aston') & strcmp(tLFP_max.Model,model);
+m=strcmp(tLFP.Monkey,'aston') & strcmp(tLFP.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tLFP_max.Area==1;
-for r=unique(tLFP_max.Array)'
-    a=tLFP_max.Array==r;
-    scatter(tLFP_max.X(s & m & a & v),...
-        tLFP_max.Y(s & m & a & v),'Marker','*' )
+v=tLFP.Area==1;
+for r=unique(tLFP.Array)'
+    a=tLFP.Array==r;
+    scatter(tLFP.X(s & m & a & v),...
+        tLFP.Y(s & m & a & v),'Marker','*' )
 
 end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Aston V1 LFP (lGAM)')
 
 subplot(2,2,4);hold on;
-m=strcmp(tLFP_max.Monkey,'aston') & strcmp(tLFP_max.Model,model);
+m=strcmp(tLFP.Monkey,'aston') & strcmp(tLFP.Model,model);
 plot([-10 20],[0 0],'k');
 plot([0 0],[-30 10],'k');
-v=tLFP_max.Area==4;
-for r=unique(tLFP_max.Array)'
-    a=tLFP_max.Array==r;
-    scatter(tLFP_max.X(s & m & a & v),...
-        tLFP_max.Y(s & m & a & v),'Marker','*' )
+v=tLFP.Area==4;
+for r=unique(tLFP.Array)'
+    a=tLFP.Array==r;
+    scatter(tLFP.X(s & m & a & v),...
+        tLFP.Y(s & m & a & v),'Marker','*' )
 
 end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Aston V4 LFP (lGAM)')
 
-%% Ephys location difference & size difference  ---
+%% Ephys location difference & size difference  ---------------------------
 rth=25;
 
 ephys_MOD={'linear_ephys_cv1','css_ephys_cv1','dog_ephys_cv1'};
@@ -497,22 +511,22 @@ for m=1:length(ephys_MOD)
     C{m}=[];R2m{m}=[];SZ{m}=[];
     
     model=ephys_MOD{m};
-    s = strcmp(tMUA_max.Model,model);
-    C{m}=[C{m} tMUA_max.R2(s) tMUA_max.X(s) tMUA_max.Y(s) tMUA_max.rfs(s)];
-    R2m{m}=[R2m{m} tMUA_max.R2(s)];
-    SZ{m}=[SZ{m} tMUA_max.R2(s) tMUA_max.rfs(s)];
+    s = strcmp(tMUA.Model,model);
+    C{m}=[C{m} tMUA.R2(s) tMUA.X(s) tMUA.Y(s) tMUA.rfs(s)];
+    R2m{m}=[R2m{m} tMUA.R2(s)];
+    SZ{m}=[SZ{m} tMUA.R2(s) tMUA.rfs(s)];
     
-    s = strcmp(tMUA_max.Model,'classicRF');
-    C{m}=[C{m} tMUA_max.X(s)./668.745 tMUA_max.Y(s)./668.745 tMUA_max.rfs(s)./2];
+    s = strcmp(tMUA.Model,'classicRF');
+    C{m}=[C{m} tMUA.X(s)./668.745 tMUA.Y(s)./668.745 tMUA.rfs(s)./2];
     
-    s = strcmp(tLFP_max.Model,model);
-    sig=unique(tLFP_max.SigType);
+    s = strcmp(tLFP.Model,model);
+    sig=unique(tLFP.SigType);
     lfp_order = [3 1 2 5 4];
     for i=lfp_order
-        b=strcmp(tLFP_max.SigType,sig{i});
-        C{m}=[C{m} tLFP_max.R2(s & b) tLFP_max.X(s & b) tLFP_max.Y(s & b) tLFP_max.rfs(s & b)];
-        R2m{m}=[R2m{m} tLFP_max.R2(s & b)];
-        SZ{m}=[SZ{m} tLFP_max.R2(s & b) tLFP_max.rfs(s & b)];
+        b=strcmp(tLFP.SigType,sig{i});
+        C{m}=[C{m} tLFP.R2(s & b) tLFP.X(s & b) tLFP.Y(s & b) tLFP.rfs(s & b)];
+        R2m{m}=[R2m{m} tLFP.R2(s & b)];
+        SZ{m}=[SZ{m} tLFP.R2(s & b) tLFP.rfs(s & b)];
     end
     
     s= sum(R2m{m}>rth,2)==size(R2m{m},2);
@@ -539,14 +553,14 @@ for m=1:length(ephys_MOD)
 end
 
 %% MUA model comparison ===================================================
-m=unique(tMUA_max.Model);
+m=unique(tMUA.Model);
 R2=[];
 for i=1:length(m)
-    R2 = [R2 tMUA_max.R2(strcmp(tMUA_max.Model,m{i}))];
+    R2 = [R2 tMUA.R2(strcmp(tMUA.Model,m{i}))];
 end
 
-v1=tLFP_max.Area(strcmp(tMUA_max.Model,m{1}))==1;
-v4=tLFP_max.Area(strcmp(tMUA_max.Model,m{1}))==4;
+v1=tLFP.Area(strcmp(tMUA.Model,m{1}))==1;
+v4=tLFP.Area(strcmp(tMUA.Model,m{1}))==4;
 
 f=figure;
 set(f,'Position',[100 100 1200 1200]);
@@ -572,16 +586,16 @@ end
 f=figure; 
 set(f,'Position',[100 100 1200 1200]);
 
-sig=unique(tLFP_max.SigType);
+sig=unique(tLFP.SigType);
 lfp_order = [3 1 2 5 4];
 spn=1;
 for fb=lfp_order
-    m=unique(tLFP_max.Model);
+    m=unique(tLFP.Model);
     R2=[];
     for i=1:length(m)-1
-        R2 = [R2 tLFP_max.R2(...
-            strcmp(tLFP_max.Model,m{i}) & ...
-            strcmp(tLFP_max.SigType,sig{fb}))];
+        R2 = [R2 tLFP.R2(...
+            strcmp(tLFP.Model,m{i}) & ...
+            strcmp(tLFP.SigType,sig{fb}))];
     end
     
     subplot(length(sig),3,spn); hold on;
@@ -628,15 +642,15 @@ ephys_MOD={'linear_ephys_cv1','css_ephys_cv1','dog_ephys_cv1'};
 
 for m=1:length(ephys_MOD)
     model=ephys_MOD{m};
-    s = strcmp(tMUA_max.Model,model);
-    RR=[RR tMUA_max.R2(s)];
+    s = strcmp(tMUA.Model,model);
+    RR=[RR tMUA.R2(s)];
     
-    s = strcmp(tLFP_max.Model,model);
-    sig=unique(tLFP_max.SigType);
+    s = strcmp(tLFP.Model,model);
+    sig=unique(tLFP.SigType);
     lfp_order = [3 1 2 5 4];
     for i=lfp_order
-        b=strcmp(tLFP_max.SigType,sig{i});
-        RR=[RR tLFP_max.R2(s & b)];
+        b=strcmp(tLFP.SigType,sig{i});
+        RR=[RR tLFP.R2(s & b)];
     end
     LAB=['MUA';sig(lfp_order)];
     
@@ -720,7 +734,7 @@ for m=1:length(ephys_MOD)
             
             scatter(SZ{m}(s,ref+1),SZ{m}(s,fb+1),120,[0.3 0.3 0.3],'Marker','.')
             xlabel(LAB{(ref+1)/2});ylabel(LAB{(fb+1)/2});
-            title(['pRF size' model(1:3)],'interpreter','none')
+            title(['pRF size ' model(1:3)],'interpreter','none')
             
             set(gca,'xlim',[0 10],'ylim',[0 10]);
             
@@ -753,7 +767,7 @@ for m=1:length(ephys_MOD)
             plot([mean(dSz) mean(dSz)],YY,'r','LineWidth',2)
             plot([median(dSz) median(dSz)],YY,'b','LineWidth',2)
             set(gca,'xlim',[-6 6])
-            xlabel(['Sz ' model(1:3)],'interpreter','none');
+            xlabel(['Sz Diff - ' model(1:3)],'interpreter','none');
             ylabel('cnt','interpreter','none');
             title(['Size ' LAB{(fb+1)/2} '-' LAB{(ref+1)/2} ],...
                 'interpreter','none')
@@ -777,45 +791,206 @@ end
 
 
 
-%% Pattern Space-Size =====================================================
-% - classify all pRFs by their location and get their size
-% - correlate across modailities
 
-Rth=2; 
-MRI_MODEL={'linhrf_cv1_mhrf','csshrf_cv1_mhrf','doghrf_cv1_mhrf'};
+%% Correlate MRI-ephys ====================================================
+% This analysis takes a while!! Do not overuse...
 
-for m=1%:length(MRI_MODEL)
-    s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth;
+Rth_mri = 2;
+Rth_ephys = 50;
+mxS = 10;
+
+MRI_MODEL = {'linhrf_cv1_mhrf','csshrf_cv1_mhrf','doghrf_cv1_mhrf'};
+EPHYS_MODEL = unique(tMUA.Model);
+
+nbtstr = 100;
+np = 500;
+grid_vf = [ 0 5 -5 1 ; 0 8 -8 0]; % [xmin xmax ymin ymax] [v1; v4] dva
+grid_spacing = 0.25;% dva
+
+warning off;
+
+for m = 2%1:length(MRI_MODEL)
+    s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
+         T(modidx.(MRI_MODEL{m})).mod.rfs < mxS;
     
-    for r=1%:length(roi)
-      
-        temp_X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-        temp_Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-        temp_S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-
+    % collect mri prfs
+    for r = 1:length(roi)
+        if strcmp(roi{r},'V1') % V1
+            mri1.X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri1.Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri1.S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+        elseif strcmp(roi{r},'V4_merged') % V4
+            mri4.X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri4.Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri4.S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+        end
     end
+               
+    % collect ephys prfs
+    for i = 1:size(EPHYS_MODEL,1)    
+        if strcmp(EPHYS_MODEL{i}(1:3),MRI_MODEL{m}(1:3))
+            idx_mod=i;
+        end
+    end
+    % V1
+    s = strcmp(tMUA.Model,EPHYS_MODEL{idx_mod}) & ...
+        tMUA.Area == 1 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
+    mua1.X = tMUA.X(s); mua1.Y = tMUA.Y(s); mua1.S = tMUA.rfs(s);
+    % V4
+    s = strcmp(tMUA.Model,EPHYS_MODEL{idx_mod}) & ...
+        tMUA.Area == 4 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
+    mua4.X = tMUA.X(s); mua4.Y = tMUA.Y(s); mua4.S = tMUA.rfs(s);  
+    
+    freqband=unique(tLFP.SigType);
+    for fb = 1: length(freqband)
+        s = strcmp(tLFP.Model,EPHYS_MODEL{idx_mod}) & ...
+            tLFP.Area == 1 & tLFP.R2 > Rth_ephys & tLFP.rfs < mxS & ...
+            strcmp(tLFP.SigType, freqband{fb});
+        lfp1(fb).freqband =  freqband{fb};
+        lfp1(fb).X =  tLFP.X(s);
+        lfp1(fb).Y =  tLFP.Y(s);
+        lfp1(fb).S =  tLFP.rfs(s);
+        
+        s = strcmp(tLFP.Model,EPHYS_MODEL{idx_mod}) & ...
+            tLFP.Area == 4 & tLFP.R2 > Rth_ephys & tLFP.rfs < mxS & ...
+            strcmp(tLFP.SigType, freqband{fb});
+        lfp4(fb).freqband =  freqband{fb};
+        lfp4(fb).X =  tLFP.X(s);
+        lfp4(fb).Y =  tLFP.Y(s);
+        lfp4(fb).S =  tLFP.rfs(s);
+    end
+   
+    % Calculate  grids and do bootstrap correlation
+    % =============================================
+    % create XY-grid
+    [x1q,y1q] = meshgrid(...
+        grid_vf(1,1):grid_spacing:grid_vf(1,2),...
+        grid_vf(1,3):grid_spacing:grid_vf(1,4));
+    [x4q,y4q] = meshgrid(...
+        grid_vf(2,1):grid_spacing:grid_vf(2,2),...
+        grid_vf(2,3):grid_spacing:grid_vf(2,4));
+    
+    mri1.S_grid = griddata(mri1.X,mri1.Y,mri1.S,x1q,y1q,'linear');
+    mri4.S_grid = griddata(mri4.X,mri4.Y,mri4.S,x4q,y4q,'linear');
+    mua1.S_grid = griddata(mua1.X,mua1.Y,mua1.S,x1q,y1q,'linear');
+    mua4.S_grid = griddata(mua4.X,mua4.Y,mua4.S,x4q,y4q,'linear');
+    for fb = 1: length(freqband)
+        lfp1(fb).S_grid = griddata(...
+            lfp1(fb).X,lfp1(fb).Y,lfp1(fb).S,x1q,y1q,'linear');
+        lfp4(fb).S_grid = griddata(...
+            lfp4(fb).X,lfp4(fb).Y,lfp4(fb).S,x4q,y4q,'linear');
+    end
+    
+    if false
+        subplot(2,2,1); hold on;
+        contourf(x1q,y1q,mri1.S_grid,'LevelStep',0.1,'LineStyle','none');
+        plot(x1q,y1q,'k.')
+        
+        subplot(2,2,2);hold on;
+        contourf(x1q,y1q,mua1.S_grid,'LevelStep',0.1,'LineStyle','none');
+        plot(x1q,y1q,'k.')
+        
+        subplot(2,2,3);hold on;
+        contourf(x4q,y4q,mri4.S_grid,'LevelStep',0.1,'LineStyle','none');
+        plot(x4q,y4q,'k.')
+        
+        subplot(2,2,4);hold on;
+        contourf(x4q,y4q,mua4.S_grid,'LevelStep',0.1,'LineStyle','none');
+        plot(x4q,y4q,'k.')
+    end
+        
+    % bootstrap the correlation analysis
+    v1 = find(~isnan(mri1.S_grid));
+    v4 = find(~isnan(mri4.S_grid));
+    cc1=[]; cc4=[];
+    
+    figure; 
+    for i=1:nbtstr
+        c1=[];
+        V=v1(randperm(length(v1)));
+        
+        subplot(2,6,1);hold on;
+        
+        selS = [mri1.S_grid(:) mua1.S_grid(:)];
+        selS = selS(V(1:np),:);
+        selS = selS(~isnan(selS(:,2)),:);
+        [r,p]=corrcoef(selS(:,1), selS(:,2));
+        
+        scatter(mri1.S_grid(V(1:np)), mua1.S_grid(V(1:np)),'o');
+        title('V1 Map corr.');xlabel('MRI');ylabel('MUA');
+        c1=[c1 r(2)];
+        
+        for fb=1:length(freqband)
+            subplot(2,6,1+fb);hold on;
+            try
+                selS = [mri1.S_grid(:) lfp1(fb).S_grid(:)];
+                selS = selS(V(1:np),:);
+                selS = selS(~isnan(selS(:,2)),:);
+                [r,p]=corrcoef(selS(:,1), selS(:,2));
+                scatter(mri1.S_grid(V(1:np)), lfp1(fb).S_grid(V(1:np)),'o');
+            catch
+                r=NaN(2,2);
+            end
+            title('V1 Map corr.');xlabel('MRI');ylabel(lfp1(fb).freqband);
+            if r(2)<0; r=NaN(2,2); end % only look at positive correlations
+            c1=[c1 r(2)];
+        end
+        
+        cc1=[cc1; c1];
+        
+        c4=[];
+        V=v4(randperm(length(v4)));
+        
+        subplot(2,6,7);hold on;
+        
+        selS = [mri4.S_grid(:) mua4.S_grid(:)];
+        selS = selS(V(1:np),:);
+        selS = selS(~isnan(selS(:,2)),:);
+        [r,p]=corrcoef(selS(:,1), selS(:,2));
+        
+        scatter(mri4.S_grid(V(1:np)), mua4.S_grid(V(1:np)),'o');
+        title('V4 Map corr.');xlabel('MRI');ylabel('MUA');
+        c4=[c4 r(2)];
+        
+        for fb=1:length(freqband)
+            subplot(2,6,7+fb);hold on;
+            try
+                selS = [mri4.S_grid(:) lfp4(fb).S_grid(:)];
+                selS = selS(V(1:np),:);
+                selS = selS(~isnan(selS(:,2)),:);
+                [r,p]=corrcoef(selS(:,1), selS(:,2));
+                scatter(mri4.S_grid(V(1:np)), lfp4(fb).S_grid(V(1:np)),'o');
+            catch
+                r=NaN(2,2);
+            end
+            title('V4 Map corr.');xlabel('MRI');ylabel(lfp1(fb).freqband);
+            c4=[c4 r(2)];
+        end
+        
+        cc4=[cc4; c4];
+        
+        
+    end
+    cc1_stat = [mean(cc1,1); std(cc1,0,1)];
+    cc4_stat = [mean(cc4,1); std(cc4,0,1)];
+    
+    figure; hold on;
+    hBar = bar(1:6, [cc1_stat(1,:);cc4_stat(1,:)]);pause(0.1)
+    xBar=cell2mat(get(hBar,'XData')).' + [hBar.XOffset];
+    errorbar(xBar, [cc1_stat(1,:);cc4_stat(1,:)]',...
+        [cc1_stat(2,:);cc4_stat(2,:)]','k','LineStyle','none')
+    set(gca,'xtick',1:6,'xticklabels',{'MUA',...
+        lfp1(1).freqband,...
+        lfp1(2).freqband,...
+        lfp1(3).freqband,...
+        lfp1(4).freqband,...
+        lfp1(5).freqband});
+    legend({'V1','V4'},'Location','NorthWest');
 end
 
-% create raster
-x_edge = [-1 6]; y_edge=[-6 1];
-stepsize = 0.2;
-
-xrange = x_edge(1):stepsize:x_edge(2);
-yrange = y_edge(1):stepsize:y_edge(2);
+warning on;
 
 
-mri_map = NaN(length(xrange),length(yrange));
-
-for yi = 1:length(yrange)
-    yyi = yrange(yi);
-    for xi = 1:length(xrange)
-        xxi = xrange(xi);
-        si = temp_X > xxi-(stepsize/2) & temp_X < xxi+(stepsize/2) & ...
-            temp_Y > yyi-(stepsize/2) & temp_Y < yyi+(stepsize/2);
-        mri_map(yi,xi) = mean(temp_S(si));
-     end
-end
 
 
-%% Correlate MRI-ephys
 
