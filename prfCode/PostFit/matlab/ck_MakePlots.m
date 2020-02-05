@@ -806,6 +806,8 @@ nbtstr = 100;
 np = 500;
 grid_vf = [ 0 5 -5 1 ; 0 8 -8 0]; % [xmin xmax ymin ymax] [v1; v4] dva
 grid_spacing = 0.25;% dva
+pth = 0.20;
+poscorr_only = true;
 
 warning off;
 
@@ -918,6 +920,8 @@ for m = 2%1:length(MRI_MODEL)
         
         scatter(mri1.S_grid(V(1:np)), mua1.S_grid(V(1:np)),'o');
         title('V1 Map corr.');xlabel('MRI');ylabel('MUA');
+        if p < pth; r=NaN(2,2); end % only look at decent correlations
+        if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
         c1=[c1 r(2)];
         
         for fb=1:length(freqband)
@@ -932,10 +936,10 @@ for m = 2%1:length(MRI_MODEL)
                 r=NaN(2,2);
             end
             title('V1 Map corr.');xlabel('MRI');ylabel(lfp1(fb).freqband);
-            if r(2)<0; r=NaN(2,2); end % only look at positive correlations
+            if p < pth; r=NaN(2,2); end % only look at decent correlations
+            if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
             c1=[c1 r(2)];
         end
-        
         cc1=[cc1; c1];
         
         c4=[];
@@ -950,6 +954,8 @@ for m = 2%1:length(MRI_MODEL)
         
         scatter(mri4.S_grid(V(1:np)), mua4.S_grid(V(1:np)),'o');
         title('V4 Map corr.');xlabel('MRI');ylabel('MUA');
+        if p < pth; r=NaN(2,2); end % only look at decent correlations
+        if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
         c4=[c4 r(2)];
         
         for fb=1:length(freqband)
@@ -963,16 +969,15 @@ for m = 2%1:length(MRI_MODEL)
             catch
                 r=NaN(2,2);
             end
+            if p < pth; r=NaN(2,2); end % only look at decent correlations
+            if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
             title('V4 Map corr.');xlabel('MRI');ylabel(lfp1(fb).freqband);
             c4=[c4 r(2)];
         end
-        
         cc4=[cc4; c4];
-        
-        
     end
-    cc1_stat = [mean(cc1,1); std(cc1,0,1)];
-    cc4_stat = [mean(cc4,1); std(cc4,0,1)];
+    cc1_stat = [nanmean(cc1,1); nanstd(cc1,0,1)];
+    cc4_stat = [nanmean(cc4,1); nanstd(cc4,0,1)];
     
     figure; hold on;
     hBar = bar(1:6, [cc1_stat(1,:);cc4_stat(1,:)]);pause(0.1)
