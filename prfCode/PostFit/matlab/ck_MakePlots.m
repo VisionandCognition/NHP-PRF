@@ -806,7 +806,7 @@ nbtstr = 100;
 np = 500;
 grid_vf = [ 0 5 -5 1 ; 0 8 -8 0]; % [xmin xmax ymin ymax] [v1; v4] dva
 grid_spacing = 0.25;% dva
-pth = 0.20;
+pth = 0.10;
 poscorr_only = true;
 
 warning off;
@@ -905,10 +905,11 @@ for m = 2%1:length(MRI_MODEL)
     v1 = find(~isnan(mri1.S_grid));
     v4 = find(~isnan(mri4.S_grid));
     cc1=[]; cc4=[];
+    pp1=[]; pp4=[];
     
     figure; 
     for i=1:nbtstr
-        c1=[];
+        c1=[];p1=[];
         V=v1(randperm(length(v1)));
         
         subplot(2,6,1);hold on;
@@ -920,9 +921,11 @@ for m = 2%1:length(MRI_MODEL)
         
         scatter(mri1.S_grid(V(1:np)), mua1.S_grid(V(1:np)),'o');
         title('V1 Map corr.');xlabel('MRI');ylabel('MUA');
-        if p < pth; r=NaN(2,2); end % only look at decent correlations
-        if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
-        c1=[c1 r(2)];
+        
+        %if p < pth; r=NaN(2,2); end % only look at decent correlations
+        %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
+        
+        c1=[c1 r(2)]; p1=[p1 p(2)];
         
         for fb=1:length(freqband)
             subplot(2,6,1+fb);hold on;
@@ -936,13 +939,13 @@ for m = 2%1:length(MRI_MODEL)
                 r=NaN(2,2);
             end
             title('V1 Map corr.');xlabel('MRI');ylabel(lfp1(fb).freqband);
-            if p < pth; r=NaN(2,2); end % only look at decent correlations
-            if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
-            c1=[c1 r(2)];
+            %if p < pth; r=NaN(2,2); end % only look at decent correlations
+            %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
+            c1=[c1 r(2)]; p1=[p1 p(2)];
         end
-        cc1=[cc1; c1];
+        cc1=[cc1; c1]; pp1=[pp1; p1];
         
-        c4=[];
+        c4=[];p4=[];
         V=v4(randperm(length(v4)));
         
         subplot(2,6,7);hold on;
@@ -954,9 +957,9 @@ for m = 2%1:length(MRI_MODEL)
         
         scatter(mri4.S_grid(V(1:np)), mua4.S_grid(V(1:np)),'o');
         title('V4 Map corr.');xlabel('MRI');ylabel('MUA');
-        if p < pth; r=NaN(2,2); end % only look at decent correlations
-        if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
-        c4=[c4 r(2)];
+        %if p < pth; r=NaN(2,2); end % only look at decent correlations
+        %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
+        c4=[c4 r(2)]; p4=[p4 p(2)];
         
         for fb=1:length(freqband)
             subplot(2,6,7+fb);hold on;
@@ -969,15 +972,24 @@ for m = 2%1:length(MRI_MODEL)
             catch
                 r=NaN(2,2);
             end
-            if p < pth; r=NaN(2,2); end % only look at decent correlations
-            if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
+            %if p < pth; r=NaN(2,2); end % only look at decent correlations
+            %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
             title('V4 Map corr.');xlabel('MRI');ylabel(lfp1(fb).freqband);
-            c4=[c4 r(2)];
+            c4=[c4 r(2)]; p4=[p4 p(2)];
         end
-        cc4=[cc4; c4];
+        cc4=[cc4; c4]; pp4=[pp4; p4];
     end
-    cc1_stat = [nanmean(cc1,1); nanstd(cc1,0,1)];
-    cc4_stat = [nanmean(cc4,1); nanstd(cc4,0,1)];
+    
+    c1filt=cc1; c4filt=cc4;
+    if poscorr_only
+        c1filt(pp1>pth | cc1<0)=NaN;
+        c4filt(pp4>pth | cc4<0)=NaN;
+    else
+        c1filt(pp1>pth)=NaN;
+        c4filt( pp4>pth)=NaN;
+    end
+    cc1_stat = [nanmean(c1filt,1); nanstd(c1filt,0,1)];
+    cc4_stat = [nanmean(c4filt,1); nanstd(c4filt,0,1)];
     
     figure; hold on;
     hBar = bar(1:6, [cc1_stat(1,:);cc4_stat(1,:)]);pause(0.1)
@@ -991,6 +1003,11 @@ for m = 2%1:length(MRI_MODEL)
         lfp1(4).freqband,...
         lfp1(5).freqband});
     legend({'V1','V4'},'Location','NorthWest');
+    title(...
+        {['pRF model: ' MRI_MODEL{m}(1:3)],...
+        ['nPoints: ' num2str(np) ', nBtstr: ' num2str(nbtstr) ...
+        ', p < ' num2str(pth) ],[' R2th-mri: '  num2str(Rth_mri) ...
+        ', R2th-ephys: ' num2str(Rth_ephys)]})
 end
 
 warning on;
