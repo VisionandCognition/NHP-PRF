@@ -1008,6 +1008,9 @@ for m = 2%1:length(MRI_MODEL)
         ['nPoints: ' num2str(np) ', nBtstr: ' num2str(nbtstr) ...
         ', p < ' num2str(pth) ],[' R2th-mri: '  num2str(Rth_mri) ...
         ', R2th-ephys: ' num2str(Rth_ephys)]})
+    
+    % Stats
+    anova1
 end
 
 warning on;
