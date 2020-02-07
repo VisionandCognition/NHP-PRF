@@ -781,19 +781,9 @@ for m=1:length(ephys_MOD)
 end
 
 
-%% What's specific about the good DoG fits ================================
-% - find these channels/voxels
-% - plot their location
-% - plot their size
-% - plot their prf profile
-
-
-
-
-
-
 %% Correlate MRI-ephys ====================================================
 % This analysis takes a while!! Do not overuse...
+rng(1); % seed the random number generator
 
 Rth_mri = 2;
 Rth_ephys = 50;
@@ -818,13 +808,13 @@ for m = 2%1:length(MRI_MODEL)
     % collect mri prfs
     for r = 1:length(roi)
         if strcmp(roi{r},'V1') % V1
-            mri1.X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            mri1.Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            mri1.S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri1(m).X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri1(m).Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
         elseif strcmp(roi{r},'V4_merged') % V4
-            mri4.X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            mri4.Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            mri4.S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri4(m).X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri4(m).Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri4(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
         end
     end
                
@@ -834,32 +824,34 @@ for m = 2%1:length(MRI_MODEL)
             idx_mod=i;
         end
     end
-    % V1
+    % MUA V1
     s = strcmp(tMUA.Model,EPHYS_MODEL{idx_mod}) & ...
         tMUA.Area == 1 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
-    mua1.X = tMUA.X(s); mua1.Y = tMUA.Y(s); mua1.S = tMUA.rfs(s);
-    % V4
+    mua1(m).X = tMUA.X(s); mua1(m).Y = tMUA.Y(s); mua1(m).S = tMUA.rfs(s);
+    % MUA V4
     s = strcmp(tMUA.Model,EPHYS_MODEL{idx_mod}) & ...
         tMUA.Area == 4 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
-    mua4.X = tMUA.X(s); mua4.Y = tMUA.Y(s); mua4.S = tMUA.rfs(s);  
-    
+    mua4(m).X = tMUA.X(s); mua4(m).Y = tMUA.Y(s); mua4(m).S = tMUA.rfs(s);  
+    % LFP
     freqband=unique(tLFP.SigType);
     for fb = 1: length(freqband)
+        % V1
         s = strcmp(tLFP.Model,EPHYS_MODEL{idx_mod}) & ...
             tLFP.Area == 1 & tLFP.R2 > Rth_ephys & tLFP.rfs < mxS & ...
             strcmp(tLFP.SigType, freqband{fb});
-        lfp1(fb).freqband =  freqband{fb};
-        lfp1(fb).X =  tLFP.X(s);
-        lfp1(fb).Y =  tLFP.Y(s);
-        lfp1(fb).S =  tLFP.rfs(s);
+        lfp1(fb,m).freqband =  freqband{fb};
+        lfp1(fb,m).X =  tLFP.X(s);
+        lfp1(fb,m).Y =  tLFP.Y(s);
+        lfp1(fb,m).S =  tLFP.rfs(s);
         
+        % V4
         s = strcmp(tLFP.Model,EPHYS_MODEL{idx_mod}) & ...
             tLFP.Area == 4 & tLFP.R2 > Rth_ephys & tLFP.rfs < mxS & ...
             strcmp(tLFP.SigType, freqband{fb});
-        lfp4(fb).freqband =  freqband{fb};
-        lfp4(fb).X =  tLFP.X(s);
-        lfp4(fb).Y =  tLFP.Y(s);
-        lfp4(fb).S =  tLFP.rfs(s);
+        lfp4(fb,m).freqband =  freqband{fb};
+        lfp4(fb,m).X =  tLFP.X(s);
+        lfp4(fb,m).Y =  tLFP.Y(s);
+        lfp4(fb,m).S =  tLFP.rfs(s);
     end
    
     % Calculate  grids and do bootstrap correlation
@@ -872,136 +864,156 @@ for m = 2%1:length(MRI_MODEL)
         grid_vf(2,1):grid_spacing:grid_vf(2,2),...
         grid_vf(2,3):grid_spacing:grid_vf(2,4));
     
-    mri1.S_grid = griddata(mri1.X,mri1.Y,mri1.S,x1q,y1q,'linear');
-    mri4.S_grid = griddata(mri4.X,mri4.Y,mri4.S,x4q,y4q,'linear');
-    mua1.S_grid = griddata(mua1.X,mua1.Y,mua1.S,x1q,y1q,'linear');
-    mua4.S_grid = griddata(mua4.X,mua4.Y,mua4.S,x4q,y4q,'linear');
+    mri1(m).S_grid = griddata(mri1(m).X,mri1(m).Y,mri1(m).S,x1q,y1q,'linear');
+    mri4(m).S_grid = griddata(mri4(m).X,mri4(m).Y,mri4(m).S,x4q,y4q,'linear');
+    mua1(m).S_grid = griddata(mua1(m).X,mua1(m).Y,mua1(m).S,x1q,y1q,'linear');
+    mua4(m).S_grid = griddata(mua4(m).X,mua4(m).Y,mua4(m).S,x4q,y4q,'linear');
     for fb = 1: length(freqband)
-        lfp1(fb).S_grid = griddata(...
-            lfp1(fb).X,lfp1(fb).Y,lfp1(fb).S,x1q,y1q,'linear');
-        lfp4(fb).S_grid = griddata(...
-            lfp4(fb).X,lfp4(fb).Y,lfp4(fb).S,x4q,y4q,'linear');
+        lfp1(fb,m).S_grid = griddata(...
+            lfp1(fb,m).X,lfp1(fb,m).Y,lfp1(fb,m).S,x1q,y1q,'linear');
+        lfp4(fb,m).S_grid = griddata(...
+            lfp4(fb,m).X,lfp4(fb,m).Y,lfp4(fb,m).S,x4q,y4q,'linear');
     end
     
     if false
+        figure;
         subplot(2,2,1); hold on;
-        contourf(x1q,y1q,mri1.S_grid,'LevelStep',0.1,'LineStyle','none');
+        contourf(x1q,y1q,mri1(m).S_grid,'LevelStep',0.1,'LineStyle','none');
         plot(x1q,y1q,'k.')
         
         subplot(2,2,2);hold on;
-        contourf(x1q,y1q,mua1.S_grid,'LevelStep',0.1,'LineStyle','none');
+        contourf(x1q,y1q,mua1(m).S_grid,'LevelStep',0.1,'LineStyle','none');
         plot(x1q,y1q,'k.')
         
         subplot(2,2,3);hold on;
-        contourf(x4q,y4q,mri4.S_grid,'LevelStep',0.1,'LineStyle','none');
+        contourf(x4q,y4q,mri4(m).S_grid,'LevelStep',0.1,'LineStyle','none');
         plot(x4q,y4q,'k.')
         
         subplot(2,2,4);hold on;
-        contourf(x4q,y4q,mua4.S_grid,'LevelStep',0.1,'LineStyle','none');
+        contourf(x4q,y4q,mua4(m).S_grid,'LevelStep',0.1,'LineStyle','none');
         plot(x4q,y4q,'k.')
     end
         
     % bootstrap the correlation analysis
-    v1 = find(~isnan(mri1.S_grid));
-    v4 = find(~isnan(mri4.S_grid));
+    fprintf('Performing a bootstrapped correlation analysis\n')
+    v1 = find(~isnan(mri1(m).S_grid));
+    v4 = find(~isnan(mri4(m).S_grid));
     cc1=[]; cc4=[];
     pp1=[]; pp4=[];
     
-    figure; 
+    fprintf(['nBtstr: ' num2str(nbtstr) ', nSamples: ' num2str(np) '\n'])
+    plotscatter=false;
+    if plotscatter; figure; end % plotting all here, selecting later
     for i=1:nbtstr
+        % --- V1 ---
         c1=[];p1=[];
         V=v1(randperm(length(v1)));
-        
-        subplot(2,6,1);hold on;
-        
-        selS = [mri1.S_grid(:) mua1.S_grid(:)];
+             
+        selS = [mri1(m).S_grid(:) mua1(m).S_grid(:)];
         selS = selS(V(1:np),:);
         selS = selS(~isnan(selS(:,2)),:);
         [r,p]=corrcoef(selS(:,1), selS(:,2));
-        
-        scatter(mri1.S_grid(V(1:np)), mua1.S_grid(V(1:np)),'o');
-        title('V1 Map corr.');xlabel('MRI');ylabel('MUA');
-        
+        if plotscatter
+            subplot(2,6,1); hold on;
+            scatter(mri1(m).S_grid(V(1:np)), mua1(m).S_grid(V(1:np)),'o');
+            title('V1 Map corr.');xlabel('MRI');ylabel('MUA');
+        end
         %if p < pth; r=NaN(2,2); end % only look at decent correlations
         %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
         
         c1=[c1 r(2)]; p1=[p1 p(2)];
         
         for fb=1:length(freqband)
-            subplot(2,6,1+fb);hold on;
+            
             try
-                selS = [mri1.S_grid(:) lfp1(fb).S_grid(:)];
+                selS = [mri1(m).S_grid(:) lfp1(fb,m).S_grid(:)];
                 selS = selS(V(1:np),:);
                 selS = selS(~isnan(selS(:,2)),:);
                 [r,p]=corrcoef(selS(:,1), selS(:,2));
-                scatter(mri1.S_grid(V(1:np)), lfp1(fb).S_grid(V(1:np)),'o');
+                if plotscatter
+                    subplot(2,6,1+fb);hold on;
+                    scatter(mri1(m).S_grid(V(1:np)), lfp1(fb,m).S_grid(V(1:np)),'o');
+                end
             catch
                 r=NaN(2,2);
             end
-            title('V1 Map corr.');xlabel('MRI');ylabel(lfp1(fb).freqband);
+            if plotscatter
+                subplot(2,6,1+fb);
+                title('V1 Map corr.');xlabel('MRI');ylabel(lfp1(fb,m).freqband);
+            end
             %if p < pth; r=NaN(2,2); end % only look at decent correlations
             %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
             c1=[c1 r(2)]; p1=[p1 p(2)];
         end
         cc1=[cc1; c1]; pp1=[pp1; p1];
+        stats(m).cc1 = cc1; stats(m).pp1 = pp1;
         
+        % --- V4 ----
         c4=[];p4=[];
         V=v4(randperm(length(v4)));
         
-        subplot(2,6,7);hold on;
-        
-        selS = [mri4.S_grid(:) mua4.S_grid(:)];
+        selS = [mri4(m).S_grid(:) mua4(m).S_grid(:)];
         selS = selS(V(1:np),:);
         selS = selS(~isnan(selS(:,2)),:);
         [r,p]=corrcoef(selS(:,1), selS(:,2));
-        
-        scatter(mri4.S_grid(V(1:np)), mua4.S_grid(V(1:np)),'o');
-        title('V4 Map corr.');xlabel('MRI');ylabel('MUA');
+        if plotscatter
+            subplot(2,6,7);hold on;
+            scatter(mri4(m).S_grid(V(1:np)), mua4(m).S_grid(V(1:np)),'o');
+            title('V4 Map corr.');xlabel('MRI');ylabel('MUA');
+        end
         %if p < pth; r=NaN(2,2); end % only look at decent correlations
         %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
         c4=[c4 r(2)]; p4=[p4 p(2)];
         
         for fb=1:length(freqband)
-            subplot(2,6,7+fb);hold on;
             try
-                selS = [mri4.S_grid(:) lfp4(fb).S_grid(:)];
+                selS = [mri4(m).S_grid(:) lfp4(fb,m).S_grid(:)];
                 selS = selS(V(1:np),:);
                 selS = selS(~isnan(selS(:,2)),:);
                 [r,p]=corrcoef(selS(:,1), selS(:,2));
-                scatter(mri4.S_grid(V(1:np)), lfp4(fb).S_grid(V(1:np)),'o');
+                if plotscatter
+                    subplot(2,6,7+fb);hold on;
+                    scatter(mri4(m).S_grid(V(1:np)), lfp4(fb,m).S_grid(V(1:np)),'o');
+                end
             catch
                 r=NaN(2,2);
             end
             %if p < pth; r=NaN(2,2); end % only look at decent correlations
             %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
-            title('V4 Map corr.');xlabel('MRI');ylabel(lfp1(fb).freqband);
+            if plotscatter
+                subplot(2,6,7+fb);
+                title('V4 Map corr.');xlabel('MRI');ylabel(lfp1(fb,m).freqband);
+            end
             c4=[c4 r(2)]; p4=[p4 p(2)];
         end
         cc4=[cc4; c4]; pp4=[pp4; p4];
+        stats(m).cc4 = cc4; stats(m).pp4 = pp4;
     end
     
-    c1filt=cc1; c4filt=cc4;
+    stats(m).c1filt=stats(m).cc1; stats(m).c4filt=stats(m).cc4;
     if poscorr_only
-        c1filt(pp1>pth | cc1<0)=NaN;
-        c4filt(pp4>pth | cc4<0)=NaN;
+        stats(m).c1filt(stats(m).pp1>pth | stats(m).cc1<0)=NaN;
+        stats(m).c4filt(stats(m).pp4>pth | stats(m).cc4<0)=NaN;
     else
-        c1filt(pp1>pth)=NaN;
-        c4filt( pp4>pth)=NaN;
+        stats(m).c1filt(stats(m).pp1>pth)=NaN;
+        stats(m).c4filt(stats(m).pp4>pth)=NaN;
     end
-    cc1_stat = [nanmean(c1filt,1); nanstd(c1filt,0,1)];
-    cc4_stat = [nanmean(c4filt,1); nanstd(c4filt,0,1)];
+    stats(m).cc1_stat = [nanmean(stats(m).c1filt,1); nanstd(stats(m).c1filt,0,1)];
+    stats(m).cc4_stat = [nanmean(stats(m).c4filt,1); nanstd(stats(m).c4filt,0,1)];
     
+    % plot average and stdev
     figure; hold on;
-    hBar = bar(1:6, [cc1_stat(1,:);cc4_stat(1,:)]);pause(0.1)
+    hBar = bar(1:6, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]);pause(0.1)
     xBar=cell2mat(get(hBar,'XData')).' + [hBar.XOffset];
-    errorbar(xBar, [cc1_stat(1,:);cc4_stat(1,:)]',...
-        [cc1_stat(2,:);cc4_stat(2,:)]','k','LineStyle','none')
-    set(gca,'xtick',1:6,'xticklabels',{'MUA',...
-        lfp1(1).freqband,...
-        lfp1(2).freqband,...
-        lfp1(3).freqband,...
-        lfp1(4).freqband,...
-        lfp1(5).freqband});
+    errorbar(xBar, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]',...
+        [stats(m).cc1_stat(2,:);stats(m).cc4_stat(2,:)]','k','LineStyle','none')
+    GroupLabels = {'MUA',...
+        lfp1(1,m).freqband,...
+        lfp1(2,m).freqband,...
+        lfp1(3,m).freqband,...
+        lfp1(4,m).freqband,...
+        lfp1(5,m).freqband};
+    set(gca,'xtick',1:6,'xticklabels',GroupLabels);
     legend({'V1','V4'},'Location','NorthWest');
     title(...
         {['pRF model: ' MRI_MODEL{m}(1:3)],...
@@ -1009,13 +1021,27 @@ for m = 2%1:length(MRI_MODEL)
         ', p < ' num2str(pth) ],[' R2th-mri: '  num2str(Rth_mri) ...
         ', R2th-ephys: ' num2str(Rth_ephys)]})
     
-    % Stats
-    anova1
+    % Stats ---
+    % V1
+    [stats(m).p1,stats(m).t1,stats(m).s1] = ...
+        anova1(stats(m).c1filt,GroupLabels); 
+    [stats(m).comp1, stats(m).means1, stats(m).h1, stats(m).names1] = ...
+        multcompare(stats(m).s1);
+    % V4
+    [stats(m).p4,stats(m).t4,stats(m).s4] = ...
+        anova1(stats(m).c4filt,GroupLabels);
+    [stats(m).comp4, stats(m).means4, stats(m).h4, stats(m).names4] = ...
+        multcompare(stats(m).s4);
 end
 
 warning on;
 
 
+%% What's specific about the good DoG fits ================================
+% - find these channels/voxels
+% - plot their location
+% - plot their size
+% - plot their prf profile
 
 
 
