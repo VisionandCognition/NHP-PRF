@@ -7,7 +7,7 @@ function ck_BasicProc_AllFits_cv1
 % clear all;
 clc;
 CVMODE='cv1';
-dataset='NEW'; % AVG / NEW / ORG
+dataset='ORG'; % AVG / NEW / ORG
 
 %% LOAD DATA ==============================================================
 fitres_path = ...

@@ -72,7 +72,7 @@ for m = 1:length(monkeys)
     
     %% Get ROI info =======================================================
     fprintf(['Processing ROIs for monkey: ' monkeys{m} '\n']);
-    
+
     ROIs = {'V1', 'V2_merged','V3_merged','V3A','V4_merged','VIP','5_merged',...
         '7_merged','LIP_merged','MST','MT','TEO','TPO',...
         [cMonkey '_LH_V1_electrodes'],[cMonkey '_LH_V4_electrodes']};
@@ -84,7 +84,7 @@ for m = 1:length(monkeys)
     for r=1:length(ROIs)
         fprintf([ROIs{r} '\n']);
         R(m).ROI(r).label = ROIs{r};
-        roi_idx = load_nii(fullfile(roi_path,monkeys{m},'NonReg',...
+        roi_idx = load_nii(fullfile(roi_path, cMonkey,'NonReg',...
             'ROI',[ROIs{r} '.nii']));
         R(m).ROI(r).idx = reshape(roi_idx.img, [numel(roi_idx.img),1]);
     end

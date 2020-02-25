@@ -759,7 +759,12 @@ else
 end
 
 results.R2(options.vxs,:) =     permute(rA,[2 1]);
-results.gain(options.vxs,:) =   permute(posrect(paramsA(:,4,:)),[3 1 2]);
+
+if options.allowneggain
+    results.gain(options.vxs,:) =   permute(paramsA(:,4,:),[3 1 2]);
+else
+    results.gain(options.vxs,:) =   permute(posrect(paramsA(:,4,:)),[3 1 2]);
+end
 
 if ~wantquick
     results.resnorms(options.vxs) = a1.resnorms;
