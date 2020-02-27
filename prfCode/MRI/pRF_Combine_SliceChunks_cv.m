@@ -126,6 +126,17 @@ for cv=1:2
     gzip(fullfile(ResFld, ['Sess-' Session '_rfsize_' num2str(cv) '.nii']));
     delete(fullfile(ResFld, ['Sess-' Session '_rfsize_' num2str(cv) '.nii']));
     
+    % gain ---
+    fprintf('Gain, ');
+    nii = make_nii(result.gain(:,:,:,cv),[1 1 1],[],16,...
+        'pRF fit: Gain');
+    nii.hdr.hist = result.hdr_ref.hist;
+    nii.hdr.dime.datatype = 64; nii.hdr.dime.bitpix = 64;
+    save_nii(nii, fullfile(ResFld, ...
+        ['Sess-' Session '_gain_' num2str(cv) '.nii']));
+    gzip(fullfile(ResFld, ['Sess-' Session '_gain_' num2str(cv) '.nii']));
+    delete(fullfile(ResFld, ['Sess-' Session '_gain_' num2str(cv) '.nii']));    
+    
     % exponential ---
     if isfield(result,'expt')
         fprintf('Expt, ');

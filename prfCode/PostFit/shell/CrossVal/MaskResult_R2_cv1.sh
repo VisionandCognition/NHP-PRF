@@ -37,30 +37,42 @@ for part in 1 2; do
     echo 'Part ' ${part}
     fslmaths 'Sess-'$sess'_ang_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -add nanreplacement.nii.gz 'ANG_'${part}'_th'$RTH'.nii.gz'
     fslmaths 'Sess-'$sess'_ecc_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -div 10 -add nanreplacement.nii.gz 'ECC_'${part}'_th'$RTH'.nii.gz'
+    
     if [ ${sess:0:3} = css ]; then
         fslmaths 'Sess-'$sess'_expt_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -add nanreplacement.nii.gz 'EXPT_'${part}'_th'$RTH'.nii.gz'
         fslmaths 'Sess-'$sess'_exptsq_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -add nanreplacement.nii.gz 'EXPTSQ_'${part}'_th'$RTH'.nii.gz'
     fi
+    
     fslmaths 'Sess-'$sess'_imag_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -add nanreplacement.nii.gz 'IMAG_'${part}'_th'$RTH'.nii.gz'
     fslmaths 'Sess-'$sess'_real_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -add nanreplacement.nii.gz 'REAL_'${part}'_th'$RTH'.nii.gz'
     fslmaths 'Sess-'$sess'_FWHM_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -div 10 -add nanreplacement.nii.gz 'FWHM_'${part}'_th'$RTH'.nii.gz'
     fslmaths 'Sess-'$sess'_rfsize_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -div 10 -add nanreplacement.nii.gz 'RFS_'${part}'_th'$RTH'.nii.gz'
+    fslmaths 'Sess-'$sess'_gain_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -add nanreplacement.nii.gz 'GAIN_'${part}'_th'$RTH'.nii.gz'
+    
     if [ ${sess:0:3} = dog ]; then
         fslmaths 'Sess-'$sess'_normamp_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -add nanreplacement.nii.gz 'NAMP_'${part}'_th'$RTH'.nii.gz'
         fslmaths 'Sess-'$sess'_sd2_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -div 10 -add nanreplacement.nii.gz 'IRFS_'${part}'_th'$RTH'.nii.gz'
         fslmaths 'Sess-'$sess'_sdratio_'${part}'.nii.gz' -nan -mas 'mask_th'$RTH'.nii.gz' -add nanreplacement.nii.gz 'SDRATIO_'${part}'_th'$RTH'.nii.gz'
     fi
 
+
+    # ======
+
     fslmaths 'Sess-'$sess'_ang_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_ang_'${part}'.nii.gz'
     fslmaths 'Sess-'$sess'_ecc_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_ecc_'${part}'.nii.gz'
+    
     if [ ${sess:0:3} = css ]; then
         fslmaths 'Sess-'$sess'_expt_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_expt_'${part}'.nii.gz' 
         fslmaths 'Sess-'$sess'_exptsq_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_exptsq_'${part}'.nii.gz' 
     fi
+    
     fslmaths 'Sess-'$sess'_imag_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_imag_'${part}'.nii.gz' 
     fslmaths 'Sess-'$sess'_real_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_real_'${part}'.nii.gz' 
     fslmaths 'Sess-'$sess'_FWHM_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_FWHM_'${part}'.nii.gz'  
     fslmaths 'Sess-'$sess'_rfsize_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_rfsize_'${part}'.nii.gz'
+    fslmaths 'Sess-'$sess'_gain_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_gain_'${part}'.nii.gz'
+
+    
     if [ ${sess:0:3} = dog ]; then
         fslmaths 'Sess-'$sess'_normamp_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_normamp_'${part}'.nii.gz'
         fslmaths 'Sess-'$sess'_sd2_'${part}'.nii.gz' -nan -add nanreplacement.nii.gz 'Sess-'$sess'_sd2_'${part}'.nii.gz'
@@ -70,14 +82,18 @@ for part in 1 2; do
     mkdir -p TH_$RTH
     mv 'ANG_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
     mv 'ECC_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
+    
     if [ ${sess:0:3} = css ]; then
         mv 'EXPT_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
         mv 'EXPTSQ_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
     fi
+    
     mv 'IMAG_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
     mv 'REAL_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
     mv 'FWHM_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
     mv 'RFS_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
+    mv 'GAIN_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
+    
     if [ ${sess:0:3} = dog ]; then
         mv 'NAMP_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/
         mv 'IRFS_'${part}'_th'$RTH'.nii.gz' ./TH_$RTH/

@@ -73,6 +73,10 @@ for m = 1:length(monkeys)
     %% Get ROI info =======================================================
     fprintf(['Processing ROIs for monkey: ' monkeys{m} '\n']);
 
+    
+    % ==== Add more ROIS ====
+    % ==== Add more ROIS ====
+    % ==== Add more ROIS ====
     ROIs = {'V1', 'V2_merged','V3_merged','V3A','V4_merged','VIP','5_merged',...
         '7_merged','LIP_merged','MST','MT','TEO','TPO',...
         [cMonkey '_LH_V1_electrodes'],[cMonkey '_LH_V4_electrodes']};

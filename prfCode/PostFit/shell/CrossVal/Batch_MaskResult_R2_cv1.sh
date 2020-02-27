@@ -1,12 +1,13 @@
 #!/bin/bash
-MONKEY=danny
+#MONKEY=danny
+MONKEY=eddy
 
-declare -a sessions=(
+declare -a sessions2=(
     'linhrf_cv1_dhrf_neggain'
     'linhrf_cv1_mhrf_neggain'
 )
 
-declare -a sessions2=(
+declare -a sessions=(
     'csshrf_cv1_dhrf'
     'csshrf_cv1_mhrf'
     'doghrf_cv1_dhrf'
