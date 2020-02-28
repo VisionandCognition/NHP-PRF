@@ -14,8 +14,13 @@ S = 3.6 + ...
     sqrt(X.^2 + Y.^2)*0.24 + ...
     1.2*(rand(N,1)-0.5);
 
+%% scatter 3d
+figure;
+subplot(1,2,1); scatter(x,y,'MarkerFaceColor',s);
+subplot(1,2,2); scatter3(x,y,s)
+
 %% interpolate x,y,s surfaces
-[xq,yq] = meshgrid(0:.1:10,-10:.1:0);
+[xq,yq] = meshgrid(0:.5:10,-10:.5:0);
 Xq=xq; Yq=yq;
 
 sq = griddata(x,y,s,xq,yq,'cubic');
@@ -23,12 +28,15 @@ Sq = griddata(X,Y,S,Xq,Yq,'cubic');
 
 
 %% plot interpolated surfaces through the data
+figure;
 subplot(1,2,1);hold on;
-contourf(xq,yq,sq,'LevelStep',0.1,'LineStyle','none');
+%contourf(xq,yq,sq,'LevelStep',0.1,'LineStyle','none');
+surf(xq,yq,sq);
 plot(xq,yq,'k.')
 
 subplot(1,2,2);hold on;
-contourf(Xq,Yq,Sq,'LevelStep',0.1,'LineStyle','none');
+%contourf(Xq,Yq,Sq,'LevelStep',0.1,'LineStyle','none');
+surf(Xq,Yq,Sq);
 plot(Xq,Yq,'k.')
 
 %% bootstrap the correlation analysis

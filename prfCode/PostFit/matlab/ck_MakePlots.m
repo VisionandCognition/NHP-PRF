@@ -801,16 +801,24 @@ poscorr_only = true;
 
 warning off;
 
-for m = 2%1:length(MRI_MODEL)
+for m = 3%1:length(MRI_MODEL)
     s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
          T(modidx.(MRI_MODEL{m})).mod.rfs < mxS;
     
     % collect mri prfs
     for r = 1:length(roi)
         if strcmp(roi{r},'V1') % V1
-            mri1(m).X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            mri1(m).Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri1(m).X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & ...
+                T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            mri1(m).Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & ...
+                T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            if strcmp(MRI_MODEL{m}(1:3),'dog')
+                mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & ...
+                    T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            else
+                mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & ...
+                    T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            end
         elseif strcmp(roi{r},'V4_merged') % V4
             mri4(m).X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
             mri4(m).Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
@@ -875,7 +883,7 @@ for m = 2%1:length(MRI_MODEL)
             lfp4(fb,m).X,lfp4(fb,m).Y,lfp4(fb,m).S,x4q,y4q,'linear');
     end
     
-    if false
+    if true
         figure;
         subplot(2,2,1); hold on;
         contourf(x1q,y1q,mri1(m).S_grid,'LevelStep',0.1,'LineStyle','none');
@@ -902,7 +910,7 @@ for m = 2%1:length(MRI_MODEL)
     pp1=[]; pp4=[];
     
     fprintf(['nBtstr: ' num2str(nbtstr) ', nSamples: ' num2str(np) '\n'])
-    plotscatter=false;
+    plotscatter=true;
     if plotscatter; figure; end % plotting all here, selecting later
     for i=1:nbtstr
         % --- V1 ---

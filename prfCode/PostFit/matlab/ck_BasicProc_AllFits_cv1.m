@@ -1,7 +1,6 @@
 function ck_BasicProc_AllFits_cv1
 
-% this script will do some basic processing like calculate 
-% - X,Y coordinates from polar coordinates
+% this script will do some basic processing 
 
 %%
 % clear all;
@@ -895,7 +894,7 @@ for r = 1:length(R_EPHYS) % animals
         end
     end
 
-    % remove the 5th modeltype from label fields where you don't want them
+    % remove the last modeltype from label fields where you don't want them
     nRows = nInst*nChan;
     sp=(r-1)*length(R_EPHYS(r).model)*nRows;
     
