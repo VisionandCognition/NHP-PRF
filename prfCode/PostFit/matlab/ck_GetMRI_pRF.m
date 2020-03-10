@@ -72,29 +72,37 @@ for m = 1:length(monkeys)
     
     %% Get ROI info =======================================================
     fprintf(['Processing ROIs for monkey: ' monkeys{m} '\n']);
-
     
-    % ==== Add more ROIS ====
-    % ==== Add more ROIS ====
-    % ==== Add more ROIS ====
-    ROIs = {'V1', 'V2_merged','V3_merged','V3A','V4_merged','VIP','5_merged',...
-        '7_merged','LIP_merged','MST','MT','TEO','TPO',...
-        [cMonkey '_LH_V1_electrodes'],[cMonkey '_LH_V4_electrodes']};
+    labelfile = fullfile(bids_path,['sub-' monkeys{m}],'atlas','D99_labeltable.txt');
+    D99 = ck_GetAtlasTable(labelfile);
     
-    BRAINMASK = load_nii(fullfile(bids_path,['sub-' monkeys{m}],'func',...
-            ['sub-' monkeys{m} '_ref_func_mask_res-1x1x1.nii']));
+    atlasfile = fullfile(bids_path,['sub-' monkeys{m}],'atlas',...
+        ['D99_in_' cMonkey '_adj_inFunc.nii']);
+    brainmaskfile = fullfile(bids_path,['sub-' monkeys{m}],'func',...
+        ['sub-' monkeys{m} '_ref_func_mask_res-1x1x1.nii']);
+    
+%     ROIs = {'V1', 'V2_merged','V3_merged','V3A','V4_merged','VIP','5_merged',...
+%         '7_merged','LIP_merged','MST','MT','TEO','TPO',...
+%         [cMonkey '_LH_V1_electrodes'],[cMonkey '_LH_V4_electrodes']};
+    
+    BRAINMASK = load_nii(brainmaskfile);
     R(m).BRAIN = reshape(BRAINMASK.img, [numel(BRAINMASK.img),1]);
     
-    for r=1:length(ROIs)
-        fprintf([ROIs{r} '\n']);
-        R(m).ROI(r).label = ROIs{r};
-        roi_idx = load_nii(fullfile(roi_path, cMonkey,'NonReg',...
-            'ROI',[ROIs{r} '.nii']));
-        R(m).ROI(r).idx = reshape(roi_idx.img, [numel(roi_idx.img),1]);
-    end
+    ROI = load_nii(atlasfile);
+    R(m).ROI = reshape(ROI.img, [numel(ROI.img),1]);
+    
+    
+    
+%     for r=1:length(ROIs)
+%         fprintf([ROIs{r} '\n']);
+%         R(m).ROI(r).label = ROIs{r};
+%         roi_idx = load_nii(fullfile(roi_path, cMonkey,'NonReg',...
+%             'ROI',[ROIs{r} '.nii']));
+%         R(m).ROI(r).idx = reshape(roi_idx.img, [numel(roi_idx.img),1]);
+%     end
 end
 
 %% Save the combined results ==============================================
 fprintf('Saving the combined MRI result-file\n');
 [~,~,~] = mkdir(fullfile(fitres_path,'Combined'));
-save(fullfile(fitres_path,'Combined',output),'R')
+save(fullfile(fitres_path,'Combined',output),'R','D99')
