@@ -41,158 +41,155 @@ for mi = 1:length(m)
     modidx.(m{mi}) = mi;
 end
 
-%% MRI scatter plots & differences R2 =====================================
-roi={'V1','V2_merged','V3_merged','V4_merged','MT','MST','TEO','LIP_merged'};
-roilabels={'V1','V2','V3','V4','MT','MST','TEO','LIP'};
+%% Initiate some information ==============================================
+% proces ROI info
+rois = {...
+    'V1',   [34];...            % occipital / visual
+    'V2',   [131];...           % occipital / visual
+    'V3',   [123,60,93];...     % occipital / visual
+    'V4',   [20,39,75];...      % mid-visual
+    'MT',   [95];...            % mid-visual
+    'MST',  [99];...            % mid-visual
+    'TEO',  [125];...           % temporal
+    'TAa',  [152];...           % temporal
+    'Tpt',  [97];...            % temporal (temporal/parietal)
+    'TPO',  [159];...           % temporal
+    'FST',  [53];...            % temporal
+    'VIP',  [30];...            % parietal
+    'LIP',  [31,130];...        % parietal
+    '1-2',  [50];...            % parietal (somatosensory)
+    '5',    [5,134];...         % parietal
+    '7',    [91,121];...        % parietal
+    'PULV', [197,198];...       % subcortical
+    'LGN',  [200,201];...       % subcortical
+    'STR',  [175];...           % subcortical
+    'SI',   [137];...           % Prim Somatosensory
+    'SII',  [63];...            % Sec Somatosensory
+    '23',   [6,17,27];...       % cingulate
+    'F2',   [153];...           % premotor
+    'F4',   [146];...           % premotor
+    'F5',   [129];...           % premotor
+    'F7',   [126];...           % premotor
+    '8A',   [51,148];...        % frontal FEF
+    '8B',   [32,57];...         % frontal FEF
+    'DLPFC',[76,127];...        % frontal
+    'OFC',  [55,107];...        % frontal
+    'INS',  [18,87,128];...     % frontal
+    'CIN',  [45,98];...         % frontal
+    'PFC',  [25,47];...         % frontal
+};
+
+roi=rois(:,2);
+roilabels=rois(:,1);
+
 MRI_MODELS={...
     'linhrf_cv1_mhrf','linhrf_cv1_dhrf';...
+    'linhrf_cv1_mhrf_neggain','linhrf_cv1_dhrf_neggain';...
     'csshrf_cv1_mhrf','csshrf_cv1_dhrf';...
     'doghrf_cv1_mhrf','doghrf_cv1_dhrf';...
     };
+MMS={...
+    'LIN_m','LIN_d';...
+    'LIN-N_m','LIN-N_d';...
+    'CSS_m','CSS_d';...
+    'DOG_m','DOG_d';...
+    };
 
+%% MRI scatter plots & differences R2 =====================================
+RTHRES = 1;
+
+% scatter plots ---
 f=figure;
 set(f,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
-set(f,'Position',[100 100 1600 1000]);
-s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>0; % allows selection but keep at 0
+set(f,'Position',[10 10 800 1000]);
+s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>RTHRES; % allows selection but keep at 0
 
-subplot(2,3,1); hold on;
-plot([0 100],[0 100],'k','Linewidth',2);
-for r=1:length(roi)
-    scatter(T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
-        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),100,'Marker','.');
-end
-title('linear vs css'); xlabel('linear');ylabel('css');
-set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-
-subplot(2,3,2); hold on;
-plot([0 100],[0 100],'k','Linewidth',2); 
-for r=1:length(roi)
-    scatter(T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
-        T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r})),100,'Marker','.');
-end
-title('linear vs dog'); xlabel('linear');ylabel('dog');
-set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-
-subplot(2,3,3); hold on;
-plot([0 100],[0 100],'k','Linewidth',2); 
-for r=1:length(roi)
-    scatter(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),...
-        T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r})),100,'Marker','.');
-end
-title('css vs dog'); xlabel('css');ylabel('dog');
-set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-legend(['XY' roilabels],'interpreter','none','Location','SouthEast');
-
-% diff distrutions plots -----
-diffmat{1}=[];
-for r=1:length(roi)
-    [n,x] = hist(...
-        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r}))-...
-        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
-        100);
-    f = n./sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r}));
-    
-    m = mean(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r}))-...
-        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})));
-    sd = std(T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r}))-...
-        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})));
-    se = sd ./ sqrt(sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
-    diffmat{1} = [diffmat{1}; m sd se];
-end
-
-diffmat{2}=[];
-for r=1:length(roi)
-    [n,x] = hist(...
-        T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
-        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})),...
-        100);
-    f = n./sum(s_R2 & T(modidx.doghrf_cv1_mhrf).mod.(roi{r}));
-    
-    m = mean(T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
-        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})));
-    sd = std(T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
-        T(modidx.linhrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.linhrf_cv1_mhrf).mod.(roi{r})));
-    se = sd ./ sqrt(sum(s_R2 & T(modidx.doghrf_cv1_mhrf).mod.(roi{r})));
-    diffmat{2} = [diffmat{2}; m sd se];   
-end
-
-diffmat{3}=[];
-for r=1:length(roi)
-    [n,x] = hist(...
-        T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
-        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})),...
-        100);
-    f = n./sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r}));
-    
-    m = mean(T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
-        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
-    sd = std(T(modidx.doghrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.doghrf_cv1_mhrf).mod.(roi{r}))-...
-        T(modidx.csshrf_cv1_mhrf).mod.R2(s_R2 & ...
-        T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
-    se = sd ./ sqrt(sum(s_R2 & T(modidx.csshrf_cv1_mhrf).mod.(roi{r})));
-    diffmat{3} = [diffmat{3}; m sd se];
-end
-
-TITLES={...
-    'CSS - LINEAR',...
-    'DOG - LINEAR',...
-    'DOG - CSS'};
-for cc = 1:length(diffmat)
-    subplot(2,3,3+cc); hold on;
-
-    for xval=1:length(diffmat{cc})
-        bar(xval,diffmat{cc}(xval,1));
+paneln=1;
+for rowmod=1:4
+    for colmod=rowmod+1:4
+        subplot(3,2,paneln); hold on;
+        plot([0 100],[0 100],'k','Linewidth',2);
+        for r=1:length(roi)
+            SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                ck_GetROIidx(roilabels(r),rois) );
+            scatter(T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS),...
+                T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS),100,'Marker','.');
+        end
+        title([MMS{rowmod,1} ' vs ' MMS{colmod,1}],'interpreter','none'); 
+        xlabel(MMS{rowmod,1},'interpreter','none');
+        ylabel(MMS{colmod,1},'interpreter','none');
+        set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+        paneln=paneln+1;
     end
-    for xval=1:length(diffmat{cc})
-        errorbar(xval,diffmat{cc}(xval,1),diffmat{cc}(xval,3),...
-            'k-','Linestyle','none');
+end
+
+% diff distributions plots -----
+idx=1;
+for rowmod=1:4
+    for colmod=rowmod+1:4
+        diffmat{idx}=[];
+        for r=1:length(roi)
+            SSS = s_R2 & ...
+                ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                ck_GetROIidx(roilabels(r),rois) );
+            
+            [n,x] = hist(...
+                T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)-...
+                T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS), 100);
+            f = n./sum(SSS);
+            
+            m = mean(T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)-...
+                T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS));
+            sd = std(T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)-...
+                T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS));
+            se = sd ./ sqrt(sum(SSS));
+            diffmat{idx} = [diffmat{idx}; m sd se];
+        end
+        idx=idx+1;
     end
-    set(gca,'xticklabels',[],'ylim',[-1.5 2]);
-    xlabel('ROI'); ylabel('Diff R2');
-    title(TITLES{cc});
-    if cc==3
-        legend(roilabels,'interpreter','none','Location','NorthEast');
+end
+
+f2=figure;
+set(f2,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+set(f2,'Position',[100 100 1600 1000]);
+
+cc=1;
+for rowmod=1:4
+    for colmod=rowmod+1:4
+        subplot(3,2,cc); hold on;
+        for xval=1:length(diffmat{cc})
+            bar(xval,diffmat{cc}(xval,1));
+        end
+        for xval=1:length(diffmat{cc})
+            errorbar(xval,diffmat{cc}(xval,1),diffmat{cc}(xval,3),...
+                'k-','Linestyle','none');
+        end
+        set(gca,'xtick',1:length(diffmat{cc}),...
+            'xticklabels',roilabels,'ylim',[-1.5 2]);
+        xlabel('ROI'); ylabel('Diff R2');
+        title([MMS{colmod,1} ' - ' MMS{rowmod,1}],...
+            'interpreter','none');
+        xtickangle(45)
+        cc=cc+1;
     end
 end
 
 %% MRI scatter plot HRF & differences =====================================
+RTHRES = 0;
+
 f2=figure;
 set(f2,'Position',[100 100 1500 1200]);
 set(f2,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
-s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>0;
+s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>RTHRES;
 
 for mm = 1:size(MRI_MODELS,1)
-
-    subplot(3,3,(mm-1)*3 +1); hold on;
+    subplot(4,3,(mm-1)*3 +1); hold on;
     plot([0 100],[0 100],'k','LineWidth',2);
     for r=1:length(roi)
-        scatter(T(modidx.(MRI_MODELS{mm,1})).mod.R2(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r})),...
-            T(modidx.(MRI_MODELS{mm,2})).mod.R2(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,2})).mod.(roi{r})),100,'Marker','.');
+        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                ck_GetROIidx(roilabels(r),rois) );
+        scatter(T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS),...
+            T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS),100,'Marker','.');
     end
     title(['mHRF vs cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
     xlabel('Monkey HRF R2'); ylabel('Canonical HRF R2');
@@ -200,27 +197,23 @@ for mm = 1:size(MRI_MODELS,1)
 
     diffmat2{1}=[];
     for r=1:length(roi)
+        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                ck_GetROIidx(roilabels(r),rois) );
         [n,x] = hist(...
-            T(modidx.(MRI_MODELS{mm,1})).mod.R2(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}))-...
-            T(modidx.(MRI_MODELS{mm,2})).mod.R2(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,2})).mod.(roi{r})),100);
-        f = n./sum(s_R2 & T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}));
+            T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS)-...
+            T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS),100);
+        f = n./sum(SSS);
     
-        m = mean(T(modidx.(MRI_MODELS{mm,1})).mod.R2(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}))-...
-            T(modidx.(MRI_MODELS{mm,2})).mod.R2(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,2})).mod.(roi{r})));
-        sd = std(T(modidx.(MRI_MODELS{mm,1})).mod.R2(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}))-...
-            T(modidx.(MRI_MODELS{mm,2})).mod.R2(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,2})).mod.(roi{r})));
-        nvox = sum(s_R2 & T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}));
+        m = mean(T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS)-...
+            T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS));
+        sd = std(T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS)-...
+            T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS));
+        nvox = sum(SSS);
         se = sd ./ sqrt(nvox);
         diffmat2{1} = [diffmat2{1}; m sd se nvox];
     end
 
-    subplot(3,3,(mm-1)*3 +2); hold on
+    subplot(4,3,(mm-1)*3 +2); hold on
     for xval=1:length(diffmat2{1})
         bar(xval,diffmat2{1}(xval,1));
     end
@@ -235,20 +228,24 @@ for mm = 1:size(MRI_MODELS,1)
     set(gca,'xticklabels',[],'ylim',[-0.65 1]);
     xlabel('ROI'); ylabel('Diff R2');
     title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
-    legend(roilabels,'interpreter','none','Location','NorthEast');
+    %legend(roilabels,'interpreter','none','Location','NorthEast');
+    set(gca,'xtick',1:length(diffmat{cc}),'xticklabels',roilabels);
+    xtickangle(45)
     
-    subplot(3,3,(mm-1)*3 +3); hold on
+    subplot(4,3,(mm-1)*3 +3); hold on
     for xval=1:length(diffmat2{1})
         bar(xval,diffmat2{1}(xval,4));
     end
     set(gca,'xticklabels',[]);
     xlabel('ROI'); ylabel('# voxels');
-    title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
-    legend(roilabels,'interpreter','none','Location','NorthEast');
+    title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none');
+    set(gca,'xtick',1:length(diffmat{cc}),'xticklabels',roilabels);
+    xtickangle(45)
+    %legend(roilabels,'interpreter','none','Location','NorthEast');
 end
 
 %% MRI rf size depending on HRF ===========================================
-R2th=10;
+R2th=5;
 
 f3=figure;
 set(f3,'Position',[100 100 1500 1200]);
@@ -258,34 +255,34 @@ s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > R2th;
 
 for mm = 1:size(MRI_MODELS,1)
     
-    sp=subplot(3,3,(mm-1)*3 +1);hold on;
+    sp=subplot(4,3,(mm-1)*3 +1);hold on;
     plot([0 100],[0 100],'k','LineWidth',2);
     for r=1:length(roi)
-        scatter(T(modidx.(MRI_MODELS{mm,1})).mod.rfs(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r})),...
-            T(modidx.(MRI_MODELS{mm,2})).mod.rfs(s_R2 & ...
-            T(modidx.(MRI_MODELS{mm,2})).mod.(roi{r})),100,'Marker','.');
+        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+            ck_GetROIidx(roilabels(r),rois) );
+        
+        scatter(T(modidx.(MRI_MODELS{mm,1})).mod.rfs(SSS),...
+            T(modidx.(MRI_MODELS{mm,2})).mod.rfs(SSS),100,'Marker','.');
     end
-    title(['mHRF vs cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
+    title(['mHRF vs cHRF (' MMS{mm,1} ')'],'interpreter','none'); 
     xlabel('Monkey HRF sz');ylabel('Canonical HRF sz');
     set(gca, 'Box','off', 'xlim', [0 15], 'ylim',[0 15]);
     text('Parent',sp,'Position',[1 13], ...
         'String',['R2th: ' num2str(R2th)],...
         'Fontsize',12, 'Fontweight','bold')
 
-    
     diffmat2{1}=[];
     for r=1:length(roi)
+        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+            ck_GetROIidx(roilabels(r),rois) );
         [n,x] = hist(...
-            T(modidx.(MRI_MODELS{mm,1})).mod.rfs(s_R2 & ...
-              T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r})) - ...
-            T(modidx.(MRI_MODELS{mm,2})).mod.rfs(s_R2 & ...
-              T(modidx.(MRI_MODELS{mm,2})).mod.(roi{r})), 100);
-        f = n./sum(s_R2 & T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}));
+            T(modidx.(MRI_MODELS{mm,1})).mod.rfs(SSS) - ...
+            T(modidx.(MRI_MODELS{mm,2})).mod.rfs(SSS), 100);
+        f = n./sum(SSS);
         
         dsz = T(modidx.(MRI_MODELS{mm,1})).mod.rfs - ...
             T(modidx.(MRI_MODELS{mm,2})).mod.rfs;
-        dsz = dsz(s_R2 & T(modidx.(MRI_MODELS{mm,1})).mod.(roi{r}));
+        dsz = dsz(SSS);
         dsz = dsz(isfinite(dsz));
         
         m = mean(dsz);
@@ -295,7 +292,7 @@ for mm = 1:size(MRI_MODELS,1)
     end
     
     
-    subplot(3,3,(mm-1)*3 +2); hold on
+    subplot(4,3,(mm-1)*3 +2); hold on
     for xval=1:size(diffmat2{1},1)
         bar(xval,diffmat2{1}(xval,1));
     end
@@ -305,62 +302,63 @@ for mm = 1:size(MRI_MODELS,1)
     end
     set(gca,'xticklabels',[],'ylim',[-0.5 1.5]);
     xlabel('ROI'); ylabel('Diff pRF size');
-    title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
-    legend(roilabels,'interpreter','none','Location','NorthEast');
-    
-    
-    subplot(3,3,(mm-1)*3 +3); hold on
+    title(['mHRF - cHRF (' MMS{mm,1} ')'],'interpreter','none'); 
+    %legend(roilabels,'interpreter','none','Location','NorthEast');
+    set(gca,'xtick',1:length(diffmat2{1}),'xticklabels',roilabels);
+    xtickangle(45)
+
+    subplot(4,3,(mm-1)*3 +3); hold on
     for xval=1:size(diffmat2{1},1)
         bar(xval,diffmat2{1}(xval,4));
     end
 
     set(gca,'xticklabels',[]);
     xlabel('ROI'); ylabel('Number of voxels');
-    title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
+    title(['mHRF - cHRF (' MMS{mm,1} ')'],'interpreter','none'); 
+    set(gca,'xtick',1:length(diffmat2{1}),'xticklabels',roilabels);
+    xtickangle(45)
 end
 
 %% MRI ECC vs PRF Size ====================================================
-Rth=15; 
+Rth=10; 
 
 f4=figure;
 set(f4,'Position',[100 100 1000 1200]);
 set(f4,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
-MRI_MODEL={'linhrf_cv1_mhrf','csshrf_cv1_mhrf','doghrf_cv1_mhrf'};
 
-for m=1:length(MRI_MODEL)
-    s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth;
+for m=1:length(MRI_MODELS)
+    s_R2 = T(modidx.(MRI_MODELS{m,1})).mod.R2 > Rth;
     EccBin = 0.5:1:30.5;
     
-    subplot(3,2,(m-1)*2 +1);hold on;
+    subplot(4,2,(m-1)*2 +1);hold on;
     for r=1:length(roi)
+        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+            ck_GetROIidx(roilabels(r),rois) );
+
         ES{r}=[];
-        scatter(T(modidx.(MRI_MODEL{m})).mod.ecc(s_R2 & ...
-            T(modidx.(MRI_MODEL{m})).mod.(roi{r})),...
-            T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & ...
-            T(modidx.(MRI_MODEL{m})).mod.(roi{r})),100,'Marker','.');
+        scatter(T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS),...
+            T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS),100,'Marker','.');
         for b=1:length(EccBin)
             bb=[EccBin(b)-0.5 EccBin(b)+0.5];
-            PSZ=T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & ...
-                T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            ECC=T(modidx.(MRI_MODEL{m})).mod.ecc(s_R2 & ...
-                T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+            PSZ=T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS);
+            ECC=T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS);
             ES{r}=[ES{r}; EccBin(b) median(PSZ(ECC>=bb(1) & ECC<=bb(2)))];
         end
     end
-    title(['Ecc vs pRF size [' MRI_MODEL{m} ', R>' num2str(Rth) ']'],...
+    title(['Ecc vs pRF size [' MRI_MODELS{m,1} ', R>' num2str(Rth) ']'],...
         'interpreter','none');
     xlabel('Eccentricity');ylabel('pRF size');
     set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
     
-    subplot(3,2,(m-1)*2 +2);hold on;
+    subplot(4,2,(m-1)*2 +2);hold on;
     for r=1:length(roi)
         h=plot(ES{r}(:,1),ES{r}(:,2),'o');
         set(h,'MarkerSize',6,'markerfacecolor', get(h, 'color'));
     end
-    title(['Ecc vs pRF size [' MRI_MODEL{m} ', R>' num2str(Rth) ']'],...
+    title(['Ecc vs pRF size [' MMS{m,1} ', R>' num2str(Rth) ']'],...
         'interpreter','none'); xlabel('Eccentricity');ylabel('pRF size');
     set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
-    legend(roilabels,'interpreter','none','Location','NorthWest');
+    %legend(roilabels,'interpreter','none','Location','NorthWest');
 end
 
 %% EPHYS VFC ==============================================================
@@ -504,7 +502,9 @@ title('Aston V4 LFP (lGAM)')
 %% Ephys location difference & size difference  ---------------------------
 rth=25;
 
-ephys_MOD={'linear_ephys_cv1','css_ephys_cv1','dog_ephys_cv1'};
+ephys_MOD={'linear_ephys_cv1','linear_ephys_cv1_neggain',...
+    'css_ephys_cv1','dog_ephys_cv1'};
+ephys_MMS = MMS(:,1);
 clear C R2m SZ
 for m=1:length(ephys_MOD)
  
@@ -564,9 +564,9 @@ v4=tLFP.Area(strcmp(tMUA.Model,m{1}))==4;
 
 f=figure;
 set(f,'Position',[100 100 1200 1200]);
-for row=1:3
-    for column=1:3
-        subplot(3,3,((row-1)*3)+column); hold on;
+for row=1:4
+    for column=1:4
+        subplot(4,4,((row-1)*4)+column); hold on;
         plot([0 100],[0 100],'k');
         scatter(R2(v1,row+1), R2(v1,column+1),60,'Marker','.',...
             'MarkerEdgeColor',[.3 .3 .3]);
@@ -592,53 +592,38 @@ spn=1;
 for fb=lfp_order
     m=unique(tLFP.Model);
     R2=[];
-    for i=1:length(m)-1
+    for i=1:length(m)
         R2 = [R2 tLFP.R2(...
             strcmp(tLFP.Model,m{i}) & ...
             strcmp(tLFP.SigType,sig{fb}))];
     end
     
-    subplot(length(sig),3,spn); hold on;
-    plot([0 100],[0 100],'k');
-    scatter(R2(v1,3), R2(v1,1),60,'Marker','.',...
-        'MarkerEdgeColor',[.3 .3 .3]);
-    scatter(R2(v4,3), R2(v4,1),60,'Marker','.',...
-        'MarkerEdgeColor',[.3 .8 .3]);
-    set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-    xlabel(m{3},'interpreter','none');ylabel(m{1},'interpreter','none')
-    title(sig{fb})
-    if spn==1
-        legend({'','V1','V4'},'location','SouthEast');
+    for m1=1:4
+        for m2=m1+1:4
+            subplot(length(sig),6,spn); hold on;
+            plot([0 100],[0 100],'k');
+            scatter(R2(v1,m1), R2(v1,m2),60,'Marker','.',...
+                'MarkerEdgeColor',[.3 .3 .3]);
+            scatter(R2(v4,m1), R2(v4,m2),60,'Marker','.',...
+                'MarkerEdgeColor',[.3 .8 .3]);
+            set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+            xlabel(m{m1},'interpreter','none');ylabel(m{m2},'interpreter','none')
+            title(sig{fb})
+            if spn==1
+                legend({'','V1','V4'},'location','SouthEast');
+            end
+            spn=spn+1;
+        end
     end
-    spn=spn+1;
-    
-    subplot(length(sig),3,spn); hold on;
-    plot([0 100],[0 100],'k');
-    scatter(R2(v1,3), R2(v1,2),60,'Marker','.',...
-        'MarkerEdgeColor',[.3 .3 .3]);
-    scatter(R2(v4,3), R2(v4,2),60,'Marker','.',...
-        'MarkerEdgeColor',[.3 .8 .3]);
-    set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-    xlabel(m{3},'interpreter','none');ylabel(m{2},'interpreter','none')
-    title(sig{fb})
-    spn=spn+1;
-    
-    subplot(length(sig),3,spn); hold on;
-    plot([0 100],[0 100],'k');
-    scatter(R2(v1,1), R2(v1,2),60,'Marker','.',...
-        'MarkerEdgeColor',[.3 .3 .3]);
-    scatter(R2(v4,1), R2(v4,2),60,'Marker','.',...
-        'MarkerEdgeColor',[.3 .8 .3]);
-    set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-    xlabel(m{1},'interpreter','none');ylabel(m{2},'interpreter','none')
-    title(sig{fb})
-    spn=spn+1;
-      
 end
 
 %% R2 for different ephys signals =========================================
+r2th=0;
+
 RR=[];
-ephys_MOD={'linear_ephys_cv1','css_ephys_cv1','dog_ephys_cv1'};
+ephys_MOD={'linear_ephys_cv1','linear_ephys_cv1_neggain',...
+    'css_ephys_cv1','dog_ephys_cv1'};
+ephys_MMS = MMS(:,1);
 
 for m=1:length(ephys_MOD)
     model=ephys_MOD{m};
@@ -655,6 +640,7 @@ for m=1:length(ephys_MOD)
     LAB=['MUA';sig(lfp_order)];
     
     f=figure; set(f,'Position',[100 100 1300 1200]);
+    sgtitle(['R2 per Model: ' model],'interpreter','none');
     r2th=0;
     
     c=0;d=0;
@@ -674,6 +660,7 @@ for m=1:length(ephys_MOD)
     % Distance from diagonal ==============================================
     f=figure; set(f,'Position',[100 100 1300 1200]);
     LAB=['MUA';sig(lfp_order)];
+    sgtitle(['Differences Model: ' model],'interpreter','none');
 
     c=0;d=0;
     for ref=1:6
@@ -703,7 +690,6 @@ for m=1:length(ephys_MOD)
     end
 end
 
-
 %% pRF size for different ephys signals ===================================
 % SZ is [ MUA_R2(1) MUA_RFS(2) 
 %         THETA_R2(3) THETA_RFS(4) 
@@ -711,16 +697,18 @@ end
 %         BETA_R2(7) BETA_RFS8) 
 %         LGAM_R2(9) LG_RFS(10) 
 %         HGAM_R2(11) HGAM_RFS(12)]
+r2th=20;
 
-
-ephys_MOD={'linear_ephys_cv1','css_ephys_cv1','dog_ephys_cv1'};
+ephys_MOD={'linear_ephys_cv1','linear_ephys_cv1_neggain',...
+    'css_ephys_cv1','dog_ephys_cv1'};
+ephys_MMS = MMS(:,1);
 
 for m=1:length(ephys_MOD)
     model=ephys_MOD{m};
     LAB=['MUA';sig(lfp_order)];
     
     f=figure; set(f,'Position',[100 100 1300 1200]);
-    r2th=20;
+    sgtitle(['SZ per Model: ' model],'interpreter','none');
     
     c=0;d=0;
     for ref=1:2:12
@@ -749,7 +737,7 @@ for m=1:length(ephys_MOD)
     % Distance from diagonal ==============================================
     
     f=figure; set(f,'Position',[100 100 1300 1200]);
-    r2th=20;
+    sgtitle(['SZ DIFF per Model: ' model],'interpreter','none');
     
     c=0;d=0;
     for ref=1:2:12
@@ -780,71 +768,78 @@ for m=1:length(ephys_MOD)
     end
 end
 
-
 %% Correlate MRI-ephys ====================================================
 % This analysis takes a while!! Do not overuse...
 rng(1); % seed the random number generator
 
-Rth_mri = 2;
-Rth_ephys = 50;
-mxS = 10;
+Rth_mri = 2; % R2 threshold MRI
+Rth_ephys = 50; % R2 threshold ephys
+mxS = 10; % maximum size
 
-MRI_MODEL = {'linhrf_cv1_mhrf','csshrf_cv1_mhrf','doghrf_cv1_mhrf'};
-EPHYS_MODEL = unique(tMUA.Model);
+MODS = {...
+    'linhrf_cv1_mhrf','linear_ephys_cv1';...
+    'linhrf_cv1_mhrf_neggain','linear_ephys_cv1_neggain';...
+    'csshrf_cv1_mhrf','css_ephys_cv1';...
+    'doghrf_cv1_mhrf','dog_ephys_cv1';...
+    };
+MRI_MODEL = MODS(:,1);
+EPHYS_MODEL = MODS(:,2);
+MMS={'linear','linear_ngain','css','dog'};
 
 nbtstr = 100;
 np = 500;
 grid_vf = [ 0 5 -5 1 ; 0 8 -8 0]; % [xmin xmax ymin ymax] [v1; v4] dva
 grid_spacing = 0.25;% dva
 pth = 0.10;
-poscorr_only = true;
+poscorr_only = false;
 
 warning off;
 
-for m = 3%1:length(MRI_MODEL)
+cmROI = {'V1','V4'};
+fprintf('=======================\n');
+for m = 1:length(MODS)
+    fprintf(['\nBootstrap Correlation for Model: ' MODS{m} '\n']);
+    
     s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
          T(modidx.(MRI_MODEL{m})).mod.rfs < mxS;
     
     % collect mri prfs
-    for r = 1:length(roi)
-        if strcmp(roi{r},'V1') % V1
-            mri1(m).X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & ...
-                T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            mri1(m).Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & ...
-                T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+    for r = 1:size(cmROI,2)
+        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{m})).mod.ROI,...
+                ck_GetROIidx(cmROI(r),rois) );
+        if strcmp(cmROI{r},'V1') % V1
+            mri1(m).X = T(modidx.(MRI_MODEL{m})).mod.X(SSS);
+            mri1(m).Y = T(modidx.(MRI_MODEL{m})).mod.Y(SSS);
             if strcmp(MRI_MODEL{m}(1:3),'dog')
-                mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & ...
-                    T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+                mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
             else
-                mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & ...
-                    T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+                mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
             end
-        elseif strcmp(roi{r},'V4_merged') % V4
-            mri4(m).X = T(modidx.(MRI_MODEL{m})).mod.X(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            mri4(m).Y = T(modidx.(MRI_MODEL{m})).mod.Y(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
-            mri4(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(s_R2 & T(modidx.(MRI_MODEL{m})).mod.(roi{r}));
+        elseif strcmp(cmROI{r},'V4') % V4
+            mri4(m).X = T(modidx.(MRI_MODEL{m})).mod.X(SSS);
+            mri4(m).Y = T(modidx.(MRI_MODEL{m})).mod.Y(SSS);
+            mri4(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
         end
     end
                
     % collect ephys prfs
-    for i = 1:size(EPHYS_MODEL,1)    
-        if strcmp(EPHYS_MODEL{i}(1:3),MRI_MODEL{m}(1:3))
-            idx_mod=i;
-        end
-    end
     % MUA V1
-    s = strcmp(tMUA.Model,EPHYS_MODEL{idx_mod}) & ...
+    s = strcmp(tMUA.Model,EPHYS_MODEL{m}) & ...
         tMUA.Area == 1 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
-    mua1(m).X = tMUA.X(s); mua1(m).Y = tMUA.Y(s); mua1(m).S = tMUA.rfs(s);
+    mua1(m).X = tMUA.X(s); 
+    mua1(m).Y = tMUA.Y(s); 
+    mua1(m).S = tMUA.rfs(s);
     % MUA V4
-    s = strcmp(tMUA.Model,EPHYS_MODEL{idx_mod}) & ...
+    s = strcmp(tMUA.Model,EPHYS_MODEL{m}) & ...
         tMUA.Area == 4 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
-    mua4(m).X = tMUA.X(s); mua4(m).Y = tMUA.Y(s); mua4(m).S = tMUA.rfs(s);  
+    mua4(m).X = tMUA.X(s); 
+    mua4(m).Y = tMUA.Y(s); 
+    mua4(m).S = tMUA.rfs(s);  
     % LFP
     freqband=unique(tLFP.SigType);
     for fb = 1: length(freqband)
         % V1
-        s = strcmp(tLFP.Model,EPHYS_MODEL{idx_mod}) & ...
+        s = strcmp(tLFP.Model,EPHYS_MODEL{m}) & ...
             tLFP.Area == 1 & tLFP.R2 > Rth_ephys & tLFP.rfs < mxS & ...
             strcmp(tLFP.SigType, freqband{fb});
         lfp1(fb,m).freqband =  freqband{fb};
@@ -853,7 +848,7 @@ for m = 3%1:length(MRI_MODEL)
         lfp1(fb,m).S =  tLFP.rfs(s);
         
         % V4
-        s = strcmp(tLFP.Model,EPHYS_MODEL{idx_mod}) & ...
+        s = strcmp(tLFP.Model,EPHYS_MODEL{m}) & ...
             tLFP.Area == 4 & tLFP.R2 > Rth_ephys & tLFP.rfs < mxS & ...
             strcmp(tLFP.SigType, freqband{fb});
         lfp4(fb,m).freqband =  freqband{fb};
@@ -883,7 +878,7 @@ for m = 3%1:length(MRI_MODEL)
             lfp4(fb,m).X,lfp4(fb,m).Y,lfp4(fb,m).S,x4q,y4q,'linear');
     end
     
-    if true
+    if false % true
         figure;
         subplot(2,2,1); hold on;
         contourf(x1q,y1q,mri1(m).S_grid,'LevelStep',0.1,'LineStyle','none');
@@ -910,13 +905,12 @@ for m = 3%1:length(MRI_MODEL)
     pp1=[]; pp4=[];
     
     fprintf(['nBtstr: ' num2str(nbtstr) ', nSamples: ' num2str(np) '\n'])
-    plotscatter=true;
+    plotscatter=false;
     if plotscatter; figure; end % plotting all here, selecting later
     for i=1:nbtstr
         % --- V1 ---
         c1=[];p1=[];
         V=v1(randperm(length(v1)));
-             
         selS = [mri1(m).S_grid(:) mua1(m).S_grid(:)];
         selS = selS(V(1:np),:);
         selS = selS(~isnan(selS(:,2)),:);
@@ -926,13 +920,9 @@ for m = 3%1:length(MRI_MODEL)
             scatter(mri1(m).S_grid(V(1:np)), mua1(m).S_grid(V(1:np)),'o');
             title('V1 Map corr.');xlabel('MRI');ylabel('MUA');
         end
-        %if p < pth; r=NaN(2,2); end % only look at decent correlations
-        %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
-        
         c1=[c1 r(2)]; p1=[p1 p(2)];
         
         for fb=1:length(freqband)
-            
             try
                 selS = [mri1(m).S_grid(:) lfp1(fb,m).S_grid(:)];
                 selS = selS(V(1:np),:);
@@ -949,8 +939,6 @@ for m = 3%1:length(MRI_MODEL)
                 subplot(2,6,1+fb);
                 title('V1 Map corr.');xlabel('MRI');ylabel(lfp1(fb,m).freqband);
             end
-            %if p < pth; r=NaN(2,2); end % only look at decent correlations
-            %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
             c1=[c1 r(2)]; p1=[p1 p(2)];
         end
         cc1=[cc1; c1]; pp1=[pp1; p1];
@@ -969,8 +957,6 @@ for m = 3%1:length(MRI_MODEL)
             scatter(mri4(m).S_grid(V(1:np)), mua4(m).S_grid(V(1:np)),'o');
             title('V4 Map corr.');xlabel('MRI');ylabel('MUA');
         end
-        %if p < pth; r=NaN(2,2); end % only look at decent correlations
-        %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
         c4=[c4 r(2)]; p4=[p4 p(2)];
         
         for fb=1:length(freqband)
@@ -986,8 +972,6 @@ for m = 3%1:length(MRI_MODEL)
             catch
                 r=NaN(2,2);
             end
-            %if p < pth; r=NaN(2,2); end % only look at decent correlations
-            %if poscorr_only && r(2)<0; r=NaN(2,2); end % only look at positive correlations
             if plotscatter
                 subplot(2,6,7+fb);
                 title('V4 Map corr.');xlabel('MRI');ylabel(lfp1(fb,m).freqband);
@@ -1024,7 +1008,7 @@ for m = 3%1:length(MRI_MODEL)
     set(gca,'xtick',1:6,'xticklabels',GroupLabels);
     legend({'V1','V4'},'Location','NorthWest');
     title(...
-        {['pRF model: ' MRI_MODEL{m}(1:3)],...
+        {['pRF model: ' MMS{m}],...
         ['nPoints: ' num2str(np) ', nBtstr: ' num2str(nbtstr) ...
         ', p < ' num2str(pth) ],[' R2th-mri: '  num2str(Rth_mri) ...
         ', R2th-ephys: ' num2str(Rth_ephys)]})
@@ -1041,9 +1025,7 @@ for m = 3%1:length(MRI_MODEL)
     [stats(m).comp4, stats(m).means4, stats(m).h4, stats(m).names4] = ...
         multcompare(stats(m).s4);
 end
-
 warning on;
-
 
 %% What's specific about the good DoG fits ================================
 % - find these channels/voxels

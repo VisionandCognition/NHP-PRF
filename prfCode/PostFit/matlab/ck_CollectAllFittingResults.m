@@ -56,7 +56,9 @@ if Do.COMBINE
     % load mri
     fprintf('Loading MRI\n');
     R_MRI = load(fullfile(fitres_path,'MRI','Combined',['AllFits_MRI_' CV]));
+    D99 = R_MRI.D99;
     R_MRI = R_MRI.R;
+   
     % load ephys
     fprintf('Loading EPHYS\n');
     R_EPHYS = load(fullfile(fitres_path,'ephys','Combined',dataset,['AllFits_ephys_' CV]));
@@ -64,5 +66,6 @@ if Do.COMBINE
     
     % save
     fprintf('Saving results from both modalities\n');
-    save(fullfile(fitres_path,'MultiModal',dataset,['AllFits_' CV]),'R_MRI','R_EPHYS');
+    save(fullfile(fitres_path,'MultiModal',dataset,['AllFits_' CV]),...
+        'R_MRI','R_EPHYS','D99');
 end

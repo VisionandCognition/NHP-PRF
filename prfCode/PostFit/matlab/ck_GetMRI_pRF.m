@@ -71,7 +71,7 @@ for m = 1:length(monkeys)
     clear RES
     
     %% Get ROI info =======================================================
-    fprintf(['Processing ROIs for monkey: ' monkeys{m} '\n']);
+    fprintf(['Processing atlas for monkey: ' monkeys{m} '\n']);
     
     labelfile = fullfile(bids_path,['sub-' monkeys{m}],'atlas','D99_labeltable.txt');
     D99 = ck_GetAtlasTable(labelfile);
@@ -90,8 +90,6 @@ for m = 1:length(monkeys)
     
     ROI = load_nii(atlasfile);
     R(m).ROI = reshape(ROI.img, [numel(ROI.img),1]);
-    
-    
     
 %     for r=1:length(ROIs)
 %         fprintf([ROIs{r} '\n']);
