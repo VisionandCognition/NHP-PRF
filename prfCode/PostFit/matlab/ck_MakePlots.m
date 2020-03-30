@@ -16,6 +16,10 @@ def_cmap = 'Spectral';
 ResType = 'mean'; % max / mean
 TT = ['Tables_' ResType];
 
+% figure saving folder
+[~,~] = mkdir('fig_png');
+figfld = fullfile(pwd,'fig_png');
+
 %% Load ===================================================================
 fprintf(['Loading results table. '...
     'Please be patient, this will take a while..\n']);
@@ -95,6 +99,16 @@ MMS={...
     'DOG_m','DOG_d';...
     };
 
+SUBS = unique(tMRI.Monkey);
+
+%% Number of significant voxels per ROI (split by monkey and model) =======
+for s = 1: length(SUBS)
+    for r = 1:length(roi)
+    end
+end
+
+
+
 %% MRI scatter plots & differences R2 =====================================
 RTHRES = 1;
 
@@ -122,6 +136,7 @@ for rowmod=1:4
         paneln=paneln+1;
     end
 end
+saveas(f,fullfile(figfld, 'MRI_ModelComparison_R2.png'));
 
 % diff distributions plots -----
 idx=1;
@@ -151,7 +166,7 @@ end
 
 f2=figure;
 set(f2,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
-set(f2,'Position',[100 100 1600 1000]);
+set(f2,'Position',[100 100 1800 1000]);
 
 cc=1;
 for rowmod=1:4
@@ -165,7 +180,7 @@ for rowmod=1:4
                 'k-','Linestyle','none');
         end
         set(gca,'xtick',1:length(diffmat{cc}),...
-            'xticklabels',roilabels,'ylim',[-1.5 2]);
+            'xticklabels',roilabels,'ylim',[-2 2.5]);
         xlabel('ROI'); ylabel('Diff R2');
         title([MMS{colmod,1} ' - ' MMS{rowmod,1}],...
             'interpreter','none');
@@ -173,13 +188,20 @@ for rowmod=1:4
         cc=cc+1;
     end
 end
+saveas(f2,fullfile(figfld, 'MRI_ModelComparison_ROI_R2.png'));
+
+%% Value of exponential parameter for CSS across ROIs =====================
+
+
+
+
 
 %% MRI scatter plot HRF & differences =====================================
 RTHRES = 0;
 
-f2=figure;
-set(f2,'Position',[100 100 1500 1200]);
-set(f2,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+f3=figure;
+set(f3,'Position',[100 100 2000 1200]);
+set(f3,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>RTHRES;
 
 for mm = 1:size(MRI_MODELS,1)
@@ -229,7 +251,7 @@ for mm = 1:size(MRI_MODELS,1)
     xlabel('ROI'); ylabel('Diff R2');
     title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
     %legend(roilabels,'interpreter','none','Location','NorthEast');
-    set(gca,'xtick',1:length(diffmat{cc}),'xticklabels',roilabels);
+    set(gca,'xtick',1:length(diffmat2{1}),'xticklabels',roilabels);
     xtickangle(45)
     
     subplot(4,3,(mm-1)*3 +3); hold on
@@ -239,17 +261,18 @@ for mm = 1:size(MRI_MODELS,1)
     set(gca,'xticklabels',[]);
     xlabel('ROI'); ylabel('# voxels');
     title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none');
-    set(gca,'xtick',1:length(diffmat{cc}),'xticklabels',roilabels);
+    set(gca,'xtick',1:length(diffmat2{1}),'xticklabels',roilabels);
     xtickangle(45)
     %legend(roilabels,'interpreter','none','Location','NorthEast');
 end
+saveas(f3,fullfile(figfld, 'HRF_Comparison.png'));
 
 %% MRI rf size depending on HRF ===========================================
 R2th=5;
 
-f3=figure;
-set(f3,'Position',[100 100 1500 1200]);
-set(f3,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+f4=figure;
+set(f4,'Position',[100 100 1800 1200]);
+set(f4,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 
 s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > R2th;
 
@@ -300,7 +323,7 @@ for mm = 1:size(MRI_MODELS,1)
         errorbar(xval,diffmat2{1}(xval,1),diffmat2{1}(xval,3),...
             'k-','Linestyle','none')
     end
-    set(gca,'xticklabels',[],'ylim',[-0.5 1.5]);
+    set(gca,'xticklabels',[],'ylim',[-2 2.5]);
     xlabel('ROI'); ylabel('Diff pRF size');
     title(['mHRF - cHRF (' MMS{mm,1} ')'],'interpreter','none'); 
     %legend(roilabels,'interpreter','none','Location','NorthEast');
@@ -318,13 +341,14 @@ for mm = 1:size(MRI_MODELS,1)
     set(gca,'xtick',1:length(diffmat2{1}),'xticklabels',roilabels);
     xtickangle(45)
 end
+saveas(f4,fullfile(figfld, 'HRF_Comparison_pRF-Size.png'));
 
 %% MRI ECC vs PRF Size ====================================================
 Rth=10; 
 
-f4=figure;
-set(f4,'Position',[100 100 1000 1200]);
-set(f4,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+f5=figure;
+set(f5,'Position',[100 100 1000 1200]);
+set(f5,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 
 for m=1:length(MRI_MODELS)
     s_R2 = T(modidx.(MRI_MODELS{m,1})).mod.R2 > Rth;
@@ -360,10 +384,11 @@ for m=1:length(MRI_MODELS)
     set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
     %legend(roilabels,'interpreter','none','Location','NorthWest');
 end
+saveas(f5,fullfile(figfld, 'MRI_Ecc_vs_Size.png'));
 
 %% EPHYS VFC ==============================================================
 % MUA
-s=tMUA.R2>25;
+s=tMUA.R2>20;
 szm=tMUA.rfs<200;
 
 model='css_ephys_cv1';
@@ -431,9 +456,11 @@ end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Aston V4 MUA')
 
+saveas(fm,fullfile(figfld, ['EPHYS_VFC_MUA_' model '.png']));
+
 %% Ephys VFC ==============================================================
 % LFP Low Gamma
-s=tLFP.R2>25;
+s=tLFP.R2>20;
 
 model='css_ephys_cv1';
 b = 'lGamma';
@@ -499,6 +526,9 @@ end
 set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
 title('Aston V4 LFP (lGAM)')
 
+saveas(fm,fullfile(figfld, ['EPHYS_VFC_LFP_' model '.png']));
+
+
 %% Ephys location difference & size difference  ---------------------------
 rth=25;
 
@@ -562,8 +592,8 @@ end
 v1=tLFP.Area(strcmp(tMUA.Model,m{1}))==1;
 v4=tLFP.Area(strcmp(tMUA.Model,m{1}))==4;
 
-f=figure;
-set(f,'Position',[100 100 1200 1200]);
+f6=figure;
+set(f6,'Position',[100 100 1200 1200]);
 for row=1:4
     for column=1:4
         subplot(4,4,((row-1)*4)+column); hold on;
@@ -581,10 +611,11 @@ for row=1:4
         end
     end
 end
+saveas(f6,fullfile(figfld, 'EPHYS_MUA_ModelComparison.png'));
 
 %% LFP model comparison ===================================================
-f=figure; 
-set(f,'Position',[100 100 1200 1200]);
+f7=figure; 
+set(f7,'Position',[100 100 1600 1200]);
 
 sig=unique(tLFP.SigType);
 lfp_order = [3 1 2 5 4];
@@ -616,6 +647,7 @@ for fb=lfp_order
         end
     end
 end
+saveas(f7,fullfile(figfld, 'EPHYS_LFP_ModelComparison.png'));
 
 %% R2 for different ephys signals =========================================
 r2th=0;
@@ -639,7 +671,7 @@ for m=1:length(ephys_MOD)
     end
     LAB=['MUA';sig(lfp_order)];
     
-    f=figure; set(f,'Position',[100 100 1300 1200]);
+    f8=figure; set(f8,'Position',[100 100 1300 1200]);
     sgtitle(['R2 per Model: ' model],'interpreter','none');
     r2th=0;
     
@@ -656,9 +688,10 @@ for m=1:length(ephys_MOD)
             set(gca,'xlim',[0 100],'ylim',[0 100]);
         end
     end
-
+    saveas(f8,fullfile(figfld, ['EPHYS_MUA_R2_' ephys_MOD{m} '.png']));  
+    
     % Distance from diagonal ==============================================
-    f=figure; set(f,'Position',[100 100 1300 1200]);
+    f9=figure; set(f9,'Position',[100 100 1300 1200]);
     LAB=['MUA';sig(lfp_order)];
     sgtitle(['Differences Model: ' model],'interpreter','none');
 
@@ -688,6 +721,7 @@ for m=1:length(ephys_MOD)
             
         end
     end
+    saveas(f8,fullfile(figfld, ['EPHYS_MUA_R2diff_' ephys_MOD{m} '.png']));  
 end
 
 %% pRF size for different ephys signals ===================================
@@ -707,7 +741,7 @@ for m=1:length(ephys_MOD)
     model=ephys_MOD{m};
     LAB=['MUA';sig(lfp_order)];
     
-    f=figure; set(f,'Position',[100 100 1300 1200]);
+    f10=figure; set(f10,'Position',[100 100 1300 1200]);
     sgtitle(['SZ per Model: ' model],'interpreter','none');
     
     c=0;d=0;
@@ -733,10 +767,11 @@ for m=1:length(ephys_MOD)
                 std(  SZ{m}(s,fb+1)./SZ{m}(s,ref+1) )./sqrt(sum(s))];
         end
     end
-    
+    saveas(f10,fullfile(figfld, ['EPHYS_MUA_SZ_' ephys_MOD{m} '.png']));  
+
     % Distance from diagonal ==============================================
     
-    f=figure; set(f,'Position',[100 100 1300 1200]);
+    f11=figure; set(f11,'Position',[100 100 1300 1200]);
     sgtitle(['SZ DIFF per Model: ' model],'interpreter','none');
     
     c=0;d=0;
@@ -766,6 +801,8 @@ for m=1:length(ephys_MOD)
             
         end
     end
+    saveas(f11,fullfile(figfld, ['EPHYS_MUA_SZdiff_' ephys_MOD{m} '.png']));  
+
 end
 
 %% Correlate MRI-ephys ====================================================
@@ -773,8 +810,8 @@ end
 rng(1); % seed the random number generator
 
 Rth_mri = 2; % R2 threshold MRI
-Rth_ephys = 50; % R2 threshold ephys
-mxS = 10; % maximum size
+Rth_ephys = 30; % R2 threshold ephys
+mxS = 20; % maximum size
 
 MODS = {...
     'linhrf_cv1_mhrf','linear_ephys_cv1';...
@@ -784,7 +821,7 @@ MODS = {...
     };
 MRI_MODEL = MODS(:,1);
 EPHYS_MODEL = MODS(:,2);
-MMS={'linear','linear_ngain','css','dog'};
+MMS={'linear','linear_ng','css','dog'};
 
 nbtstr = 100;
 np = 500;
@@ -994,7 +1031,7 @@ for m = 1:length(MODS)
     stats(m).cc4_stat = [nanmean(stats(m).c4filt,1); nanstd(stats(m).c4filt,0,1)];
     
     % plot average and stdev
-    figure; hold on;
+    f14=figure; hold on;
     hBar = bar(1:6, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]);pause(0.1)
     xBar=cell2mat(get(hBar,'XData')).' + [hBar.XOffset];
     errorbar(xBar, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]',...
@@ -1013,17 +1050,21 @@ for m = 1:length(MODS)
         ', p < ' num2str(pth) ],[' R2th-mri: '  num2str(Rth_mri) ...
         ', R2th-ephys: ' num2str(Rth_ephys)]})
     
+    saveas(f14,fullfile(figfld, ['MRI-EPHYS_' ephys_MOD{m} '.png']));  
+
     % Stats ---
-    % V1
-    [stats(m).p1,stats(m).t1,stats(m).s1] = ...
-        anova1(stats(m).c1filt,GroupLabels); 
-    [stats(m).comp1, stats(m).means1, stats(m).h1, stats(m).names1] = ...
-        multcompare(stats(m).s1);
-    % V4
-    [stats(m).p4,stats(m).t4,stats(m).s4] = ...
-        anova1(stats(m).c4filt,GroupLabels);
-    [stats(m).comp4, stats(m).means4, stats(m).h4, stats(m).names4] = ...
-        multcompare(stats(m).s4);
+    if false
+        % V1
+        [stats(m).p1,stats(m).t1,stats(m).s1] = ...
+            anova1(stats(m).c1filt,GroupLabels);
+        [stats(m).comp1, stats(m).means1, stats(m).h1, stats(m).names1] = ...
+            multcompare(stats(m).s1);
+        % V4
+        [stats(m).p4,stats(m).t4,stats(m).s4] = ...
+            anova1(stats(m).c4filt,GroupLabels);
+        [stats(m).comp4, stats(m).means4, stats(m).h4, stats(m).names4] = ...
+            multcompare(stats(m).s4);
+    end
 end
 warning on;
 
