@@ -290,8 +290,8 @@ for r = 1:length(R_EPHYS) % animals
                         R_EPHYS(r).model(m).MUA(i).rfs.*(2*sqrt(2*log(2)));
                     
                     % SNR
-                     R_EPHYS(r).model(m).MUA(i).SNR =  ...
-                         R_EPHYS(r).model(m).MUA(i).SNR;
+                    R_EPHYS(r).model(m).MUA(i).SNR =  ...
+                        R_EPHYS(r).model(m).MUA(i).SNR;
                 end
             end
         end

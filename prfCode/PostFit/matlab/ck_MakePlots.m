@@ -36,6 +36,13 @@ fprintf('LFP...');
 eval(['tLFP = tLFP_' ResType '; clear tLFP_' ResType ';']);
 fprintf('>> DONE\n');
 
+%% Correct the eccentricity for Classic-RF from pix to deg ================
+CRF_idx=strcmp(tMUA.Model,'classicRF');
+tMUA.ecc(CRF_idx) = sqrt(tMUA.X(CRF_idx).^2 + tMUA.Y(CRF_idx).^2);
+
+%% Correct the rf size for Classic-RF from diameter to radius =============
+tMUA.rfs(CRF_idx) = tMUA.rfs(CRF_idx)./2;
+
 %% Split MRI table by model ===============================================
 m = unique(tMRI.Model);
 for mi = 1:length(m)
@@ -92,6 +99,8 @@ MRI_MODELS={...
     'csshrf_cv1_mhrf','csshrf_cv1_dhrf';...
     'doghrf_cv1_mhrf','doghrf_cv1_dhrf';...
     };
+ephys_MOD={'linear_ephys_cv1','linear_ephys_cv1_neggain',...
+    'css_ephys_cv1','dog_ephys_cv1'};
 MMS={...
     'LIN_m','LIN_d';...
     'LIN-N_m','LIN-N_d';...
@@ -102,12 +111,66 @@ MMS={...
 SUBS = unique(tMRI.Monkey);
 
 %% Number of significant voxels per ROI (split by monkey and model) =======
-for s = 1: length(SUBS)
-    for r = 1:length(roi)
+RTHRES = 5;
+
+ff = figure;
+set(ff,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+set(ff,'Position',[10 10 1600 1000]);
+
+paneln=1; 
+for s = 1:length(SUBS)
+    fprintf(['SUB: ' SUBS{s} '\n'])
+    for rowmod=1:4
+            subplot(4,2,paneln); hold on;
+            nvox=[];
+            for r=1:length(roi)
+                nvox = [nvox; sum(...
+                    T(modidx.(MRI_MODELS{rowmod,1})).mod.R2 > RTHRES & ...
+                    strcmp(T(modidx.(MRI_MODELS{rowmod,1})).mod.Monkey,SUBS{s}) & ...
+                    ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois) ) ) ...
+                     sum(strcmp(T(modidx.(MRI_MODELS{rowmod,1})).mod.Monkey,SUBS{s}) & ...
+                    ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois) ) ) ];
+            end
+            for xval=1:size(nvox,1)
+                bar(xval,nvox(xval,1));
+            end
+            title(['SUB ' SUBS{s} ', ' MMS{rowmod,1} ' nVox with R2 > ' ...
+                num2str(RTHRES)],'interpreter','none');
+            xlabel('ROI'); ylabel('nVox','interpreter','none');
+            set(gca, 'Box','off','yscale','log');
+            set(gca,'xtick',1:length(nvox),'xticklabels',roilabels);
+            xtickangle(45)
+            paneln=paneln+1;
     end
 end
+saveas(ff,fullfile(figfld, 'MRI_nVoxSign_ROI.png'));
+close(ff);
+    
+ff = figure;
+set(ff,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+set(ff,'Position',[10 10 1600 1000]);
 
-
+paneln=1; 
+for s = 1: length(SUBS)
+    fprintf(['SUB: ' SUBS{s} '\n'])
+    for rowmod=1:4
+            subplot(4,2,paneln); hold on;
+            for xval=1:size(nvox,1)
+                bar(xval,nvox(xval,1)./nvox(xval,2));
+            end
+            title(['SUB ' SUBS{s} ', ' MMS{rowmod,1} ' proportion Vox with R2 > ' ...
+                num2str(RTHRES)],'interpreter','none');
+            xlabel('ROI'); ylabel('nVox','interpreter','none');
+            set(gca, 'Box','off','ylim',[0 .6]);
+            set(gca,'xtick',1:length(nvox),'xticklabels',roilabels);
+            xtickangle(45)
+            paneln=paneln+1;
+    end
+end
+saveas(ff,fullfile(figfld, 'MRI_propVoxSign_ROI.png'));
+close(ff);
 
 %% MRI scatter plots & differences R2 =====================================
 RTHRES = 1;
@@ -191,10 +254,46 @@ end
 saveas(f2,fullfile(figfld, 'MRI_ModelComparison_ROI_R2.png'));
 
 %% Value of exponential parameter for CSS across ROIs =====================
+RTHRES = 5;
+fexp = figure;
+set(fexp,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+set(fexp,'Position',[10 10 1600 300]);
+hold on;
 
+for s = 1:length(SUBS)
+    fprintf(['SUB: ' SUBS{s} '\n'])
+    exptv(s).roi={};
+    for r=1:length(roi)
+        exptvals = T(modidx.csshrf_cv1_mhrf).mod.expt(...
+            T(modidx.csshrf_cv1_mhrf).mod.R2 > RTHRES & ...
+            strcmp(T(modidx.csshrf_cv1_mhrf).mod.Monkey,SUBS{s}) & ...
+            ismember(T(modidx.csshrf_cv1_mhrf).mod.ROI,...
+            ck_GetROIidx(roilabels(r),rois) ) );
+        exptv(s).roi{r}=exptvals;
+    end
+end
 
-
-
+for xval=1:length(roi)
+    bar(xval,mean([exptv(1).roi{xval};exptv(2).roi{xval}]));
+end
+for xval=1:length(roi)
+    errorbar(xval,...
+        mean([exptv(1).roi{xval};exptv(2).roi{xval}]),...
+        std([exptv(1).roi{xval};exptv(2).roi{xval}]),...
+        'k','Linestyle','none');
+%     errorbar(xval,...
+%         mean([exptv(1).roi{xval};exptv(2).roi{xval}]),...
+%         std([exptv(1).roi{xval};exptv(2).roi{xval}])./...
+%         sqrt(length([exptv(1).roi{xval};exptv(2).roi{xval}])),...
+%         'k','Linestyle','none');
+end
+title(['Avg EXPT parameter, R2 > ' ...
+    num2str(RTHRES)],'interpreter','none');
+xlabel('ROI'); ylabel('EXPT PM','interpreter','none');
+set(gca,'xtick',1:length(roi),'xticklabels',roilabels);
+xtickangle(45)
+saveas(fexp,fullfile(figfld, 'MRI_CSS_EXPT-PM_ROI.png'));
+close(fexp);
 
 %% MRI scatter plot HRF & differences =====================================
 RTHRES = 0;
@@ -344,7 +443,7 @@ end
 saveas(f4,fullfile(figfld, 'HRF_Comparison_pRF-Size.png'));
 
 %% MRI ECC vs PRF Size ====================================================
-Rth=10; 
+Rth=5;
 
 f5=figure;
 set(f5,'Position',[100 100 1000 1200]);
@@ -352,11 +451,51 @@ set(f5,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 
 for m=1:length(MRI_MODELS)
     s_R2 = T(modidx.(MRI_MODELS{m,1})).mod.R2 > Rth;
-    EccBin = 0.5:1:30.5;
+    EccBin = 0.5:1:16.5;
     
     subplot(4,2,(m-1)*2 +1);hold on;
     for r=1:length(roi)
-        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{m,1})).mod.ROI,...
+            ck_GetROIidx(roilabels(r),rois) );
+        
+        ES{r}=[];
+        scatter(T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS),...
+            T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS),100,'Marker','.');
+        for b=1:length(EccBin)
+            bb=[EccBin(b)-0.5 EccBin(b)+0.5];
+            PSZ=T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS);
+            ECC=T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS);
+            ES{r}=[ES{r}; EccBin(b) median(PSZ(ECC>=bb(1) & ECC<=bb(2)))];
+        end
+    end
+    title(['Ecc vs pRF size [' MMS{m} ', R>' num2str(Rth) ']'],...
+        'interpreter','none');
+    xlabel('Eccentricity');ylabel('pRF size');
+    set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
+    
+    subplot(4,2,(m-1)*2 +2);hold on;
+    for r=1:length(roi)
+        h=plot(ES{r}(:,1),ES{r}(:,2),'o');
+        set(h,'MarkerSize',6,'markerfacecolor', get(h, 'color'));
+    end
+    title(['Ecc vs pRF size [' MMS{m} ', R>' num2str(Rth) ']'],...
+        'interpreter','none'); xlabel('Eccentricity');ylabel('pRF size');
+    set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
+    %legend(roilabels,'interpreter','none','Location','NorthWest');
+end
+saveas(f5,fullfile(figfld, 'MRI_Ecc_vs_Size.png'));
+
+f5b=figure;
+set(f5b,'Position',[100 100 1000 1200]);
+set(f5b,'DefaultAxesColorOrder',brewermap(2,def_cmap));
+
+for m=1:length(MRI_MODELS)
+    s_R2 = T(modidx.(MRI_MODELS{m,1})).mod.R2 > Rth;
+    EccBin = 0.5:1:20.5;
+    
+    subplot(4,2,(m-1)*2 +1);hold on;
+    for r=[1 4]
+        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{m,1})).mod.ROI,...
             ck_GetROIidx(roilabels(r),rois) );
 
         ES{r}=[];
@@ -369,22 +508,170 @@ for m=1:length(MRI_MODELS)
             ES{r}=[ES{r}; EccBin(b) median(PSZ(ECC>=bb(1) & ECC<=bb(2)))];
         end
     end
-    title(['Ecc vs pRF size [' MRI_MODELS{m,1} ', R>' num2str(Rth) ']'],...
+    title(['Ecc vs pRF size [' MMS{m} ', R>' num2str(Rth) ']'],...
         'interpreter','none');
     xlabel('Eccentricity');ylabel('pRF size');
     set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
     
     subplot(4,2,(m-1)*2 +2);hold on;
-    for r=1:length(roi)
+    for r=[1 4]
         h=plot(ES{r}(:,1),ES{r}(:,2),'o');
         set(h,'MarkerSize',6,'markerfacecolor', get(h, 'color'));
     end
-    title(['Ecc vs pRF size [' MMS{m,1} ', R>' num2str(Rth) ']'],...
+    title(['Ecc vs pRF size [' MMS{m} ', R>' num2str(Rth) ']'],...
         'interpreter','none'); xlabel('Eccentricity');ylabel('pRF size');
-    set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
+    set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 5]);
     %legend(roilabels,'interpreter','none','Location','NorthWest');
 end
-saveas(f5,fullfile(figfld, 'MRI_Ecc_vs_Size.png'));
+saveas(f5b,fullfile(figfld, 'MRI_Ecc_vs_Size_V1V4.png'));
+
+%% EPHYS ECC vs PRF Size ==================================================
+Rth=70; 
+SNRth=2;
+
+m=unique(tMUA.Model);
+R2=[];
+for i=1:length(m)
+    R2 = [R2 tMUA.R2(strcmp(tMUA.Model,m{i}))];
+end
+
+subs = tMUA.Monkey;
+for i=1:length(subs)
+    if strcmp(subs{i},'lick')
+        subs{i} = 1;
+    elseif strcmp(subs{i},'aston')
+        subs{i} = 2;
+    end
+end
+subs=cell2mat(subs); names={'lick','aston'};
+
+mm=unique(tMUA.Model);
+for m=1:length(mm)
+    % collect
+    if ~strcmp(mm{m},'classicRF')
+        eccsz = [tMUA.R2(strcmp(tMUA.Model,mm{m})) ...
+            tMUA.ecc(strcmp(tMUA.Model,mm{m})) ...
+            tMUA.rfs(strcmp(tMUA.Model,mm{m})) ...
+            tMUA.Area(strcmp(tMUA.Model,mm{m})) ...
+            tMUA.Array(strcmp(tMUA.Model,mm{m})) ...
+            subs(strcmp(tMUA.Model,mm{m})) ...
+            tMUA.gain(strcmp(tMUA.Model,mm{m})) ...
+            ];
+    else 
+        eccsz = [tMUA.SNR(strcmp(tMUA.Model,mm{m})) ...
+            tMUA.ecc(strcmp(tMUA.Model,mm{m})) ...
+            tMUA.rfs(strcmp(tMUA.Model,mm{m})) ...
+            tMUA.Area(strcmp(tMUA.Model,mm{m})) ...
+            tMUA.Array(strcmp(tMUA.Model,mm{m})) ...
+            subs(strcmp(tMUA.Model,mm{m})) ...
+            ];
+    end
+    
+    f_eccsz_arr = figure;
+    set(f_eccsz_arr,'Position',[100 100 1800 600]);
+    for ss=1:2
+        a=[1 4];
+        for aa=1:length(a)
+            leg={};
+            if strcmp(mm{m},'classicRF')
+                sel = eccsz(:,1)>SNRth & eccsz(:,4)==a(aa) & eccsz(:,6)==ss;
+            else
+                sel = eccsz(:,1)>Rth & eccsz(:,4)==a(aa) & eccsz(:,6)==ss;
+            end
+            es1=eccsz(sel,:);
+            subplot(2,2,(ss-1)*2 + aa); 
+            hold on;
+            arr=unique(es1(:,5));
+            for aaa = 1:length(arr)
+                if arr(aaa)~=99
+                    sel2=es1(:,5)==arr(aaa);
+                    scatter(es1(sel2,2),es1(sel2,3));
+                    leg=[leg {num2str(arr(aaa))}];
+                end
+            end
+            if a(aa)==1
+                set(gca,'xlim',[0 8],'ylim',[0 3]);
+            else
+                set(gca,'xlim',[0 8],'ylim',[0 5]);
+            end
+            legend(leg,'Location','NorthEastOutside');
+            title([names{ss} ' V' num2str(a(aa))]);
+            xlabel('Ecc (dva)'); ylabel('RF-size (sd, dva)')
+        end
+    end
+    sgtitle(['MODEL: ' mm{m} ', R2th: ' num2str(Rth)],...
+        'interpreter','none');
+    saveas(f_eccsz_arr,fullfile(figfld, ...
+        ['EPHYS_MUA_Ecc_vs_Size_' mm{m} '.png']));
+    close(f_eccsz_arr);
+    
+    f_eccsz_v1 = figure;
+    set(f_eccsz_v1,'Position',[100 100 1600 400]);
+    for ss=1:2
+        leg={};
+        if strcmp(mm{m},'classicRF')
+            sel = eccsz(:,1)>SNRth & eccsz(:,4)==1 & eccsz(:,6)==ss;
+        else
+            sel = eccsz(:,1)>Rth & eccsz(:,4)==1 & eccsz(:,6)==ss;
+        end
+        es1=eccsz(sel,:);
+        subplot(1,2,ss); hold on;
+        arr=unique(es1(:,5));
+        for aaa = 1:length(arr)
+            sel2=es1(:,5)==arr(aaa);
+            scat=scatter(es1(sel2,2),es1(sel2,3));
+            %if (ss==1 && (arr(aaa)==11 || arr(aaa)==13)) || ...
+            %        (ss==2 && (arr(aaa)==10 || arr(aaa)==12))
+            if (ss==1 && arr(aaa)==11) || ...
+                    (ss==2 && arr(aaa)==10)
+                set(scat,'MarkerFaceColor','r','MarkerEdgeColor','r');
+            elseif (ss==1 && arr(aaa)==13) || ...
+                    (ss==2 && arr(aaa)==12)
+                set(scat,'MarkerFaceColor','b','MarkerEdgeColor','b');
+                
+            else
+                set(scat,'MarkerFaceColor','k','MarkerEdgeColor','k');
+            end
+            leg=[leg {num2str(arr(aaa))}];
+        end
+        title([names{ss} ' V1']);
+        xlabel('Ecc (dva)'); ylabel('RF-size (sd, dva)')
+        set(gca,'xlim',[0 8],'ylim',[0 3]);
+        %legend(leg,'Location','NorthEastOutside');
+    end
+    sgtitle(['MODEL: ' mm{m} ', R2th: ' num2str(Rth)],...
+        'interpreter','none');
+    saveas(f_eccsz_v1,fullfile(figfld, ...
+        ['EPHYS_MUA_Ecc_vs_Size_' mm{m} '.png']));
+    close(f_eccsz_v1);
+    
+    % ====================================
+    % there's something odd about arrays:
+    % 11 [to a lesser extent 13] in lick
+    % 10 [to a lesser extent 12] in aston
+    % ====================================
+
+%     % check their SNR (from classic rf fits)
+%     % these seem pretty normal
+%     figure;
+%     subplot(1,2,1);
+%     ss=eccsz(:,6)==1;
+%     scatter(eccsz(ss,5),eccsz(ss,1))
+%     subplot(1,2,2);
+%     ss=eccsz(:,6)==2;
+%     scatter(eccsz(ss,5),eccsz(ss,7))
+%     
+%     % check their gains
+%     % also normal
+%     figure;
+%     subplot(1,2,1);
+%     ss=eccsz(:,6)==1;
+%     scatter(eccsz(ss,5),eccsz(ss,7))
+%     subplot(1,2,2);
+%     ss=eccsz(:,6)==2;
+%     scatter(eccsz(ss,5),eccsz(ss,7))
+   
+end
 
 %% EPHYS VFC ==============================================================
 % MUA
@@ -528,12 +815,9 @@ title('Aston V4 LFP (lGAM)')
 
 saveas(fm,fullfile(figfld, ['EPHYS_VFC_LFP_' model '.png']));
 
-
 %% Ephys location difference & size difference  ---------------------------
 rth=25;
 
-ephys_MOD={'linear_ephys_cv1','linear_ephys_cv1_neggain',...
-    'css_ephys_cv1','dog_ephys_cv1'};
 ephys_MMS = MMS(:,1);
 clear C R2m SZ
 for m=1:length(ephys_MOD)
@@ -806,12 +1090,13 @@ for m=1:length(ephys_MOD)
 end
 
 %% Correlate MRI-ephys ====================================================
+% based on the full map X,Y,size
 % This analysis takes a while!! Do not overuse...
 rng(1); % seed the random number generator
 
-Rth_mri = 2; % R2 threshold MRI
+Rth_mri = 5; % R2 threshold MRI
 Rth_ephys = 30; % R2 threshold ephys
-mxS = 20; % maximum size
+mxS = 10; % maximum size
 
 MODS = {...
     'linhrf_cv1_mhrf','linear_ephys_cv1';...
@@ -823,18 +1108,18 @@ MRI_MODEL = MODS(:,1);
 EPHYS_MODEL = MODS(:,2);
 MMS={'linear','linear_ng','css','dog'};
 
-nbtstr = 100;
-np = 500;
-grid_vf = [ 0 5 -5 1 ; 0 8 -8 0]; % [xmin xmax ymin ymax] [v1; v4] dva
+nbtstr = 200;
+np = 100;
+grid_vf = [ 0 5 -5 0 ; 0 8 -8 0]; % [xmin xmax ymin ymax] [v1; v4] dva
 grid_spacing = 0.25;% dva
-pth = 0.10;
-poscorr_only = false;
+pth = 01;
+poscorr_only = true;
 
 warning off;
 
 cmROI = {'V1','V4'};
 fprintf('=======================\n');
-for m = 1:length(MODS)
+for m = 1%:size(MODS,1)
     fprintf(['\nBootstrap Correlation for Model: ' MODS{m} '\n']);
     
     s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
@@ -956,6 +1241,7 @@ for m = 1:length(MODS)
             subplot(2,6,1); hold on;
             scatter(mri1(m).S_grid(V(1:np)), mua1(m).S_grid(V(1:np)),'o');
             title('V1 Map corr.');xlabel('MRI');ylabel('MUA');
+            set(gca,'xlim',[0 6],'ylim',[0 6]);
         end
         c1=[c1 r(2)]; p1=[p1 p(2)];
         
@@ -968,6 +1254,7 @@ for m = 1:length(MODS)
                 if plotscatter
                     subplot(2,6,1+fb);hold on;
                     scatter(mri1(m).S_grid(V(1:np)), lfp1(fb,m).S_grid(V(1:np)),'o');
+                    set(gca,'xlim',[0 6],'ylim',[0 6]);
                 end
             catch
                 r=NaN(2,2);
@@ -993,6 +1280,7 @@ for m = 1:length(MODS)
             subplot(2,6,7);hold on;
             scatter(mri4(m).S_grid(V(1:np)), mua4(m).S_grid(V(1:np)),'o');
             title('V4 Map corr.');xlabel('MRI');ylabel('MUA');
+            set(gca,'xlim',[0 6],'ylim',[0 6]);
         end
         c4=[c4 r(2)]; p4=[p4 p(2)];
         
@@ -1005,6 +1293,7 @@ for m = 1:length(MODS)
                 if plotscatter
                     subplot(2,6,7+fb);hold on;
                     scatter(mri4(m).S_grid(V(1:np)), lfp4(fb,m).S_grid(V(1:np)),'o');
+                    set(gca,'xlim',[0 6],'ylim',[0 6]);
                 end
             catch
                 r=NaN(2,2);
@@ -1013,7 +1302,11 @@ for m = 1:length(MODS)
                 subplot(2,6,7+fb);
                 title('V4 Map corr.');xlabel('MRI');ylabel(lfp1(fb,m).freqband);
             end
-            c4=[c4 r(2)]; p4=[p4 p(2)];
+            if length(p)>1
+                c4=[c4 r(2)]; p4=[p4 p(2)];
+            else
+                 c4=[c4 nan]; p4=[p4 nan];
+            end
         end
         cc4=[cc4; c4]; pp4=[pp4; p4];
         stats(m).cc4 = cc4; stats(m).pp4 = pp4;
@@ -1048,9 +1341,317 @@ for m = 1:length(MODS)
         {['pRF model: ' MMS{m}],...
         ['nPoints: ' num2str(np) ', nBtstr: ' num2str(nbtstr) ...
         ', p < ' num2str(pth) ],[' R2th-mri: '  num2str(Rth_mri) ...
-        ', R2th-ephys: ' num2str(Rth_ephys)]})
+        ', R2th-ephys: ' num2str(Rth_ephys)]},'Interpreter','none')
     
-    saveas(f14,fullfile(figfld, ['MRI-EPHYS_' ephys_MOD{m} '.png']));  
+    %saveas(f14,fullfile(figfld, ['MRI-EPHYS_' ephys_MOD{m} '.png']));  
+
+    % Stats ---
+    if false
+        % V1
+        [stats(m).p1,stats(m).t1,stats(m).s1] = ...
+            anova1(stats(m).c1filt,GroupLabels);
+        [stats(m).comp1, stats(m).means1, stats(m).h1, stats(m).names1] = ...
+            multcompare(stats(m).s1);
+        % V4
+        [stats(m).p4,stats(m).t4,stats(m).s4] = ...
+            anova1(stats(m).c4filt,GroupLabels);
+        [stats(m).comp4, stats(m).means4, stats(m).h4, stats(m).names4] = ...
+            multcompare(stats(m).s4);
+    end
+end
+warning on;
+
+%% Correlate MRI-ephys ====================================================
+% based on the ecc vs size correlation
+% PER SIGNAL SOURCE
+% - calculate linear regression on random (filtered) subset of data
+% - repeat
+% - filter results
+% ACROSS SIGNAL SOURCES
+% - correlate the bootstrapped fit-result parameters
+% - optional >> do this in a bootstrapped way
+
+% This analysis takes a while!! Do not overuse...
+rng(1); % seed the random number generator
+
+Rth_mri = 5; % R2 threshold MRI
+Rth_ephys = 70; % R2 threshold ephys
+mxS = 10; % maximum size
+
+MODS = {...
+    'linhrf_cv1_mhrf','linear_ephys_cv1';...
+    'linhrf_cv1_mhrf_neggain','linear_ephys_cv1_neggain';...
+    'csshrf_cv1_mhrf','css_ephys_cv1';...
+    'doghrf_cv1_mhrf','dog_ephys_cv1';...
+    };
+MRI_MODEL = MODS(:,1); EPHYS_MODEL = MODS(:,2);
+MMS={'linear','linear_ng','css','dog'};
+
+nbtstr = 200;
+np = 100;
+pth = 01;
+poscorr_only = true;
+
+warning off;
+cmROI = {'V1','V4'};
+fprintf('=======================\n');
+for m = 1%:size(MODS,1)
+    fprintf(['\nBootstrap Correlation for Model: ' MODS{m} '\n']);
+    
+    s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
+         T(modidx.(MRI_MODEL{m})).mod.rfs < mxS;
+    
+    % collect mri prfs
+    for r = 1:size(cmROI,2)
+        SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{m})).mod.ROI,...
+                ck_GetROIidx(cmROI(r),rois) );
+        if strcmp(cmROI{r},'V1') % V1
+            mri1(m).ECC = T(modidx.(MRI_MODEL{m})).mod.ecc(SSS);
+            mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
+        elseif strcmp(cmROI{r},'V4') % V4
+            mri4(m).ECC = T(modidx.(MRI_MODEL{m})).mod.ecc(SSS);
+            mri4(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
+        end
+    end
+               
+    % collect ephys prfs
+    % MUA V1
+    s = strcmp(tMUA.Model,EPHYS_MODEL{m}) & ...
+        tMUA.Area == 1 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
+    % exclude the outlier V1 arrays in both  monkeys (they might be in WM)
+    s2 = ( strcmp(tMUA.Monkey,'lick') & tMUA.Array == 11) | ...
+        ( strcmp(tMUA.Monkey,'aston') & tMUA.Array == 10);
+%     % Exclude 2 outlier V1 arrays in both monkeys  
+%     s2 = ( strcmp(tMUA.Monkey,'lick') & (tMUA.Array == 11 | tMUA.Array == 13)) | ...
+%         ( strcmp(tMUA.Monkey,'aston') & (tMUA.Array == 10 | tMUA.Array == 12));   
+    s(s2) = false;
+    
+    mua1(m).ECC = tMUA.ecc(s); 
+    mua1(m).S = tMUA.rfs(s);
+    % MUA V4
+    s = strcmp(tMUA.Model,EPHYS_MODEL{m}) & ...
+        tMUA.Area == 4 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
+    mua4(m).ECC = tMUA.ecc(s); 
+    mua4(m).S = tMUA.rfs(s);  
+    % LFP
+    freqband=unique(tLFP.SigType);
+    for fb = 1: length(freqband)
+        % V1
+        s = strcmp(tLFP.Model,EPHYS_MODEL{m}) & ...
+            tLFP.Area == 1 & tLFP.R2 > Rth_ephys & tLFP.rfs < mxS & ...
+            strcmp(tLFP.SigType, freqband{fb});
+        lfp1(fb,m).freqband =  freqband{fb};
+        lfp1(fb,m).ECC =  tLFP.ecc(s);
+        lfp1(fb,m).S =  tLFP.rfs(s);
+        
+        % V4
+        s = strcmp(tLFP.Model,EPHYS_MODEL{m}) & ...
+            tLFP.Area == 4 & tLFP.R2 > Rth_ephys & tLFP.rfs < mxS & ...
+            strcmp(tLFP.SigType, freqband{fb});
+        lfp4(fb,m).freqband =  freqband{fb};
+        lfp4(fb,m).ECC =  tLFP.ecc(s);
+        lfp4(fb,m).S =  tLFP.rfs(s);
+    end
+   
+    % Calculate  & bootstrap linear regressions
+    % =============================================
+    fprintf('Performing regressions on ALL data\n')
+    MRI_stats1 = regstats(mri1(m).S,mri1(m).ECC);
+    MRI_stats4 = regstats(mri4(m).S,mri4(m).ECC);
+    MUA_stats1 = regstats(mua1(m).S,mua1(m).ECC);
+    MUA_stats4 = regstats(mua4(m).S,mua4(m).ECC);
+    
+    for fb=1:length(freqband)
+        try
+            LFP_stats1{fb} = regstats(lfp1(fb,m).S,lfp1(fb,m).ECC);
+        catch
+            LFP_stats1{fb} = [];
+        end
+        try
+            LFP_stats4{fb} = regstats(lfp4(fb,m).S,lfp4(fb,m).ECC);
+        catch
+            LFP_stats4{fb} = [];
+        end
+    end
+    
+    % Do statistics on model comparisons
+    % use fitlm
+    
+    
+    
+    % 5 temporarily in separate m-file
+    
+    
+    
+    
+    
+    
+    
+    % =====================================================================
+    fprintf('Performing a bootstrapped regression analysis\n')
+    cc1=[]; cc4=[];
+    pp1=[]; pp4=[];
+    
+    fprintf(['nBtstr: ' num2str(nbtstr) ', nSamples: ' num2str(np) '\n'])
+    for i=1:nbtstr
+        c1=[];p1=[];
+        % --- V1 ---
+        % mri
+        V=randperm(length(mri1(m).ECC));
+        selS = V(1:np);
+        stats = regstats(mri1(m).S(selS),mri1(m).ECC(selS));
+        c1=[c1 stats.beta'];
+        p1=[p1 stats.tstat.pval'];
+        
+        % mua
+        V=randperm(length(mua1(m).ECC));
+        selS = V(1:np);
+        stats = regstats(mua1(m).S(selS),mua1(m).ECC(selS));
+        c1=[c1 stats.beta'];
+        p1=[p1 stats.tstat.pval'];
+        
+        for fb=1:length(freqband)
+            try
+                V=randperm(length(lfp1(fb,m).ECC));
+                selS = V(1:np);
+                stats = regstats(lfp1(fb,m).S(selS),lfp1(fb,m).ECC(selS));
+                c1=[c1 stats.beta'];
+                p1=[p1 stats.tstat.pval'];
+            catch
+                c1=[c1 nan nan];
+                p1=[p1 nan nan];
+                %fprintf(['fb' num2str(fb) ': error with regstats\n'])
+            end
+        end
+        cc1=[cc1; c1]; pp1=[pp1; p1];
+        
+        % --- V4 ----
+        c4=[];p4=[];
+        % mri
+        V=randperm(length(mri4(m).ECC));
+        selS = V(1:np);
+        stats = regstats(mri4(m).S(selS),mri4(m).ECC(selS));
+        c4=[c4 stats.beta'];
+        p4=[p4 stats.tstat.pval'];
+        
+        % mua
+        V=randperm(length(mua4(m).ECC));
+        selS = V(1:np);
+        stats = regstats(mua4(m).S(selS),mua4(m).ECC(selS));
+        c4=[c4 stats.beta'];
+        p4=[p4 stats.tstat.pval'];
+        
+        for fb=1:length(freqband)
+            try
+                V=randperm(length(lfp4(fb,m).ECC));
+                selS = V(1:np);
+                stats = regstats(lfp4(fb,m).S(selS),lfp4(fb,m).ECC(selS));
+                c4=[c4 stats.beta'];
+                p4=[p4 stats.tstat.pval'];
+            catch
+                c4=[c4 nan nan];
+                p4=[p4 nan nan];
+                %fprintf(['fb' num2str(fb) ': error with regstats\n'])
+            end
+        end
+        cc4=[cc4; c4]; pp4=[pp4; p4];
+    end
+    
+    % show slope distributions for all signals
+    pthr=0.05;
+    
+    figure;
+    subplot(2,4,1)
+    histogram(cc1(pp1(:,2)<pthr,2),-0.2:0.02:0.5)
+    title('MRI V1'); xlabel('Ecc-Sz slope')
+    subplot(2,4,2)
+    histogram(cc1(pp1(:,4)<pthr,4),-0.2:0.02:0.5)
+    title('MUA V1');xlabel('Ecc-Sz slope')
+    subplot(2,4,3)
+    histogram(cc1(pp1(:,6)<pthr,6),-0.2:0.02:0.5)
+    title('ALPHA V1');xlabel('Ecc-Sz slope')
+    subplot(2,4,4)
+    histogram(cc1(pp1(:,8)<pthr,8),-0.2:0.02:0.5)
+    title('BETA V1');xlabel('Ecc-Sz slope')
+    subplot(2,4,5)
+    histogram(cc1(pp1(:,10)<pthr,10),-0.2:0.02:0.5)
+    title('THETA V1');xlabel('Ecc-Sz slope')
+    subplot(2,4,6)
+    histogram(cc1(pp1(:,12)<pthr,12),-0.2:0.02:0.5)
+    title('H-GAMMA V1');xlabel('Ecc-Sz slope')
+    subplot(2,4,7)
+    histogram(cc1(pp1(:,14)<pthr,14),-0.2:0.02:0.5)
+    title('L-GAMMA V1');xlabel('Ecc-Sz slope')
+    subplot(2,4,8)
+    ae_cc1 = [cc1(:,1:2); cc1(:,3:4); cc1(:,5:6); cc1(:,7:8);...
+        cc1(:,9:10); cc1(:,11:12); cc1(:,13:4)];
+    ae_pp1 = [pp1(:,1:2); pp1(:,3:4); pp1(:,5:6); pp1(:,7:8);...
+        pp1(:,9:10); pp1(:,11:12); pp1(:,13:4)];
+    histogram(ae_cc1(ae_pp1(:,2)<pthr,2),-0.2:0.02:0.5)
+    title('ALL EPHYS V1');xlabel('Ecc-Sz slope')
+    sgtitle(['MODELS: ' MODS{m,1} ' and ' MODS{m,2}],'interpreter','none')
+    
+    
+    figure;
+    subplot(2,4,1)
+    histogram(cc4(pp4(:,2)<pthr,2),-0.2:0.02:0.5)
+    title('MRI V4');xlabel('Ecc-Sz slope')
+    subplot(2,4,2)
+    histogram(cc4(pp4(:,4)<pthr,4),-0.2:0.02:0.5)
+    title('MUA V4');xlabel('Ecc-Sz slope')
+    subplot(2,4,3)
+    histogram(cc4(pp4(:,6)<pthr,6),-0.2:0.02:0.5)
+    title('ALPHA V4');xlabel('Ecc-Sz slope')
+    subplot(2,4,4)
+    histogram(cc4(pp4(:,8)<pthr,8),-0.2:0.02:0.5)
+    title('BETA V4');xlabel('Ecc-Sz slope')
+    subplot(2,4,5)
+    histogram(cc4(pp4(:,10)<pthr,10),-0.2:0.02:0.5)
+    title('THETA V4');xlabel('Ecc-Sz slope')
+    subplot(2,4,6)
+    histogram(cc4(pp4(:,12)<pthr,12),-0.2:0.02:0.5)
+    title('H-GAMMA V4');xlabel('Ecc-Sz slope')
+    subplot(2,4,7)
+    histogram(cc4(pp4(:,14)<pthr,14),-0.2:0.02:0.5)
+    title('L-GAMMA V4');xlabel('Ecc-Sz slope')
+    subplot(2,4,8)
+    ae_cc4 = [cc4(:,1:2); cc4(:,3:4); cc4(:,5:6); cc4(:,7:8);...
+        cc4(:,9:10); cc4(:,11:12); cc4(:,13:4)];
+    ae_pp4 = [pp4(:,1:2); pp4(:,3:4); pp1(:,5:6); pp4(:,7:8);...
+        pp4(:,9:10); pp4(:,11:12); pp4(:,13:4)];
+    histogram(ae_cc4(ae_pp4(:,2)<pthr,2),-0.2:0.02:0.5)
+    title('ALL EPHYS V4');xlabel('Ecc-Sz slope')
+    sgtitle(['MODELS: ' MODS{m,1} ' and ' MODS{m,2}],'interpreter','none')
+    
+    
+    
+    
+    
+    
+    
+   
+    
+    % plot average and stdev
+    f14=figure; hold on;
+    hBar = bar(1:6, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]);pause(0.1)
+    xBar=cell2mat(get(hBar,'XData')).' + [hBar.XOffset];
+    errorbar(xBar, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]',...
+        [stats(m).cc1_stat(2,:);stats(m).cc4_stat(2,:)]','k','LineStyle','none')
+    GroupLabels = {'MUA',...
+        lfp1(1,m).freqband,...
+        lfp1(2,m).freqband,...
+        lfp1(3,m).freqband,...
+        lfp1(4,m).freqband,...
+        lfp1(5,m).freqband};
+    set(gca,'xtick',1:6,'xticklabels',GroupLabels);
+    legend({'V1','V4'},'Location','NorthWest');
+    title(...
+        {['pRF model: ' MMS{m}],...
+        ['nPoints: ' num2str(np) ', nBtstr: ' num2str(nbtstr) ...
+        ', p < ' num2str(pth) ],[' R2th-mri: '  num2str(Rth_mri) ...
+        ', R2th-ephys: ' num2str(Rth_ephys)]},'Interpreter','none')
+    
+    %saveas(f14,fullfile(figfld, ['MRI-EPHYS_' ephys_MOD{m} '.png']));  
 
     % Stats ---
     if false
