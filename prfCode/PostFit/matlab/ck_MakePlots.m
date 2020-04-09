@@ -1,7 +1,13 @@
 % ck_MakePlots
 % Takes the pre-processed fitting result tables and creates comparison plots
 
+fprintf('Moving to root fodler for this script\n')
+% go to the location of this files
+cd(fullfile('/Users','chris','Documents','MRI_ANALYSIS',...
+    'NHP-PRF','prfCode','PostFit','matlab'));
+
 %% Paths ==================================================================
+fprintf('Setting up paths\n')
 BaseFld = pwd;
 DS='ORG';
 ResFld = ...
@@ -37,13 +43,16 @@ eval(['tLFP = tLFP_' ResType '; clear tLFP_' ResType ';']);
 fprintf('>> DONE\n');
 
 %% Correct the eccentricity for Classic-RF from pix to deg ================
+fprintf('Correcting eccentricity values for ClassicRF from pix to deg\n')
 CRF_idx=strcmp(tMUA.Model,'classicRF');
 tMUA.ecc(CRF_idx) = sqrt(tMUA.X(CRF_idx).^2 + tMUA.Y(CRF_idx).^2);
 
 %% Correct the rf size for Classic-RF from diameter to radius =============
+fprintf('Correcting RF size values for ClassicRF from diam to radius\n')
 tMUA.rfs(CRF_idx) = tMUA.rfs(CRF_idx)./2;
 
 %% Split MRI table by model ===============================================
+fprintf('Splitting MRI table by model\n')
 m = unique(tMRI.Model);
 for mi = 1:length(m)
     M = tMRI(strcmp(tMRI.Model,m{mi}),:);
@@ -53,6 +62,7 @@ for mi = 1:length(m)
 end
 
 %% Initiate some information ==============================================
+fprintf('Generating ROI, model, and subject labels\n')
 % proces ROI info
 rois = {...
     'V1',   [34];...            % occipital / visual
@@ -109,6 +119,82 @@ MMS={...
     };
 
 SUBS = unique(tMRI.Monkey);
+
+%% Inspect DoG size indication ============================================
+fprintf('Handling DoG pRF sizes MRI \n')
+R2th=20;
+DoGtest = tMRI(...
+    strcmp(tMRI.Model,'doghrf_cv1_mhrf') & ...
+    tMRI.ROI == ck_GetROIidx({'V1'},rois) & ...
+    tMRI.R2 > R2th ,:);
+
+ftemp = figure;
+subplot(2,2,1);
+scatter(DoGtest.ecc,DoGtest.rfs);
+xlabel('ecc');ylabel('rfs');
+subplot(2,2,2);
+scatter(DoGtest.rfs,DoGtest.gain)
+xlabel('rfs');ylabel('gain');
+subplot(2,2,3);
+scatter(DoGtest.rfs,DoGtest.normamp)
+xlabel('rfs');ylabel('namp');
+subplot(2,2,4);
+scatter(DoGtest.rfs,DoGtest.sdratio)
+xlabel('rfs');ylabel('sdratio');
+close(ftemp)
+
+% calculate the actual pRF shape
+x=linspace(-20,20,1000);
+y = (...
+    (1./(2*pi*DoGtest.rfs).*exp(-(x).^2./(2*DoGtest.rfs.^2))) - ...
+    DoGtest.normamp.*(1./(2*pi*(DoGtest.rfs.*DoGtest.sdratio)).*...
+    exp(-(x).^2./(2*(DoGtest.rfs.*DoGtest.sdratio).^2))) ...
+    );
+f_dog = figure;
+plot(x,y);
+
+% mean
+ym = nanmean(y,1); 
+hold on; plot(x,ym,'k','Linewidth',5)
+close(f_dog)
+
+
+fprintf('Handling DoG pRF sizes MUA \n')
+R2th=70;
+DoGtest = tMUA(...
+    strcmp(tMUA.Model,'dog_ephys_cv1') & ...
+    tMUA.Area == 1 & ...
+    tMUA.R2 > R2th ,:);
+
+ftemp = figure;
+subplot(2,2,1);
+scatter(DoGtest.ecc,DoGtest.rfs);
+xlabel('ecc');ylabel('rfs');
+subplot(2,2,2);
+scatter(DoGtest.rfs,DoGtest.gain)
+xlabel('rfs');ylabel('gain');
+subplot(2,2,3);
+scatter(DoGtest.rfs,DoGtest.normamp)
+xlabel('rfs');ylabel('namp');
+subplot(2,2,4);
+scatter(DoGtest.rfs,DoGtest.sdratio)
+xlabel('rfs');ylabel('sdratio');
+close(ftemp)
+
+% calculate the actual pRF shape
+x=linspace(-20,20,1000);
+y = (...
+    (1./(2*pi*DoGtest.rfs).*exp(-(x).^2./(2*DoGtest.rfs.^2))) - ...
+    DoGtest.normamp.*(1./(2*pi*(DoGtest.rfs.*DoGtest.sdratio)).*...
+    exp(-(x).^2./(2*(DoGtest.rfs.*DoGtest.sdratio).^2))) ...
+    );
+f_dog = figure;
+plot(x,y./max(y,2));
+
+% mean
+ym = nanmean(y,1); 
+hold on; plot(x,ym,'k','Linewidth',5)
+close(f_dog)
 
 %% Number of significant voxels per ROI (split by monkey and model) =======
 RTHRES = 5;
@@ -173,7 +259,7 @@ saveas(ff,fullfile(figfld, 'MRI_propVoxSign_ROI.png'));
 close(ff);
 
 %% MRI scatter plots & differences R2 =====================================
-RTHRES = 1;
+RTHRES = 0;
 
 % scatter plots ---
 f=figure;
@@ -252,6 +338,190 @@ for rowmod=1:4
     end
 end
 saveas(f2,fullfile(figfld, 'MRI_ModelComparison_ROI_R2.png'));
+
+%% Good DoG and NegGain Fits: Characterize ================================
+R2th = 10; % minimum R2
+R2enh = 10; % R2 improvement
+
+DoG = tMRI(...
+    strcmp(tMRI.Model,'doghrf_cv1_mhrf'),:);
+lin_n = tMRI(...
+    strcmp(tMRI.Model,'linhrf_cv1_mhrf_neggain'),:);
+lin = tMRI(...
+    strcmp(tMRI.Model,'linhrf_cv1_mhrf'),:);
+
+% % V1 only
+% DoG = tMRI(...
+%     strcmp(tMRI.Model,'doghrf_cv1_mhrf') & ...
+%     tMRI.ROI == ck_GetROIidx({'V1'},rois),:);
+% lin_n = tMRI(...
+%     strcmp(tMRI.Model,'linhrf_cv1_mhrf_neggain') & ...
+%     tMRI.ROI == ck_GetROIidx({'V1'},rois),:);
+% lin = tMRI(...
+%     strcmp(tMRI.Model,'linhrf_cv1_mhrf') & ...
+%     tMRI.ROI == ck_GetROIidx({'V1'},rois),:);
+
+f_neg1 = figure;
+set(f_neg1,'Position',[10 10 1200 1000]);
+vox_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh;
+subplot(2,2,1);scatter(DoG.X(vox_sel),DoG.Y(vox_sel),...
+    'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
+set(gca,'xaxislocation','origin','yaxislocation','origin',...
+    'xlim',[-8 8],'ylim',[-8 8]);
+title('Locations of pRF with good DoG fits & bad LIN fits')
+xlabel('X deg');ylabel('Y deg');
+
+subplot(2,2,2);histogram(DoG.ecc(vox_sel),0:0.1:5,...
+    'FaceColor','k','FaceAlpha',0.5);
+title('ECC of pRF with good DoG fits & bad LIN fits')
+ylabel('nvoxels'); xlabel('Ecc');
+
+vox_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+subplot(2,2,3);scatter(lin_n.X(vox_sel),lin_n.Y(vox_sel),...
+    'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
+set(gca,'xaxislocation','origin','yaxislocation','origin',...
+    'xlim',[-8 8],'ylim',[-8 8]);
+title('Locations of pRF with good LIN-N fits & bad LIN fits')
+xlabel('X deg');ylabel('Y deg');
+
+subplot(2,2,4);histogram(lin_n.ecc(vox_sel),0:0.1:5,...
+    'FaceColor','k','FaceAlpha',0.5);
+title('ECC of pRF with good LIN-N fits & bad LIN fits')
+ylabel('nvoxels'); xlabel('Ecc');
+
+saveas(f_neg1,fullfile(figfld, 'MRI_NEG-PRF1.png'));
+close(f_neg1);
+
+% % locations of all pRFs
+% figure;
+% subplot(2,2,1);scatter(DoG.X,DoG.Y);
+% set(gca,'xaxislocation','origin','yaxislocation','origin',...
+%     'xlim',[-8 8],'ylim',[-8 8]);
+% subplot(2,2,2);histogram(DoG.ecc,0:0.1:5);
+% 
+% subplot(2,2,3);scatter(lin_n.X,lin_n.Y);
+% set(gca,'xaxislocation','origin','yaxislocation','origin',...
+%     'xlim',[-8 8],'ylim',[-8 8]);
+% subplot(2,2,4);histogram(lin_n.ecc,0:0.1:5);
+
+f_neg2 = figure;
+set(f_neg2,'Position',[10 10 1300 1600]);
+vox_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+
+subplot(3,2,1); hold on;
+plot([0 15],[0 15],'r');
+scatter(lin_n.ecc(vox_sel),lin.ecc(vox_sel),...
+    'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
+xlabel('Ecc. LINEAR POSNEG')
+ylabel('Ecc. LINEAR POS')
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+title('Eccentricity')
+
+subplot(3,2,2); hold on;
+histogram(lin_n.gain(vox_sel),-10:0.1:10,'FaceColor','k','FaceAlpha',0.5);
+xlabel('gain LIN-POSNEG');ylabel('nvoxels');
+set(gca,'xlim',[-3 1]);
+MM=median(lin_n.gain(vox_sel));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+30]);
+title('Gain')
+
+subplot(3,2,3); hold on;
+bb = [lin_n.ecc(vox_sel) lin.ecc(vox_sel)];
+plot([1 2],bb)
+plot([1 2],mean(bb),'k','Linewidth',5)
+set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
+    'ylim',[0 20],'xlim',[0.8 2.2])
+ylabel('Eccentricity');
+title('Ecc Diff')
+
+subplot(3,2,4); hold on;
+histogram(lin.ecc(vox_sel)-lin_n.ecc(vox_sel),-10:0.5:10,...
+    'FaceColor','k','FaceAlpha',0.5);
+xlabel('Ecc. Diff (POS-POSNEG)');ylabel('nvoxels');
+MM=median(bb(:,2)-bb(:,1));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+30]);
+title('Ecc Diff')
+
+subplot(3,2,5); hold on;
+bb = [lin_n.rfs(vox_sel) lin.rfs(vox_sel)];
+plot([1 2],bb)
+plot([1 2],mean(bb),'k','Linewidth',5)
+set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
+    'ylim',[0 6],'xlim',[0.8 2.2])
+ylabel('Size');
+title('Size Diff')
+
+subplot(3,2,6); hold on;
+histogram(lin.rfs(vox_sel)-lin_n.rfs(vox_sel),-10:0.5:10,...
+    'FaceColor','k','FaceAlpha',0.5);
+xlabel('Size Diff (POS-POSNEG)');ylabel('nvoxels');
+MM=median(bb(:,2)-bb(:,1));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+30]);
+set(gca,'xlim',[-5 5]);
+title('Size Diff')
+
+sgtitle('pRFs POS LINEAR vs POSNEG LINEAR model')
+
+saveas(f_neg2,fullfile(figfld, 'MRI_NEG-PRF2.png'));
+close(f_neg2);
+
+
+f_neg3 = figure;
+set(f_neg3,'Position',[10 10 1300 1100]);
+vox_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh;
+
+subplot(2,2,1); hold on;
+plot([0 15],[0 15],'r');
+scatter(DoG.ecc(vox_sel),lin.ecc(vox_sel),...
+    'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
+xlabel('Ecc. DOG')
+ylabel('Ecc. LINEAR POS')
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+title('Eccentricity')
+
+subplot(2,2,2); hold on;
+histogram(DoG.normamp(vox_sel),-10:0.1:10,'FaceColor','k','FaceAlpha',0.5);
+xlabel('INH nAMP');ylabel('nvoxels');
+set(gca,'xlim',[0 3]);
+MM=median(DoG.normamp(vox_sel));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+30]);
+title('NORMAMP')
+
+subplot(2,2,3); hold on;
+bb = [DoG.ecc(vox_sel) lin.ecc(vox_sel)];
+plot([1 2],bb)
+plot([1 2],mean(bb),'k','Linewidth',5)
+set(gca,'xtick',1:2,'xticklabels',{'DoG','LIN'},...
+    'ylim',[0 20],'xlim',[0.8 2.2])
+ylabel('Eccentricity');
+title('Ecc Diff')
+
+subplot(2,2,4); hold on;
+histogram(lin.ecc(vox_sel)-DoG.ecc(vox_sel),-10:0.5:10,...
+    'FaceColor','k','FaceAlpha',0.5);
+xlabel('Ecc. Diff (POS-DoG)');ylabel('nvoxels');
+MM=median(bb(:,2)-bb(:,1));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+30]);
+title('Ecc Diff')
+
+sgtitle('pRFs POS LINEAR vs DoG model')
+
+saveas(f_neg3,fullfile(figfld, 'MRI_NEG-PRF3.png'));
+close(f_neg3);
 
 %% Value of exponential parameter for CSS across ROIs =====================
 RTHRES = 5;
