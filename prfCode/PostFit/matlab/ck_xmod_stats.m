@@ -194,8 +194,11 @@ title('V4 FIT');xlabel('Ecc');ylabel('Sz');
 
 sgtitle(['MODEL: ' MMS{m} ', Rth_mri: ' num2str(Rth_mri) ...
     ', Rth_ephys:' num2str(Rth_ephys)],'interpreter','none')
-saveas(f_xmod,fullfile(figfld, ['XMOD_REGR_' MMS{m} '.png']));  
-close(f_xmod);
+if SaveFigs 
+    saveas(f_xmod,fullfile(figfld, ['XMOD_REGR_' MMS{m} '.png']));  
+end
+if CloseFigs; close(f_xmod); end
+
 % Look at effect sizes ===
 %plotEffects(mdl_v1)
 %plotInteraction(mdl_v1,'ecc','signal')
@@ -385,5 +388,7 @@ ylabel('Ecc-Sz SLOPE');
 title('V4','interpreter','none');
 sgtitle(['MODEL: ' MMS{m} ', Rth_mri: ' num2str(Rth_mri) ...
     ', Rth_ephys:' num2str(Rth_ephys)],'interpreter','none')
-saveas(f_slopes,fullfile(figfld, ['XMOD_SlopeComparison_' MMS{m} '.png']));  
-close(f_slopes);
+if SaveFigs
+    saveas(f_slopes,fullfile(figfld, ['XMOD_SlopeComparison_' MMS{m} '.png']));  
+end
+if CloseFigs; close(f_slopes); end
