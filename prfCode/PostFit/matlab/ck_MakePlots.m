@@ -286,6 +286,7 @@ for rowmod=1:4
     end
 end
 saveas(f,fullfile(figfld, 'MRI_ModelComparison_R2.png'));
+close(f);
 
 % diff distributions plots -----
 idx=1;
@@ -338,6 +339,7 @@ for rowmod=1:4
     end
 end
 saveas(f2,fullfile(figfld, 'MRI_ModelComparison_ROI_R2.png'));
+close(f2);
 
 %% Good DoG and NegGain Fits: Characterize ================================
 R2th = 10; % minimum R2
@@ -416,7 +418,6 @@ xlabel('Ecc. LINEAR POSNEG')
 ylabel('Ecc. LINEAR POS')
 set(gca,'xlim',[0 15],'ylim',[0 15]);
 yy=get(gca,'ylim');
-plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 title('Eccentricity')
 
 subplot(3,2,2); hold on;
@@ -1359,7 +1360,7 @@ for m=1:length(ephys_MOD)
 
 end
 
-%% Correlate MRI-ephys ====================================================
+%% Correlate MRI-ephys RESAMPLE ON MAP-GRID ===============================
 % based on the full map X,Y,size
 % This analysis takes a while!! Do not overuse...
 rng(1); % seed the random number generator
@@ -1389,7 +1390,7 @@ warning off;
 
 cmROI = {'V1','V4'};
 fprintf('=======================\n');
-for m = 1%:size(MODS,1)
+for m = 1:size(MODS,1)
     fprintf(['\nBootstrap Correlation for Model: ' MODS{m} '\n']);
     
     s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
@@ -1631,7 +1632,7 @@ for m = 1%:size(MODS,1)
 end
 warning on;
 
-%% Correlate MRI-ephys ====================================================
+%% Correlate MRI-ephys REGRESSION BASED ===================================
 % based on the ecc vs size correlation
 % PER SIGNAL SOURCE
 % - calculate linear regression on random (filtered) subset of data
@@ -1646,7 +1647,8 @@ rng(1); % seed the random number generator
 
 Rth_mri = 5; % R2 threshold MRI
 Rth_ephys = 70; % R2 threshold ephys
-mxS = 10; % maximum size
+mxS = 15; % maximum size
+MaxECC = 10; % max ecc to use for fitting
 
 MODS = {...
     'linhrf_cv1_mhrf','linear_ephys_cv1';...
@@ -1665,16 +1667,16 @@ poscorr_only = true;
 warning off;
 cmROI = {'V1','V4'};
 fprintf('=======================\n');
-for m = 1%:size(MODS,1)
-    fprintf(['\nBootstrap Correlation for Model: ' MODS{m} '\n']);
+for m = 1:size(MODS,1)
+    fprintf(['\nCrossmodal Correlation for Model: ' MODS{m} '\n']);
     
     s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
-         T(modidx.(MRI_MODEL{m})).mod.rfs < mxS;
+        T(modidx.(MRI_MODEL{m})).mod.rfs < mxS;
     
     % collect mri prfs
     for r = 1:size(cmROI,2)
         SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{m})).mod.ROI,...
-                ck_GetROIidx(cmROI(r),rois) );
+            ck_GetROIidx(cmROI(r),rois) );
         if strcmp(cmROI{r},'V1') % V1
             mri1(m).ECC = T(modidx.(MRI_MODEL{m})).mod.ecc(SSS);
             mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
@@ -1683,26 +1685,26 @@ for m = 1%:size(MODS,1)
             mri4(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
         end
     end
-               
+    
     % collect ephys prfs
     % MUA V1
     s = strcmp(tMUA.Model,EPHYS_MODEL{m}) & ...
         tMUA.Area == 1 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
     % exclude the outlier V1 arrays in both  monkeys (they might be in WM)
-    s2 = ( strcmp(tMUA.Monkey,'lick') & tMUA.Array == 11) | ...
-        ( strcmp(tMUA.Monkey,'aston') & tMUA.Array == 10);
-%     % Exclude 2 outlier V1 arrays in both monkeys  
-%     s2 = ( strcmp(tMUA.Monkey,'lick') & (tMUA.Array == 11 | tMUA.Array == 13)) | ...
-%         ( strcmp(tMUA.Monkey,'aston') & (tMUA.Array == 10 | tMUA.Array == 12));   
+%     s2 = ( strcmp(tMUA.Monkey,'lick') & tMUA.Array == 11) | ...
+%         ( strcmp(tMUA.Monkey,'aston') & tMUA.Array == 10);
+    % Exclude 2 outlier V1 arrays in both monkeys
+    s2 = ( strcmp(tMUA.Monkey,'lick') & (tMUA.Array == 11 | tMUA.Array == 13)) | ...
+        ( strcmp(tMUA.Monkey,'aston') & (tMUA.Array == 10 | tMUA.Array == 12));
     s(s2) = false;
     
-    mua1(m).ECC = tMUA.ecc(s); 
+    mua1(m).ECC = tMUA.ecc(s);
     mua1(m).S = tMUA.rfs(s);
     % MUA V4
     s = strcmp(tMUA.Model,EPHYS_MODEL{m}) & ...
         tMUA.Area == 4 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
-    mua4(m).ECC = tMUA.ecc(s); 
-    mua4(m).S = tMUA.rfs(s);  
+    mua4(m).ECC = tMUA.ecc(s);
+    mua4(m).S = tMUA.rfs(s);
     % LFP
     freqband=unique(tLFP.SigType);
     for fb = 1: length(freqband)
@@ -1710,6 +1712,14 @@ for m = 1%:size(MODS,1)
         s = strcmp(tLFP.Model,EPHYS_MODEL{m}) & ...
             tLFP.Area == 1 & tLFP.R2 > Rth_ephys & tLFP.rfs < mxS & ...
             strcmp(tLFP.SigType, freqband{fb});
+%         % exclude the outlier V1 arrays in both  monkeys (they might be in WM)
+%         s2 = ( strcmp(tLFP.Monkey,'lick') & tLFP.Array == 11) | ...
+%             ( strcmp(tLFP.Monkey,'aston') & tLFP.Array == 10);
+        % Exclude 2 outlier V1 arrays in both monkeys
+        s2 = ( strcmp(tMUA.Monkey,'lick') & (tMUA.Array == 11 | tMUA.Array == 13)) | ...
+            ( strcmp(tMUA.Monkey,'aston') & (tMUA.Array == 10 | tMUA.Array == 12));
+        s(s2) = false;
+        
         lfp1(fb,m).freqband =  freqband{fb};
         lfp1(fb,m).ECC =  tLFP.ecc(s);
         lfp1(fb,m).S =  tLFP.rfs(s);
@@ -1722,7 +1732,7 @@ for m = 1%:size(MODS,1)
         lfp4(fb,m).ECC =  tLFP.ecc(s);
         lfp4(fb,m).S =  tLFP.rfs(s);
     end
-   
+    
     % Calculate  & bootstrap linear regressions
     % =============================================
     fprintf('Performing regressions on ALL data\n')
@@ -1747,200 +1757,190 @@ for m = 1%:size(MODS,1)
     % Do statistics on model comparisons
     % use fitlm
     
-    
-    
-    % 5 temporarily in separate m-file
-    
-    
-    
-    
-    
-    
+    ck_xmod_stats;
+    XMOD(m).model = MMS{m}; 
+    XMOD(m).stats = stats;
     
     % =====================================================================
-    fprintf('Performing a bootstrapped regression analysis\n')
-    cc1=[]; cc4=[];
-    pp1=[]; pp4=[];
-    
-    fprintf(['nBtstr: ' num2str(nbtstr) ', nSamples: ' num2str(np) '\n'])
-    for i=1:nbtstr
-        c1=[];p1=[];
-        % --- V1 ---
-        % mri
-        V=randperm(length(mri1(m).ECC));
-        selS = V(1:np);
-        stats = regstats(mri1(m).S(selS),mri1(m).ECC(selS));
-        c1=[c1 stats.beta'];
-        p1=[p1 stats.tstat.pval'];
+    DoBootstrapApproach = false;
+    if DoBootstrapApproach
+        fprintf('Performing a bootstrapped regression analysis\n')
+        cc1=[]; cc4=[];
+        pp1=[]; pp4=[];
         
-        % mua
-        V=randperm(length(mua1(m).ECC));
-        selS = V(1:np);
-        stats = regstats(mua1(m).S(selS),mua1(m).ECC(selS));
-        c1=[c1 stats.beta'];
-        p1=[p1 stats.tstat.pval'];
-        
-        for fb=1:length(freqband)
-            try
-                V=randperm(length(lfp1(fb,m).ECC));
-                selS = V(1:np);
-                stats = regstats(lfp1(fb,m).S(selS),lfp1(fb,m).ECC(selS));
-                c1=[c1 stats.beta'];
-                p1=[p1 stats.tstat.pval'];
-            catch
-                c1=[c1 nan nan];
-                p1=[p1 nan nan];
-                %fprintf(['fb' num2str(fb) ': error with regstats\n'])
+        fprintf(['nBtstr: ' num2str(nbtstr) ', nSamples: ' num2str(np) '\n'])
+        for i=1:nbtstr
+            c1=[];p1=[];
+            % --- V1 ---
+            % mri
+            V=randperm(length(mri1(m).ECC));
+            selS = V(1:np);
+            stats = regstats(mri1(m).S(selS),mri1(m).ECC(selS));
+            c1=[c1 stats.beta'];
+            p1=[p1 stats.tstat.pval'];
+            
+            % mua
+            V=randperm(length(mua1(m).ECC));
+            selS = V(1:np);
+            stats = regstats(mua1(m).S(selS),mua1(m).ECC(selS));
+            c1=[c1 stats.beta'];
+            p1=[p1 stats.tstat.pval'];
+            
+            for fb=1:length(freqband)
+                try
+                    V=randperm(length(lfp1(fb,m).ECC));
+                    selS = V(1:np);
+                    stats = regstats(lfp1(fb,m).S(selS),lfp1(fb,m).ECC(selS));
+                    c1=[c1 stats.beta'];
+                    p1=[p1 stats.tstat.pval'];
+                catch
+                    c1=[c1 nan nan];
+                    p1=[p1 nan nan];
+                    %fprintf(['fb' num2str(fb) ': error with regstats\n'])
+                end
             end
-        end
-        cc1=[cc1; c1]; pp1=[pp1; p1];
-        
-        % --- V4 ----
-        c4=[];p4=[];
-        % mri
-        V=randperm(length(mri4(m).ECC));
-        selS = V(1:np);
-        stats = regstats(mri4(m).S(selS),mri4(m).ECC(selS));
-        c4=[c4 stats.beta'];
-        p4=[p4 stats.tstat.pval'];
-        
-        % mua
-        V=randperm(length(mua4(m).ECC));
-        selS = V(1:np);
-        stats = regstats(mua4(m).S(selS),mua4(m).ECC(selS));
-        c4=[c4 stats.beta'];
-        p4=[p4 stats.tstat.pval'];
-        
-        for fb=1:length(freqband)
-            try
-                V=randperm(length(lfp4(fb,m).ECC));
-                selS = V(1:np);
-                stats = regstats(lfp4(fb,m).S(selS),lfp4(fb,m).ECC(selS));
-                c4=[c4 stats.beta'];
-                p4=[p4 stats.tstat.pval'];
-            catch
-                c4=[c4 nan nan];
-                p4=[p4 nan nan];
-                %fprintf(['fb' num2str(fb) ': error with regstats\n'])
+            cc1=[cc1; c1]; pp1=[pp1; p1];
+            
+            % --- V4 ----
+            c4=[];p4=[];
+            % mri
+            V=randperm(length(mri4(m).ECC));
+            selS = V(1:np);
+            stats = regstats(mri4(m).S(selS),mri4(m).ECC(selS));
+            c4=[c4 stats.beta'];
+            p4=[p4 stats.tstat.pval'];
+            
+            % mua
+            V=randperm(length(mua4(m).ECC));
+            selS = V(1:np);
+            stats = regstats(mua4(m).S(selS),mua4(m).ECC(selS));
+            c4=[c4 stats.beta'];
+            p4=[p4 stats.tstat.pval'];
+            
+            for fb=1:length(freqband)
+                try
+                    V=randperm(length(lfp4(fb,m).ECC));
+                    selS = V(1:np);
+                    stats = regstats(lfp4(fb,m).S(selS),lfp4(fb,m).ECC(selS));
+                    c4=[c4 stats.beta'];
+                    p4=[p4 stats.tstat.pval'];
+                catch
+                    c4=[c4 nan nan];
+                    p4=[p4 nan nan];
+                    %fprintf(['fb' num2str(fb) ': error with regstats\n'])
+                end
             end
+            cc4=[cc4; c4]; pp4=[pp4; p4];
         end
-        cc4=[cc4; c4]; pp4=[pp4; p4];
-    end
-    
-    % show slope distributions for all signals
-    pthr=0.05;
-    
-    figure;
-    subplot(2,4,1)
-    histogram(cc1(pp1(:,2)<pthr,2),-0.2:0.02:0.5)
-    title('MRI V1'); xlabel('Ecc-Sz slope')
-    subplot(2,4,2)
-    histogram(cc1(pp1(:,4)<pthr,4),-0.2:0.02:0.5)
-    title('MUA V1');xlabel('Ecc-Sz slope')
-    subplot(2,4,3)
-    histogram(cc1(pp1(:,6)<pthr,6),-0.2:0.02:0.5)
-    title('ALPHA V1');xlabel('Ecc-Sz slope')
-    subplot(2,4,4)
-    histogram(cc1(pp1(:,8)<pthr,8),-0.2:0.02:0.5)
-    title('BETA V1');xlabel('Ecc-Sz slope')
-    subplot(2,4,5)
-    histogram(cc1(pp1(:,10)<pthr,10),-0.2:0.02:0.5)
-    title('THETA V1');xlabel('Ecc-Sz slope')
-    subplot(2,4,6)
-    histogram(cc1(pp1(:,12)<pthr,12),-0.2:0.02:0.5)
-    title('H-GAMMA V1');xlabel('Ecc-Sz slope')
-    subplot(2,4,7)
-    histogram(cc1(pp1(:,14)<pthr,14),-0.2:0.02:0.5)
-    title('L-GAMMA V1');xlabel('Ecc-Sz slope')
-    subplot(2,4,8)
-    ae_cc1 = [cc1(:,1:2); cc1(:,3:4); cc1(:,5:6); cc1(:,7:8);...
-        cc1(:,9:10); cc1(:,11:12); cc1(:,13:4)];
-    ae_pp1 = [pp1(:,1:2); pp1(:,3:4); pp1(:,5:6); pp1(:,7:8);...
-        pp1(:,9:10); pp1(:,11:12); pp1(:,13:4)];
-    histogram(ae_cc1(ae_pp1(:,2)<pthr,2),-0.2:0.02:0.5)
-    title('ALL EPHYS V1');xlabel('Ecc-Sz slope')
-    sgtitle(['MODELS: ' MODS{m,1} ' and ' MODS{m,2}],'interpreter','none')
-    
-    
-    figure;
-    subplot(2,4,1)
-    histogram(cc4(pp4(:,2)<pthr,2),-0.2:0.02:0.5)
-    title('MRI V4');xlabel('Ecc-Sz slope')
-    subplot(2,4,2)
-    histogram(cc4(pp4(:,4)<pthr,4),-0.2:0.02:0.5)
-    title('MUA V4');xlabel('Ecc-Sz slope')
-    subplot(2,4,3)
-    histogram(cc4(pp4(:,6)<pthr,6),-0.2:0.02:0.5)
-    title('ALPHA V4');xlabel('Ecc-Sz slope')
-    subplot(2,4,4)
-    histogram(cc4(pp4(:,8)<pthr,8),-0.2:0.02:0.5)
-    title('BETA V4');xlabel('Ecc-Sz slope')
-    subplot(2,4,5)
-    histogram(cc4(pp4(:,10)<pthr,10),-0.2:0.02:0.5)
-    title('THETA V4');xlabel('Ecc-Sz slope')
-    subplot(2,4,6)
-    histogram(cc4(pp4(:,12)<pthr,12),-0.2:0.02:0.5)
-    title('H-GAMMA V4');xlabel('Ecc-Sz slope')
-    subplot(2,4,7)
-    histogram(cc4(pp4(:,14)<pthr,14),-0.2:0.02:0.5)
-    title('L-GAMMA V4');xlabel('Ecc-Sz slope')
-    subplot(2,4,8)
-    ae_cc4 = [cc4(:,1:2); cc4(:,3:4); cc4(:,5:6); cc4(:,7:8);...
-        cc4(:,9:10); cc4(:,11:12); cc4(:,13:4)];
-    ae_pp4 = [pp4(:,1:2); pp4(:,3:4); pp1(:,5:6); pp4(:,7:8);...
-        pp4(:,9:10); pp4(:,11:12); pp4(:,13:4)];
-    histogram(ae_cc4(ae_pp4(:,2)<pthr,2),-0.2:0.02:0.5)
-    title('ALL EPHYS V4');xlabel('Ecc-Sz slope')
-    sgtitle(['MODELS: ' MODS{m,1} ' and ' MODS{m,2}],'interpreter','none')
-    
-    
-    
-    
-    
-    
-    
-   
-    
-    % plot average and stdev
-    f14=figure; hold on;
-    hBar = bar(1:6, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]);pause(0.1)
-    xBar=cell2mat(get(hBar,'XData')).' + [hBar.XOffset];
-    errorbar(xBar, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]',...
-        [stats(m).cc1_stat(2,:);stats(m).cc4_stat(2,:)]','k','LineStyle','none')
-    GroupLabels = {'MUA',...
-        lfp1(1,m).freqband,...
-        lfp1(2,m).freqband,...
-        lfp1(3,m).freqband,...
-        lfp1(4,m).freqband,...
-        lfp1(5,m).freqband};
-    set(gca,'xtick',1:6,'xticklabels',GroupLabels);
-    legend({'V1','V4'},'Location','NorthWest');
-    title(...
-        {['pRF model: ' MMS{m}],...
-        ['nPoints: ' num2str(np) ', nBtstr: ' num2str(nbtstr) ...
-        ', p < ' num2str(pth) ],[' R2th-mri: '  num2str(Rth_mri) ...
-        ', R2th-ephys: ' num2str(Rth_ephys)]},'Interpreter','none')
-    
-    %saveas(f14,fullfile(figfld, ['MRI-EPHYS_' ephys_MOD{m} '.png']));  
-
-    % Stats ---
-    if false
-        % V1
-        [stats(m).p1,stats(m).t1,stats(m).s1] = ...
-            anova1(stats(m).c1filt,GroupLabels);
-        [stats(m).comp1, stats(m).means1, stats(m).h1, stats(m).names1] = ...
-            multcompare(stats(m).s1);
-        % V4
-        [stats(m).p4,stats(m).t4,stats(m).s4] = ...
-            anova1(stats(m).c4filt,GroupLabels);
-        [stats(m).comp4, stats(m).means4, stats(m).h4, stats(m).names4] = ...
-            multcompare(stats(m).s4);
+        
+        % show slope distributions for all signals
+        pthr=0.05;
+        
+        figure;
+        subplot(2,4,1)
+        histogram(cc1(pp1(:,2)<pthr,2),-0.2:0.02:0.5)
+        title('MRI V1'); xlabel('Ecc-Sz slope')
+        subplot(2,4,2)
+        histogram(cc1(pp1(:,4)<pthr,4),-0.2:0.02:0.5)
+        title('MUA V1');xlabel('Ecc-Sz slope')
+        subplot(2,4,3)
+        histogram(cc1(pp1(:,6)<pthr,6),-0.2:0.02:0.5)
+        title('ALPHA V1');xlabel('Ecc-Sz slope')
+        subplot(2,4,4)
+        histogram(cc1(pp1(:,8)<pthr,8),-0.2:0.02:0.5)
+        title('BETA V1');xlabel('Ecc-Sz slope')
+        subplot(2,4,5)
+        histogram(cc1(pp1(:,10)<pthr,10),-0.2:0.02:0.5)
+        title('THETA V1');xlabel('Ecc-Sz slope')
+        subplot(2,4,6)
+        histogram(cc1(pp1(:,12)<pthr,12),-0.2:0.02:0.5)
+        title('H-GAMMA V1');xlabel('Ecc-Sz slope')
+        subplot(2,4,7)
+        histogram(cc1(pp1(:,14)<pthr,14),-0.2:0.02:0.5)
+        title('L-GAMMA V1');xlabel('Ecc-Sz slope')
+        subplot(2,4,8)
+        ae_cc1 = [cc1(:,1:2); cc1(:,3:4); cc1(:,5:6); cc1(:,7:8);...
+            cc1(:,9:10); cc1(:,11:12); cc1(:,13:4)];
+        ae_pp1 = [pp1(:,1:2); pp1(:,3:4); pp1(:,5:6); pp1(:,7:8);...
+            pp1(:,9:10); pp1(:,11:12); pp1(:,13:4)];
+        histogram(ae_cc1(ae_pp1(:,2)<pthr,2),-0.2:0.02:0.5)
+        title('ALL EPHYS V1');xlabel('Ecc-Sz slope')
+        sgtitle(['MODELS: ' MODS{m,1} ' and ' MODS{m,2}],'interpreter','none')
+        
+        
+        figure;
+        subplot(2,4,1)
+        histogram(cc4(pp4(:,2)<pthr,2),-0.2:0.02:0.5)
+        title('MRI V4');xlabel('Ecc-Sz slope')
+        subplot(2,4,2)
+        histogram(cc4(pp4(:,4)<pthr,4),-0.2:0.02:0.5)
+        title('MUA V4');xlabel('Ecc-Sz slope')
+        subplot(2,4,3)
+        histogram(cc4(pp4(:,6)<pthr,6),-0.2:0.02:0.5)
+        title('ALPHA V4');xlabel('Ecc-Sz slope')
+        subplot(2,4,4)
+        histogram(cc4(pp4(:,8)<pthr,8),-0.2:0.02:0.5)
+        title('BETA V4');xlabel('Ecc-Sz slope')
+        subplot(2,4,5)
+        histogram(cc4(pp4(:,10)<pthr,10),-0.2:0.02:0.5)
+        title('THETA V4');xlabel('Ecc-Sz slope')
+        subplot(2,4,6)
+        histogram(cc4(pp4(:,12)<pthr,12),-0.2:0.02:0.5)
+        title('H-GAMMA V4');xlabel('Ecc-Sz slope')
+        subplot(2,4,7)
+        histogram(cc4(pp4(:,14)<pthr,14),-0.2:0.02:0.5)
+        title('L-GAMMA V4');xlabel('Ecc-Sz slope')
+        subplot(2,4,8)
+        ae_cc4 = [cc4(:,1:2); cc4(:,3:4); cc4(:,5:6); cc4(:,7:8);...
+            cc4(:,9:10); cc4(:,11:12); cc4(:,13:4)];
+        ae_pp4 = [pp4(:,1:2); pp4(:,3:4); pp1(:,5:6); pp4(:,7:8);...
+            pp4(:,9:10); pp4(:,11:12); pp4(:,13:4)];
+        histogram(ae_cc4(ae_pp4(:,2)<pthr,2),-0.2:0.02:0.5)
+        title('ALL EPHYS V4');xlabel('Ecc-Sz slope')
+        sgtitle(['MODELS: ' MODS{m,1} ' and ' MODS{m,2}],'interpreter','none')
+        
+        
+        % plot average and stdev
+        f14=figure; hold on;
+        hBar = bar(1:6, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]);pause(0.1)
+        xBar=cell2mat(get(hBar,'XData')).' + [hBar.XOffset];
+        errorbar(xBar, [stats(m).cc1_stat(1,:);stats(m).cc4_stat(1,:)]',...
+            [stats(m).cc1_stat(2,:);stats(m).cc4_stat(2,:)]','k','LineStyle','none')
+        GroupLabels = {'MUA',...
+            lfp1(1,m).freqband,...
+            lfp1(2,m).freqband,...
+            lfp1(3,m).freqband,...
+            lfp1(4,m).freqband,...
+            lfp1(5,m).freqband};
+        set(gca,'xtick',1:6,'xticklabels',GroupLabels);
+        legend({'V1','V4'},'Location','NorthWest');
+        title(...
+            {['pRF model: ' MMS{m}],...
+            ['nPoints: ' num2str(np) ', nBtstr: ' num2str(nbtstr) ...
+            ', p < ' num2str(pth) ],[' R2th-mri: '  num2str(Rth_mri) ...
+            ', R2th-ephys: ' num2str(Rth_ephys)]},'Interpreter','none')
+        
+        %saveas(f14,fullfile(figfld, ['MRI-EPHYS_' ephys_MOD{m} '.png']));
+        
+        % Stats ---
+        if false
+            % V1
+            [stats(m).p1,stats(m).t1,stats(m).s1] = ...
+                anova1(stats(m).c1filt,GroupLabels);
+            [stats(m).comp1, stats(m).means1, stats(m).h1, stats(m).names1] = ...
+                multcompare(stats(m).s1);
+            % V4
+            [stats(m).p4,stats(m).t4,stats(m).s4] = ...
+                anova1(stats(m).c4filt,GroupLabels);
+            [stats(m).comp4, stats(m).means4, stats(m).h4, stats(m).names4] = ...
+                multcompare(stats(m).s4);
+        end
     end
 end
 warning on;
 
-%% What's specific about the good DoG fits ================================
-% - find these channels/voxels
+%% What's specific about the good DoG fits EPHYS EDITION ==================
+% - find these channels
 % - plot their location
 % - plot their size
 % - plot their prf profile
