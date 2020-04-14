@@ -1953,13 +1953,7 @@ warning on;
 
 %% What's specific about the good DoG fits EPHYS EDITION ==================
 % this doesn't happen for MUA
-% it is present in LFP 
-
-
-
-
-
-
+% it is present in LFP (lower freq)
 
 % - find these channels
 % - plot their location
@@ -1969,184 +1963,179 @@ warning on;
 R2th = 10; % minimum R2
 R2enh = 10; % R2 improvement
 
-DoG = tMRI(...
-    strcmp(tMRI.Model,'doghrf_cv1_mhrf'),:);
-lin_n = tMRI(...
-    strcmp(tMRI.Model,'linhrf_cv1_mhrf_neggain'),:);
-lin = tMRI(...
-    strcmp(tMRI.Model,'linhrf_cv1_mhrf'),:);
-
-% % V1 only
-% DoG = tMRI(...
-%     strcmp(tMRI.Model,'doghrf_cv1_mhrf') & ...
-%     tMRI.ROI == ck_GetROIidx({'V1'},rois),:);
-% lin_n = tMRI(...
-%     strcmp(tMRI.Model,'linhrf_cv1_mhrf_neggain') & ...
-%     tMRI.ROI == ck_GetROIidx({'V1'},rois),:);
-% lin = tMRI(...
-%     strcmp(tMRI.Model,'linhrf_cv1_mhrf') & ...
-%     tMRI.ROI == ck_GetROIidx({'V1'},rois),:);
-
-f_neg1 = figure;
-set(f_neg1,'Position',[10 10 1200 1000]);
-vox_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh;
-subplot(2,2,1);scatter(DoG.X(vox_sel),DoG.Y(vox_sel),...
-    'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
-set(gca,'xaxislocation','origin','yaxislocation','origin',...
-    'xlim',[-8 8],'ylim',[-8 8]);
-title('Locations of pRF with good DoG fits & bad LIN fits')
-xlabel('X deg');ylabel('Y deg');
-
-subplot(2,2,2);histogram(DoG.ecc(vox_sel),0:0.1:5,...
-    'FaceColor','k','FaceAlpha',0.5);
-title('ECC of pRF with good DoG fits & bad LIN fits')
-ylabel('nvoxels'); xlabel('Ecc');
-
-vox_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
-subplot(2,2,3);scatter(lin_n.X(vox_sel),lin_n.Y(vox_sel),...
-    'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
-set(gca,'xaxislocation','origin','yaxislocation','origin',...
-    'xlim',[-8 8],'ylim',[-8 8]);
-title('Locations of pRF with good LIN-N fits & bad LIN fits')
-xlabel('X deg');ylabel('Y deg');
-
-subplot(2,2,4);histogram(lin_n.ecc(vox_sel),0:0.1:5,...
-    'FaceColor','k','FaceAlpha',0.5);
-title('ECC of pRF with good LIN-N fits & bad LIN fits')
-ylabel('nvoxels'); xlabel('Ecc');
-
-saveas(f_neg1,fullfile(figfld, 'MRI_NEG-PRF1.png'));
-close(f_neg1);
-
-% % locations of all pRFs
-% figure;
-% subplot(2,2,1);scatter(DoG.X,DoG.Y);
-% set(gca,'xaxislocation','origin','yaxislocation','origin',...
-%     'xlim',[-8 8],'ylim',[-8 8]);
-% subplot(2,2,2);histogram(DoG.ecc,0:0.1:5);
-% 
-% subplot(2,2,3);scatter(lin_n.X,lin_n.Y);
-% set(gca,'xaxislocation','origin','yaxislocation','origin',...
-%     'xlim',[-8 8],'ylim',[-8 8]);
-% subplot(2,2,4);histogram(lin_n.ecc,0:0.1:5);
-
-f_neg2 = figure;
-set(f_neg2,'Position',[10 10 1300 1600]);
-vox_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
-
-subplot(3,2,1); hold on;
-plot([0 15],[0 15],'r');
-scatter(lin_n.ecc(vox_sel),lin.ecc(vox_sel),...
-    'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
-xlabel('Ecc. LINEAR POSNEG')
-ylabel('Ecc. LINEAR POS')
-set(gca,'xlim',[0 15],'ylim',[0 15]);
-yy=get(gca,'ylim');
-title('Eccentricity')
-
-subplot(3,2,2); hold on;
-histogram(lin_n.gain(vox_sel),-10:0.1:10,'FaceColor','k','FaceAlpha',0.5);
-xlabel('gain LIN-POSNEG');ylabel('nvoxels');
-set(gca,'xlim',[-3 1]);
-MM=median(lin_n.gain(vox_sel));
-yy=get(gca,'ylim');
-plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
-set(gca,'ylim',[0 yy(2)+30]);
-title('Gain')
-
-subplot(3,2,3); hold on;
-bb = [lin_n.ecc(vox_sel) lin.ecc(vox_sel)];
-plot([1 2],bb)
-plot([1 2],mean(bb),'k','Linewidth',5)
-set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
-    'ylim',[0 20],'xlim',[0.8 2.2])
-ylabel('Eccentricity');
-title('Ecc Diff')
-
-subplot(3,2,4); hold on;
-histogram(lin.ecc(vox_sel)-lin_n.ecc(vox_sel),-10:0.5:10,...
-    'FaceColor','k','FaceAlpha',0.5);
-xlabel('Ecc. Diff (POS-POSNEG)');ylabel('nvoxels');
-MM=median(bb(:,2)-bb(:,1));
-yy=get(gca,'ylim');
-plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
-set(gca,'ylim',[0 yy(2)+30]);
-title('Ecc Diff')
-
-subplot(3,2,5); hold on;
-bb = [lin_n.rfs(vox_sel) lin.rfs(vox_sel)];
-plot([1 2],bb)
-plot([1 2],mean(bb),'k','Linewidth',5)
-set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
-    'ylim',[0 6],'xlim',[0.8 2.2])
-ylabel('Size');
-title('Size Diff')
-
-subplot(3,2,6); hold on;
-histogram(lin.rfs(vox_sel)-lin_n.rfs(vox_sel),-10:0.5:10,...
-    'FaceColor','k','FaceAlpha',0.5);
-xlabel('Size Diff (POS-POSNEG)');ylabel('nvoxels');
-MM=median(bb(:,2)-bb(:,1));
-yy=get(gca,'ylim');
-plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
-set(gca,'ylim',[0 yy(2)+30]);
-set(gca,'xlim',[-5 5]);
-title('Size Diff')
-
-sgtitle('pRFs POS LINEAR vs POSNEG LINEAR model')
-
-saveas(f_neg2,fullfile(figfld, 'MRI_NEG-PRF2.png'));
-close(f_neg2);
+fb = {'Alpha','Beta'};
 
 
-f_neg3 = figure;
-set(f_neg3,'Position',[10 10 1300 1100]);
-vox_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh;
-
-subplot(2,2,1); hold on;
-plot([0 15],[0 15],'r');
-scatter(DoG.ecc(vox_sel),lin.ecc(vox_sel),...
-    'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
-xlabel('Ecc. DOG')
-ylabel('Ecc. LINEAR POS')
-set(gca,'xlim',[0 15],'ylim',[0 15]);
-yy=get(gca,'ylim');
-plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
-title('Eccentricity')
-
-subplot(2,2,2); hold on;
-histogram(DoG.normamp(vox_sel),-10:0.1:10,'FaceColor','k','FaceAlpha',0.5);
-xlabel('INH nAMP');ylabel('nvoxels');
-set(gca,'xlim',[0 3]);
-MM=median(DoG.normamp(vox_sel));
-yy=get(gca,'ylim');
-plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
-set(gca,'ylim',[0 yy(2)+30]);
-title('NORMAMP')
-
-subplot(2,2,3); hold on;
-bb = [DoG.ecc(vox_sel) lin.ecc(vox_sel)];
-plot([1 2],bb)
-plot([1 2],mean(bb),'k','Linewidth',5)
-set(gca,'xtick',1:2,'xticklabels',{'DoG','LIN'},...
-    'ylim',[0 20],'xlim',[0.8 2.2])
-ylabel('Eccentricity');
-title('Ecc Diff')
-
-subplot(2,2,4); hold on;
-histogram(lin.ecc(vox_sel)-DoG.ecc(vox_sel),-10:0.5:10,...
-    'FaceColor','k','FaceAlpha',0.5);
-xlabel('Ecc. Diff (POS-DoG)');ylabel('nvoxels');
-MM=median(bb(:,2)-bb(:,1));
-yy=get(gca,'ylim');
-plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
-set(gca,'ylim',[0 yy(2)+30]);
-title('Ecc Diff')
-
-sgtitle('pRFs POS LINEAR vs DoG model')
-
-saveas(f_neg3,fullfile(figfld, 'MRI_NEG-PRF3.png'));
-close(f_neg3);
-
-
+for fidx = 1:length(fb)
+    
+    DoG = tMRI(...
+        strcmp(tLFP.Model,'dog_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
+    lin_n = tMRI(...
+        strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,fb{fidx}),:);
+    lin = tMRI(...
+        strcmp(tLFP.Model,'linear_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
+    
+    f_neg1 = figure;
+    set(f_neg1,'Position',[10 10 1200 1000]);
+    vox_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh;
+    subplot(2,2,1);scatter(DoG.X(vox_sel),DoG.Y(vox_sel),...
+        'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
+    set(gca,'xaxislocation','origin','yaxislocation','origin',...
+        'xlim',[-8 8],'ylim',[-8 8]);
+    title('Locations of pRF with good DoG fits & bad LIN fits')
+    xlabel('X deg');ylabel('Y deg');
+    
+    subplot(2,2,2);histogram(DoG.ecc(vox_sel),0:0.1:5,...
+        'FaceColor','k','FaceAlpha',0.5);
+    title('ECC of pRF with good DoG fits & bad LIN fits')
+    ylabel('nChannels'); xlabel('Ecc');
+    
+    vox_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+    subplot(2,2,3);scatter(lin_n.X(vox_sel),lin_n.Y(vox_sel),...
+        'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
+    set(gca,'xaxislocation','origin','yaxislocation','origin',...
+        'xlim',[-8 8],'ylim',[-8 8]);
+    title('Locations of pRF with good LIN-N fits & bad LIN fits')
+    xlabel('X deg');ylabel('Y deg');
+    
+    subplot(2,2,4);histogram(lin_n.ecc(vox_sel),0:0.1:5,...
+        'FaceColor','k','FaceAlpha',0.5);
+    title('ECC of pRF with good LIN-N fits & bad LIN fits')
+    ylabel('nChannelss'); xlabel('Ecc');
+    
+    sgtitle(fb{fidx})
+    saveas(f_neg1,fullfile(figfld, ['EPHYS_NEG-PRF1_' fb{fidx} '.png']));
+    close(f_neg1);
+    
+    % % locations of all pRFs
+    % figure;
+    % subplot(2,2,1);scatter(DoG.X,DoG.Y);
+    % set(gca,'xaxislocation','origin','yaxislocation','origin',...
+    %     'xlim',[-8 8],'ylim',[-8 8]);
+    % subplot(2,2,2);histogram(DoG.ecc,0:0.1:5);
+    %
+    % subplot(2,2,3);scatter(lin_n.X,lin_n.Y);
+    % set(gca,'xaxislocation','origin','yaxislocation','origin',...
+    %     'xlim',[-8 8],'ylim',[-8 8]);
+    % subplot(2,2,4);histogram(lin_n.ecc,0:0.1:5);
+    
+    f_neg2 = figure;
+    set(f_neg2,'Position',[10 10 1300 1600]);
+    chan_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+    
+    subplot(3,2,1); hold on;
+    plot([0 15],[0 15],'r');
+    scatter(lin_n.ecc(chan_sel),lin.ecc(chan_sel),...
+        'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
+    xlabel('Ecc. LINEAR POSNEG')
+    ylabel('Ecc. LINEAR POS')
+    set(gca,'xlim',[0 15],'ylim',[0 15]);
+    yy=get(gca,'ylim');
+    title('Eccentricity')
+    
+    subplot(3,2,2); hold on;
+    histogram(lin_n.gain(chan_sel),-10:0.1:10,'FaceColor','k','FaceAlpha',0.5);
+    xlabel('gain LIN-POSNEG');ylabel('nChannels');
+    set(gca,'xlim',[-1 3]);
+    MM=median(lin_n.gain(chan_sel));
+    yy=get(gca,'ylim');
+    plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+    set(gca,'ylim',[0 yy(2)+10]);
+    title('Gain')
+    
+    subplot(3,2,3); hold on;
+    bb = [lin_n.ecc(chan_sel) lin.ecc(chan_sel)];
+    plot([1 2],bb)
+    plot([1 2],mean(bb),'k','Linewidth',5)
+    set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
+        'ylim',[0 20],'xlim',[0.8 2.2])
+    ylabel('Eccentricity');
+    title('Ecc Diff')
+    
+    subplot(3,2,4); hold on;
+    histogram(lin.ecc(chan_sel)-lin_n.ecc(chan_sel),-10:0.5:10,...
+        'FaceColor','k','FaceAlpha',0.5);
+    xlabel('Ecc. Diff (POS-POSNEG)');ylabel('nChannels');
+    set(gca,'xlim',[-5 10]);
+    MM=median(bb(:,2)-bb(:,1));
+    yy=get(gca,'ylim');
+    plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+    set(gca,'ylim',[0 yy(2)+10]);
+    title('Ecc Diff')
+    
+    subplot(3,2,5); hold on;
+    bb = [lin_n.rfs(chan_sel) lin.rfs(chan_sel)];
+    plot([1 2],bb)
+    plot([1 2],mean(bb),'k','Linewidth',5)
+    set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
+        'ylim',[0 6],'xlim',[0.8 2.2])
+    ylabel('Size');
+    title('Size Diff')
+    
+    subplot(3,2,6); hold on;
+    histogram(lin.rfs(chan_sel)-lin_n.rfs(chan_sel),-10:0.5:10,...
+        'FaceColor','k','FaceAlpha',0.5);
+    xlabel('Size Diff (POS-POSNEG)');ylabel('nChannels');
+    MM=median(bb(:,2)-bb(:,1));
+    yy=get(gca,'ylim');
+    plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+    set(gca,'ylim',[0 yy(2)+10]);
+    set(gca,'xlim',[-5 5]);
+    title('Size Diff')
+    
+    sgtitle([ fb{fidx} ': pRFs POS LINEAR vs POSNEG LINEAR model'])
+    saveas(f_neg2,fullfile(figfld,['EPHYS_NEG-PRF2_' fb{fidx} '.png']));
+    close(f_neg2);
+    
+    
+    f_neg3 = figure;
+    set(f_neg3,'Position',[10 10 1300 1100]);
+    chan_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh;
+    
+    subplot(2,2,1); hold on;
+    plot([0 15],[0 15],'r');
+    scatter(DoG.ecc(chan_sel),lin.ecc(chan_sel),...
+        'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerFaceAlpha',0.5);
+    xlabel('Ecc. DOG')
+    ylabel('Ecc. LINEAR POS')
+    set(gca,'xlim',[0 15],'ylim',[0 15]);
+    yy=get(gca,'ylim');
+    plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+    title('Eccentricity')
+    
+    subplot(2,2,2); hold on;
+    histogram(DoG.normamp(chan_sel),-10:0.1:10,'FaceColor','k','FaceAlpha',0.5);
+    xlabel('INH nAMP');ylabel('nChannels');
+    set(gca,'xlim',[0 3]);
+    MM=median(DoG.normamp(chan_sel));
+    yy=get(gca,'ylim');
+    plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+    set(gca,'ylim',[0 yy(2)+30]);
+    title('NORMAMP')
+    
+    subplot(2,2,3); hold on;
+    bb = [DoG.ecc(chan_sel) lin.ecc(chan_sel)];
+    plot([1 2],bb)
+    plot([1 2],mean(bb),'k','Linewidth',5)
+    set(gca,'xtick',1:2,'xticklabels',{'DoG','LIN'},...
+        'ylim',[0 20],'xlim',[0.8 2.2])
+    ylabel('Eccentricity');
+    title('Ecc Diff')
+    
+    subplot(2,2,4); hold on;
+    histogram(lin.ecc(chan_sel)-DoG.ecc(chan_sel),-10:0.5:10,...
+        'FaceColor','k','FaceAlpha',0.5);
+    xlabel('Ecc. Diff (POS-DoG)');ylabel('nChannels');
+    MM=median(bb(:,2)-bb(:,1));
+    yy=get(gca,'ylim');
+    plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+    set(gca,'ylim',[0 yy(2)+10]);
+    title('Ecc Diff')
+    
+    sgtitle('pRFs POS LINEAR vs DoG model')
+    
+    saveas(f_neg3,fullfile(figfld,['EPHYS_NEG-PRF3_' fb{fidx} '.png']));
+    close(f_neg3);
+    
+end
 
