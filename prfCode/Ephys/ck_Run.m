@@ -5,8 +5,8 @@ addpath(genpath('../../prfCode'));
 addpath(fullfile('/home','chris','Documents','MATLAB','GENERAL_FUNCTIONS'));
 
 %% SETTINGS ###############################################################
-Subj = {'Aston','Aston','Aston'}; % Lick / Aston
-Sess = {'20191205_B1','20191205_B2','20191205_B3'}; % 20180807_B2 / 20181004_B1
+Subj = {'Aston','Lick'}; % Lick / Aston
+Sess = {'20181004_B1','20180807_B2'}; % 20180807_B2 / 20181004_B1
 
 for s=2:length(Subj)
     subj = Subj{s};
@@ -29,7 +29,8 @@ for s=2:length(Subj)
     Do.SaveMUA_perArray = true;
     Do.SaveLFP_perArray = true;
 
-    Do.CreatePrediction = false; % Switched to AnalyzePRF, do not use this
+    % Switched to AnalyzePRF, do not use this -----
+    Do.CreatePrediction = false; 
 
     Do.FitPRF           = false;
     Do.FitMUA           = false; % MUA data
@@ -37,20 +38,22 @@ for s=2:length(Subj)
 
     Do.PlotPRF_MUA      = false;
     Do.PlotPRF_LFP      = false;
+    % ---------------------------------------------
+    
 
     %% load data ==========================================================
     %This preprocess the data so it can be used in fits.
     if Do.Load.Any
         ck_Load(subj, sess, Do)
-        %ck_Load_Median(subj, sess, Do)
-        %ck_Load_Median_firstavgperbar(subj, sess, Do)
     end
+
+
 
     %% ####################################################################
     % This is the old way of doing it. Creates a large range of predicted
-    % pRFs. THe fitting will then find the best pRF per channel/signal-type
+    % pRFs. The fitting will then find the best pRF per channel/signal-type
     % NB1! Switched to using the adapted AnalyzePRF toolbox.
-    % >> This is no longer used. 
+    % >> This is no longer used <<
 
     % create pRF prediction ==============================================
     % NB2! Should be done in parallel and will take days.

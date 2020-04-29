@@ -1,0 +1,36 @@
+=======
+  MUA
+=======
+channelDataMUA{144} >> electrodes
+sf should be 1e3 Hz
+no explicit timestamps
+
+duration = 808603 samples @ 1 kHz = 808.603 sec
+
+
+=======
+  DIG
+=======
+NEV.
+    MetaTags.
+        SampleRes = 30000
+        SerialDigitalIO.
+            TimeStamp
+            TimeStampSec
+            UnparsedData
+        
+        
+    ElectrodesInfo
+    Data
+    IOLabels
+sf should be 30e3 Hz
+
+duration = max(TimeStampSec) = 781
+
+
++++++++
+  EXP
++++++++
+
+duration of experiment should be at least
+5*2.5

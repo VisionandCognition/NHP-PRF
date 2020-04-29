@@ -1,62 +1,65 @@
 #!/bin/bash
 MONKEY=$1
+MODEL=$2
+ROI=$3
 
-echo 'Pocessing monkey '${MONKEY} 
+echo Processing monkey ${MONKEY} 
+echo ${MODEL} ${ROI} 
 
-if [ ${MONKEY} = 'Danny' ]; then
-	M_FLD=../Results/danny/AveragedResults
-	ROI_FLD=../Results/Reference/danny/output_files/ROI_adj/1mm/nii
-else  # Eddy
-	M_FLD=../Results/eddy/AveragedResults
-	ROI_FLD=../Results/Reference/eddy/output_files/ROI/1mm/nii
-fi
-
+M_FLD=../../../../FitResults/MRI/${MONKEY}/${MODEL}/inAnat
+ROI_FLD=../../../../FitResults/Reference/Volumes/atlas/${MONKEY}/ROI_manualadjust
 home_fld=${pwd}
 
-# do this for all existing AveragedResults subfolders 
-# (based on Thr)
-for sf in ${M_FLD}/Thr_*; do
+# do this for all existing thresholded subfolders 
+for sf in ${M_FLD}/TH_*; do
 	if [ -d ${sf} ]; then
 		echo 'Processing '$sf
 		
 		# mask averaged results with these ROIs
-		declare -a arr=(
-    		#'V1'
-    		#'V2'
-    		#'V3d'
-    		#'V3v'
-    		#'V3A'
-    		#'V4'
-    		#'V4t'
-    		#'V4v'
-    		#'MT'
-    		#'MST'
-    		#'TPO'
-    		#'TEO'
-    		#'7a_(Opt-PG)'
-    		'5_(PE)'
-    		'5_(PEa)'
-    		'LIPd'
-    		'LIPv'
-    		'VIP'	
-    		)
+		# NB! Use the filenames from ROI_manualadjust
+		# use specified ROI or this list
+
+		if [ ${ROI} == 'allrois']; then 
+			declare -a arr=(
+	    		#'V1'
+	    		#'V2'
+	    		#'V3d'
+	    		#'V3v'
+	    		#'V3A'
+	    		#'V4'
+	    		#'V4t'
+	    		#'V4v'
+	    		#'MT'
+	    		#'MST'
+	    		#'TPO'
+	    		#'TEO'
+	    		#'7a_(Opt-PG)'
+	    		'5_(PE)'
+	    		'5_(PEa)'
+	    		'LIPd'
+	    		'LIPv'
+	    		'VIP'	
+	    	)
+	    else;
+	    	declare -a arr=(
+	    		${ROI}	
+	    	)
+	    fi
 
 		for roi in "${arr[@]}"; do
 			echo 'ROI '${roi}
 
-			mkdir -p ${sf}/mROI/
 			mkdir -p ${sf}/mROI/${roi}
-
 			
-			fslmaths ${ROI_FLD}/${roi}_roi.nii -sub 1 -mul 99 \
+			fslmaths ${ROI_FLD}/${roi}_roi.nii.gz -sub 1 -mul 99 \
 					 ${ROI_FLD}/${roi}_SUB.nii
 
 			# mask with roi file
 			for file in ${sf}/*.nii.gz; do
-				fslmaths ${file} -mas ${ROI_FLD}/${roi}_roi.nii \
+				fslmaths ${file} -mas ${ROI_FLD}/${roi}_roi.nii.gz \
 					 ${sf}/mROI/${roi}/$(basename "$file")
 				fslmaths ${sf}/mROI/${roi}/$(basename "$file") -add \
-						 ${ROI_FLD}/${roi}_SUB.nii \
+						 ${ROI_FLD}/${roi}_SUB.nii.gz \
 						 ${sf}/mROI/${roi}/$(basename "$file")
 			done
 			rm ${ROI_FLD}/${roi}_SUB*

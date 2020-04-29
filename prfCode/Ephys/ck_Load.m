@@ -20,7 +20,8 @@ if nargin<3
     
     Do.SaveMUA_perArray = true;
     Do.SaveLFP_perArray = true;
-    
+
+    % Switched to AnalyzePRF, do not use this -----
     Do.CreatePrediction = false;
     
     Do.FitPRF           = false;
@@ -29,6 +30,7 @@ if nargin<3
     
     Do.PlotPRF_MUA      = false;
     Do.PlotPRF_LFP      = false;
+    % ---------------------------------------------    
 end
 
 if nargin<2

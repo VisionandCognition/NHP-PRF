@@ -44,8 +44,7 @@ if Do.EPHYS
 %        'classicRF'};
     output = ['AllFits_ephys_' CV];
     
-    %ck_GetEphys_pRF(monkeys,models,output);
-    ck_GetEphys_pRF2(monkeys,models,output,dataset);
+    ck_GetEphys_pRF(monkeys,models,output,dataset);
 end
 
 %% COMBINE ================================================================
