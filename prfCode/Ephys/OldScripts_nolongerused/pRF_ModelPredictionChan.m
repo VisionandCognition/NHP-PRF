@@ -1,5 +1,4 @@
 % load this manually
-
 % e.g. data for the voxel you'd like to reconstruct
 % exstimulus=stimulus;
 
