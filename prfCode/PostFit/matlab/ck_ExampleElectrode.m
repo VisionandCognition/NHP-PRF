@@ -13,13 +13,14 @@ else
     LoadedResults=false;
 end
 
+addpath(genpath('/Users/chris/Documents/MRI_ANALYSIS/NHP-PRF/prfCode/LISA/OnServer/analyzePRF'))
+modeltype = 'linear_ephys'; TR=0.5;
+
 %% Load files =============================================================
 if ~LoadedResults
     RESULT_FILE = [ '/home/chris/Documents/MRI_ANALYSIS/NHP-PRF/FitResults/'...
         'ephys/Combined/ORG/AllFits_ephys_cv1.mat'];
     load(RESULT_FILE);
-    modeltype = 'linear_ephys'; TR=0.5;
-    
     RES = R(1).model(1);
     
     maxi=[];
@@ -112,6 +113,7 @@ res = [size(stimulus{1},1) size(stimulus{1},2)];
 resmx = max(res);                   
 degs = result_mua.options.maxpolydeg; 
 [d,xx,yy] = makegaussian2d(resmx,2,2,2,2);
+options = result_mua.options;
    
 stimulusPP = {};
 for p=1:length(stimulus)
@@ -191,10 +193,10 @@ end
 % Visualize the results
 f=figure; hold on;
 set(gcf,'Units','points','Position',[100 100 1000 300]);
-plot(cat(1,datats{:}),'ok','MarkerSize',6,'MarkerFaceColor',[.75 .75 .75]);
-plot(cat(1,modelts{:}),'k','Linewidth',2);
+plot(.5:0.5:120,cat(1,datats{:}),'ok','MarkerSize',6,'MarkerFaceColor',[.75 .75 .75]);
+plot(.5:0.5:120,cat(1,modelts{:}),'k','Linewidth',2);
 xlabel('Time (stimulus position)'); ylabel('Signal');
-ax = axis;
+ax = axis; set(gca,'xlim',[0 121]);
 %axis([.5 1200+.5 ax(3:4)]);
 title('Time-series data MUA - Example electrode');
 legend({'Data','Model'})
@@ -208,7 +210,8 @@ for fb=1:5
     resmx = max(res);                   
     degs = result_lfp(fb).options.maxpolydeg; 
     [d,xx,yy] = makegaussian2d(resmx,2,2,2,2);
-   
+    options = result_lfp(fb).options;
+
     stimulusPP = {};
     for p=1:length(stimulus)
         stimulusPP{p} = squish(stimulus{p},2)';  % this flattens the image so that the dimensionality is now frames x pixels
@@ -287,10 +290,10 @@ for fb=1:5
     % Visualize the results
     f=figure; hold on;
     set(gcf,'Units','points','Position',[100 100 1000 300]);
-    plot(cat(1,datats{:}),'ok','MarkerSize',6,'MarkerFaceColor',[.75 .75 .75]);
-    plot(cat(1,modelts{:}),'k','Linewidth',2);
+    plot(.5:0.5:120,cat(1,datats{:}),'ok','MarkerSize',6,'MarkerFaceColor',[.75 .75 .75]);
+    plot(.5:0.5:120,cat(1,modelts{:}),'k','Linewidth',2);
     xlabel('Time (stimulus position)'); ylabel('Signal');
-    ax = axis;
+    ax = axis; set(gca,'xlim',[0 121]);
     %axis([.5 1200+.5 ax(3:4)]);
     title(['Time-series data LFP fb-' num2str(fb) ' - Example electrode']); 
     legend({'Data','Model'})

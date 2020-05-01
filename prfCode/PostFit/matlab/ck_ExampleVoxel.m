@@ -13,6 +13,8 @@ else
     LoadedResults=false;
 end
 
+addpath(genpath('/Users/chris/Documents/MRI_ANALYSIS/NHP-PRF/prfCode/LISA/OnServer/analyzePRF'))
+
 %% Load files =============================================================
 if ~LoadedResults
     RESULT_FILE = ...
@@ -168,8 +170,8 @@ end
 %% Visualize the results ==================================================
 f=figure; hold on;
 set(gcf,'Units','points','Position',[100 100 1000 300]);
-plot(datats{2},'ok','MarkerSize',6,'MarkerFaceColor',[.75 .75 .75])
-plot(modelts{2},'k','Linewidth',2)
+plot(datats{4},'ok','MarkerSize',6,'MarkerFaceColor',[.75 .75 .75])
+plot(modelts{4},'k','Linewidth',2)
 %plot(cat(1,datats{:}),'r-');
 %plot(cat(1,modelts{:}),'b-');
 %straightline(300*(1:4)+.5,'v','g-');
