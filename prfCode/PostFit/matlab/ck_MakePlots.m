@@ -2,7 +2,7 @@
 % Takes the pre-processed fitting result tables and creates comparison plots
 
 SaveFigs=false;
-CloseFigs=true;
+CloseFigs=false;
 
 fprintf('Moving to root folder for this script\n')
 % go to the location of this files
