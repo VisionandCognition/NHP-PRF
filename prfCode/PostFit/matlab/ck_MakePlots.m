@@ -74,8 +74,11 @@ fprintf('Generating ROI, model, and subject labels\n')
 rois = {...
     'V1',   [34];...            % occipital / visual
     'V2',   [131];...           % occipital / visual
-    'V3',   [123,60,93];...     % occipital / visual
+    'V3',   [60,93];...     	% occipital / visual
+    'V3A'	[123];...			% occipital / visual
     'V4',   [20,39,75];...      % mid-visual
+    'V6',   [73];...            % mid-visual
+    'V6A',  [141,56];...
     'MT',   [95];...            % mid-visual
     'MST',  [99];...            % mid-visual
     'TEO',  [125];...           % temporal
@@ -83,28 +86,31 @@ rois = {...
     'Tpt',  [97];...            % temporal (temporal/parietal)
     'TPO',  [159];...           % temporal
     'FST',  [53];...            % temporal
-    'VIP',  [30];...            % parietal
-    'LIP',  [31,130];...        % parietal
-    '1-2',  [50];...            % parietal (somatosensory)
-    '5',    [5,134];...         % parietal
-    '7',    [91,121];...        % parietal
+    'A1',	[80];...			% temporal
+    'ML'	[25];...			% temporal	
+    'AL',	[46];...			% temporal
     'PULV', [197,198];...       % subcortical
     'LGN',  [200,201];...       % subcortical
     'STR',  [175];...           % subcortical
-    'SI',   [137];...           % Prim Somatosensory
+    'MIP',  [89];...  
+    'PIP',  [90];...
+    'LIP',  [31,130];...        % parietal
+    'VIP',  [30];...            % parietal
+    '5',    [134];...         	% parietal
+    '7',    [91,121];...        % parietal
+    'SI',   [50,137];...        % Prim Somatosensory
     'SII',  [63];...            % Sec Somatosensory
-    '23',   [6,17,27];...       % cingulate
     'F2',   [153];...           % premotor
     'F4',   [146];...           % premotor
     'F5',   [129];...           % premotor
     'F7',   [126];...           % premotor
-    '8A',   [51,148];...        % frontal FEF
-    '8B',   [32,57];...         % frontal FEF
-    'DLPFC',[76,127];...        % frontal
+    '8',    [32,51,57,148];...  % frontal FEF  8A: 51, 148; 8B: 32, 57 % combine these??
+    'CINp', [6,17,27];...       % posterior cingulate
+    'CINa', [45,98];...         % anterior cingulate
     'OFC',  [55,107];...        % frontal
     'INS',  [18,87,128];...     % frontal
-    'CIN',  [45,98];...         % frontal
-    'PFC',  [25,47];...         % frontal
+    'DLPFC',[47,76,127];...     % frontal
+    'VMPFC',[5];...         	% frontal
 };
 
 roi=rois(:,2);
@@ -233,12 +239,13 @@ for s = 1:length(SUBS)
                 num2str(RTHRES)],'interpreter','none');
             xlabel('ROI'); ylabel('nVox','interpreter','none');
             set(gca, 'Box','off','yscale','log');
-            set(gca,'xtick',1:length(nvox),'xticklabels',roilabels);
+            set(gca,'xtick',1:length(nvox),'xticklabels',roilabels,'TickDir','out');
             xtickangle(45)
             paneln=paneln+1;
     end
 end
-saveas(ff,fullfile(figfld, 'MRI_nVoxSign_ROI.png'));
+saveas(ff,fullfile(pngfld, 'MRI_nVoxSign_ROI.png'));
+saveas(ff,fullfile(svgfld, 'MRI_nVoxSign_ROI.svg'));
 close(ff);
     
 ff = figure;
@@ -257,13 +264,14 @@ for s = 1: length(SUBS)
                 num2str(RTHRES)],'interpreter','none');
             xlabel('ROI'); ylabel('nVox','interpreter','none');
             set(gca, 'Box','off','ylim',[0 .6]);
-            set(gca,'xtick',1:length(nvox),'xticklabels',roilabels);
+            set(gca,'xtick',1:length(nvox),'xticklabels',roilabels,'TickDir','out');
             xtickangle(45)
             paneln=paneln+1;
     end
 end
 
-if SaveFigs; saveas(ff,fullfile(figfld, 'MRI_propVoxSign_ROI.png')); end
+if SaveFigs; saveas(ff,fullfile(pngfld, 'MRI_propVoxSign_ROI.png')); end
+if SaveFigs; saveas(ff,fullfile(svgfld, 'MRI_propVoxSign_ROI.svg')); end
 if CloseFigs; close(ff); end
 
 %% MRI scatter plots & differences R2 =====================================
@@ -486,7 +494,6 @@ xtickangle(45)
 if SaveFigs; saveas(f3,fullfile(figfld, 'MRI_SelModelComparison_ROI_R2.png')); end
 if CloseFigs; close(f3); end
 
-
 %% Good DoG and NegGain Fits: Characterize ================================
 R2th = 5; % minimum R2
 R2enh = 5; % R2 improvement
@@ -677,6 +684,12 @@ set(gca,'ylim',[0 yy(2)+130],'TickDir','out');
 title('Gain')
 fprintf(['MEDIAN GAIN: ' num2str(MM) '\n'])
 
+% Wilcoxon 1-tailed < 1
+[p,h,stats] = signrank(lin_n.gain(vox_sel),0,'tail','left');
+fprintf(['Gain < 0: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+
 subplot(2,3,2); hold on;
 bb = [lin_n.ecc(vox_sel) lin.ecc(vox_sel)];
 plot([1 2],mean(bb),'o','Linewidth',2)
@@ -729,10 +742,11 @@ if SaveFigs; saveas(f_neg2,fullfile(pngfld, 'MRI_NEG-PRF2.png')); end
 if SaveFigs; saveas(f_neg2,fullfile(svgfld, 'MRI_NEG-PRF2.svg')); end
 if CloseFigs; close(f_neg2); end
 
-% Wilcoxon 1-tailed < 1
+% Wilcoxon 1-tailed < 0
 [p,h,stats] = signrank(bbecc(:,1),bbecc(:,2));
 fprintf(['Wilcoxon z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
 
 % ---------
 
@@ -750,6 +764,13 @@ plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 set(gca,'ylim',[0 yy(2)+30],'TickDir','out');
 title('NORMAMP')
 fprintf(['MEDIAN NAMP: ' num2str(MM) '\n'])
+
+
+% Wilcoxon 1-tailed > 1
+[p,h,stats] = signrank(DoG.normamp(vox_sel),1,'tail','right');
+fprintf(['nAmp > 1: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
 
 subplot(1,3,2); hold on;
 bb = [DoG.ecc(vox_sel) lin.ecc(vox_sel)];
@@ -783,15 +804,6 @@ sgtitle('pRFs POS LINEAR vs DoG model')
 fprintf(['Wilcoxon z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
-
-
-
-
-
-
-
-
-
 %% Value of exponential parameter for CSS across ROIs =====================
 RTHRES = 5;
 fexp = figure;
@@ -814,25 +826,33 @@ end
 
 all_expt=[];
 for xval=1:length(roi)
-    bar(xval,mean([exptv(1).roi{xval};exptv(2).roi{xval}]));
-    all_expt = [all_expt; exptv(1).roi{xval}; exptv(2).roi{xval}];
+    if size([exptv(1).roi{xval};exptv(2).roi{xval}],1) > 4
+        bar(xval,mean([exptv(1).roi{xval};exptv(2).roi{xval}]));
+        all_expt = [all_expt; exptv(1).roi{xval}; exptv(2).roi{xval}];
+    else
+        bar(xval,0);
+        all_expt = [all_expt; exptv(1).roi{xval}; exptv(2).roi{xval}];
+    end
 end
 
 for xval=1:length(roi)
-    errorbar(xval,...
-        mean([exptv(1).roi{xval};exptv(2).roi{xval}]),...
-        std([exptv(1).roi{xval};exptv(2).roi{xval}]),...
-        'k','Linestyle','none');
-%     errorbar(xval,...
-%         mean([exptv(1).roi{xval};exptv(2).roi{xval}]),...
-%         std([exptv(1).roi{xval};exptv(2).roi{xval}])./...
-%         sqrt(length([exptv(1).roi{xval};exptv(2).roi{xval}])),...
-%         'k','Linestyle','none');
+    if size([exptv(1).roi{xval};exptv(2).roi{xval}],1) > 4
+        errorbar(xval,...
+            mean([exptv(1).roi{xval};exptv(2).roi{xval}]),...
+            std([exptv(1).roi{xval};exptv(2).roi{xval}]),...
+            'k','Linestyle','none');
+        %     errorbar(xval,...
+        %         mean([exptv(1).roi{xval};exptv(2).roi{xval}]),...
+        %         std([exptv(1).roi{xval};exptv(2).roi{xval}])./...
+        %         sqrt(length([exptv(1).roi{xval};exptv(2).roi{xval}])),...
+        %         'k','Linestyle','none');
+    end
 end
 title(['Avg EXPT parameter, R2 > ' ...
     num2str(RTHRES)],'interpreter','none');
-xlabel('ROI'); ylabel('EXPT PM','interpreter','none');
-set(gca,'xtick',1:length(roi),'xticklabels',roilabels);
+%xlabel('ROI'); 
+ylabel('EXPT PM','interpreter','none');
+set(gca,'xtick',1:length(roi),'xticklabels',roilabels,'TickDir','out');
 xtickangle(45)
 if SaveFigs; saveas(fexp,fullfile(figfld, 'MRI_CSS_EXPT-PM_ROI.png')); end
 if CloseFigs; close(fexp); end
@@ -842,40 +862,130 @@ if CloseFigs; close(fexp); end
 fprintf(['ALL VOXELS - Wilcoxon EXPT < 1 : z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
-[p,h,stats] = signrank([exptv(1).roi{1};exptv(2).roi{1}],1,'tail','left');
-fprintf(['\nV1 VOXELS - Wilcoxon EXPT < 1 : z = ' ...
-    num2str(stats.zval) ', p = ' num2str(p) '\n\n']);
+% [p,h,stats] = signrank([exptv(1).roi{1};exptv(2).roi{1}],1,'tail','left');
+% fprintf(['\nV1 VOXELS - Wilcoxon EXPT < 1 : z = ' ...
+%     num2str(stats.zval) ', p = ' num2str(p) '\n\n']);
 
+
+fprintf('\n------\nSTATS\n------\n')
 for xval=1:length(roi)
-    [p,h,stats] = signrank([exptv(1).roi{xval};exptv(2).roi{xval}],1,'tail','left');
-    if stats.signedrank > 0
-        fprintf([roilabels{xval} ' VOXELS - Wilcoxon EXPT < 1 : z = ' ...
-            num2str(stats.zval) ', p = ' num2str(p) '\n']);
+    if size([exptv(1).roi{xval};exptv(2).roi{xval}],1) > 4
+        [p,h,stats] = signrank([exptv(1).roi{xval};exptv(2).roi{xval}],1,'tail','left');
+        if isfield(stats,'zval')  
+            fprintf([roilabels{xval} ' VOXELS - Wilcoxon EXPT < 1 : z = ' ...
+                num2str(stats.zval) ', p = ' num2str(p) '\n']);
+        end
+    else
+        fprintf([roilabels{xval} ': Not enough values for statistics\n'])
     end
 end
 
 %% MRI scatter plot HRF & differences =====================================
 RTHRES = 0;
 
-f3=figure;
-set(f3,'Position',[100 100 2000 1200]);
-set(f3,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+% f3=figure;
+% set(f3,'Position',[100 100 2000 1200]);
+% set(f3,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+% s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>RTHRES;
+% 
+% for mm = 1:size(MRI_MODELS,1)
+%     subplot(4,3,(mm-1)*3 +1); hold on;
+%     plot([0 100],[0 100],'k','LineWidth',2);
+%     for r=1:length(roi)
+%         SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+%                 ck_GetROIidx(roilabels(r),rois) );
+%         scatter(T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS),...
+%             T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS),100,'Marker','.');
+%     end
+%     title(['mHRF vs cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
+%     xlabel('Monkey HRF R2'); ylabel('Canonical HRF R2');
+%     set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+% 
+%     diffmat2{1}=[];
+%     for r=1:length(roi)
+%         SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+%                 ck_GetROIidx(roilabels(r),rois) );
+%         [n,x] = hist(...
+%             T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS)-...
+%             T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS),100);
+%         f = n./sum(SSS);
+%     
+%         m = mean(T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS)-...
+%             T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS));
+%         sd = std(T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS)-...
+%             T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS));
+%         nvox = sum(SSS);
+%         se = sd ./ sqrt(nvox);
+%         diffmat2{1} = [diffmat2{1}; m sd se nvox];
+%     end
+% 
+%     subplot(4,3,(mm-1)*3 +2); hold on
+%     for xval=1:length(diffmat2{1})
+%         bar(xval,diffmat2{1}(xval,1));
+%     end
+%     for xval=1:length(diffmat2{1})
+%         errorbar(xval,diffmat2{1}(xval,1),diffmat2{1}(xval,3),...
+%         'k-','Linestyle','none')
+%     end
+%     % mean (taking nvox into account)
+%     mAll = sum((diffmat2{1}(:,1).*diffmat2{1}(:,4)))./...
+%         sum(diffmat2{1}(:,4));    
+%     text(0.5, -0.4,num2str(mAll))
+%     set(gca,'xticklabels',[],'ylim',[-0.65 1]);
+%     xlabel('ROI'); ylabel('Diff R2');
+%     title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
+%     %legend(roilabels,'interpreter','none','Location','NorthEast');
+%     set(gca,'xtick',1:length(diffmat2{1}),'xticklabels',roilabels);
+%     xtickangle(45)
+%     
+%     subplot(4,3,(mm-1)*3 +3); hold on
+%     for xval=1:length(diffmat2{1})
+%         bar(xval,diffmat2{1}(xval,4));
+%     end
+%     set(gca,'xticklabels',[]);
+%     xlabel('ROI'); ylabel('# voxels');
+%     title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none');
+%     set(gca,'xtick',1:length(diffmat2{1}),'xticklabels',roilabels);
+%     xtickangle(45)
+%     %legend(roilabels,'interpreter','none','Location','NorthEast');
+% end
+% if SaveFigs; saveas(f3,fullfile(pngfld, 'HRF_Comparison.png')); end
+% if SaveFigs; saveas(f3,fullfile(svgfld, 'HRF_Comparison.svg')); end
+% if CloseFigs; close(f3); end
+
+f3a=figure;
+set(f3a,'Position',[100 100 1300 1200]);
+set(f3a,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>RTHRES;
+
+f3b=figure;
+set(f3b,'Position',[100 100 1300 1200]);
+set(f3b,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 s_R2 = T(modidx.linhrf_cv1_mhrf).mod.R2>RTHRES;
 
 for mm = 1:size(MRI_MODELS,1)
-    subplot(4,3,(mm-1)*3 +1); hold on;
-    plot([0 100],[0 100],'k','LineWidth',2);
+    
+    figure(f3a)
+    subplot(1,4,mm); hold on;
+    XY=[];
     for r=1:length(roi)
         SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
                 ck_GetROIidx(roilabels(r),rois) );
-        scatter(T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS),...
-            T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS),100,'Marker','.');
+%         scatter(T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS),...
+%             T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS),100,'Marker','.');
+        XY=[XY; T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS) ...
+            T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS)];
     end
+    binscatter(XY(:,1),XY(:,2),100); colorbar; 
+    set(gca,'ColorScale','log');
+    colormap(inferno)
+    caxis([1 1e4]) 
+    plot([-2 100],[-2 100],'k','Linewidth',1);   
     title(['mHRF vs cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
     xlabel('Monkey HRF R2'); ylabel('Canonical HRF R2');
-    set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+    set(gca, 'Box','off', 'xlim', [-2 100], 'ylim',[-2 100]);
 
-    diffmat2{1}=[];
+    diffmat2{1}=[]; dH=[];
     for r=1:length(roi)
         SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
                 ck_GetROIidx(roilabels(r),rois) );
@@ -891,9 +1001,13 @@ for mm = 1:size(MRI_MODELS,1)
         nvox = sum(SSS);
         se = sd ./ sqrt(nvox);
         diffmat2{1} = [diffmat2{1}; m sd se nvox];
+        dH=[dH;...
+            T(modidx.(MRI_MODELS{mm,1})).mod.R2(SSS) - ...
+            T(modidx.(MRI_MODELS{mm,2})).mod.R2(SSS) ];
     end
-
-    subplot(4,3,(mm-1)*3 +2); hold on
+    
+    figure(f3b)
+    subplot(4,1,mm); hold on
     for xval=1:length(diffmat2{1})
         bar(xval,diffmat2{1}(xval,1));
     end
@@ -901,30 +1015,32 @@ for mm = 1:size(MRI_MODELS,1)
         errorbar(xval,diffmat2{1}(xval,1),diffmat2{1}(xval,3),...
         'k-','Linestyle','none')
     end
-    % mean (taking nvox into account)
+    % mean (weighted mean taking nvox into account)
     mAll = sum((diffmat2{1}(:,1).*diffmat2{1}(:,4)))./...
-        sum(diffmat2{1}(:,4));    
-    text(0.5, -0.4,num2str(mAll))
-    set(gca,'xticklabels',[],'ylim',[-0.65 1]);
-    xlabel('ROI'); ylabel('Diff R2');
+        sum(diffmat2{1}(:,4)); 
+    mAll = mean(dH); 
+    stdAll = std(dH);
+    
+    
+    % Wilcoxon 1-tailed < 1
+    [p,h,stats] = signrank(dH,0);
+    fprintf(['ALL VOXELS - Wilcoxon dHRF (' MRI_MODELS{mm,1} ') < 1 : z = ' ...
+        num2str(stats.zval) ', p = ' num2str(p) '\n']);
+    
+    
+    
+    text(0.5, -1.2,[num2str(mAll) ' +/- ' num2str(stdAll)])
+    set(gca,'xticklabels',[],'ylim',[-1.6 1.6],'TickDir','out');
+    %xlabel('ROI'); 
+    ylabel('Diff R2');
     title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none'); 
     %legend(roilabels,'interpreter','none','Location','NorthEast');
     set(gca,'xtick',1:length(diffmat2{1}),'xticklabels',roilabels);
-    xtickangle(45)
-    
-    subplot(4,3,(mm-1)*3 +3); hold on
-    for xval=1:length(diffmat2{1})
-        bar(xval,diffmat2{1}(xval,4));
-    end
-    set(gca,'xticklabels',[]);
-    xlabel('ROI'); ylabel('# voxels');
-    title(['mHRF - cHRF (' MRI_MODELS{mm,1} ')'],'interpreter','none');
-    set(gca,'xtick',1:length(diffmat2{1}),'xticklabels',roilabels);
-    xtickangle(45)
-    %legend(roilabels,'interpreter','none','Location','NorthEast');
+    xtickangle(45)    
 end
-if SaveFigs; saveas(f3,fullfile(figfld, 'HRF_Comparison.png')); end
-if CloseFigs; close(f3); end
+if SaveFigs; saveas(f3b,fullfile(pngfld, 'HRF_Comparison_binned.png')); end
+if SaveFigs; saveas(f3b,fullfile(svgfld, 'HRF_Comparison_binned.svg')); end
+if CloseFigs; close(f3b); end
 
 %% MRI rf size depending on HRF ===========================================
 R2th=5;
@@ -936,13 +1052,19 @@ set(f4,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 s_R2 = T(modidx.csshrf_cv1_mhrf).mod.R2 > R2th;
 
 for mm = 1:size(MRI_MODELS,1)
+    xy_sz{mm}=[]; xy_ecc{mm}=[];
     
     sp=subplot(4,3,(mm-1)*3 +1);hold on;
     plot([0 100],[0 100],'k','LineWidth',2);
     for r=1:length(roi)
         SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
             ck_GetROIidx(roilabels(r),rois) );
-        
+        xy_sz{mm} = [xy_sz{mm};...
+            T(modidx.(MRI_MODELS{mm,1})).mod.rfs(SSS) ...
+            T(modidx.(MRI_MODELS{mm,2})).mod.rfs(SSS)];
+        xy_ecc{mm} = [xy_ecc{mm};...
+            T(modidx.(MRI_MODELS{mm,1})).mod.ecc(SSS) ...
+            T(modidx.(MRI_MODELS{mm,2})).mod.ecc(SSS)];   
         scatter(T(modidx.(MRI_MODELS{mm,1})).mod.rfs(SSS),...
             T(modidx.(MRI_MODELS{mm,2})).mod.rfs(SSS),100,'Marker','.');
     end
@@ -953,6 +1075,23 @@ for mm = 1:size(MRI_MODELS,1)
         'String',['R2th: ' num2str(R2th)],...
         'Fontsize',12, 'Fontweight','bold')
 
+    xy_sz{mm}( isinf(xy_sz{mm})  ) = nan;
+    xy_ecc{mm}( isinf(xy_ecc{mm})  ) = nan;
+
+    % Wilcoxon
+    fprintf(['--' MMS{mm,1} '--\n'])
+    [p,h,stats] = signrank(xy_sz{mm}(:,1),xy_sz{mm}(:,2),'method','approximate');
+    fprintf(['ALL VOXELS R2>TH - Wilcoxon HRF sz: z = ' ...
+        num2str(stats.zval) ', p = ' num2str(p) '\n']);
+    fprintf(['Mean:' num2str(nanmean(diff(xy_sz{mm},1,2))) ', std ' ...
+        num2str(nanstd(diff(xy_sz{mm},1,2))) '\n'])
+    
+    [p,h,stats] = signrank(xy_ecc{mm}(:,1),xy_ecc{mm}(:,2),'method','approximate');
+    fprintf(['ALL VOXELS R2>TH - Wilcoxon HRF ecc: z = ' ...
+        num2str(stats.zval) ', p = ' num2str(p) '\n']);
+    fprintf(['Mean:' num2str(nanmean(diff(xy_ecc{mm},1,2))) ', std ' ...
+        num2str(nanstd(diff(xy_ecc{mm},1,2))) '\n'])
+    
     diffmat2{1}=[];
     for r=1:length(roi)
         SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
@@ -1021,7 +1160,8 @@ for m=1:length(MRI_MODELS)
         
         ES{r}=[];
         scatter(T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS),...
-            T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS),100,'Marker','.');
+            T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS),100,'Marker','.');        
+        
         for b=1:length(EccBin)
             bb=[EccBin(b)-0.5 EccBin(b)+0.5];
             PSZ=T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS);
@@ -1044,8 +1184,67 @@ for m=1:length(MRI_MODELS)
     set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
     %legend(roilabels,'interpreter','none','Location','NorthWest');
 end
-if SaveFigs; saveas(f5,fullfile(figfld, 'MRI_Ecc_vs_Size.png')); end
+if SaveFigs
+    saveas(f5,fullfile(pngfld, 'MRI_Ecc_vs_Size.png'));
+    saveas(f5,fullfile(svgfld, 'MRI_Ecc_vs_Size.svg'));
+end
 if CloseFigs; close(f5); end
+
+
+%% More detail for CSS mHRF (for paper)
+Rth=5;
+
+f5css=figure;
+set(f5css,'Position',[100 100 2000 1500]);
+set(f5css,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+
+m=3; % css
+s_R2 = T(modidx.(MRI_MODELS{m,1})).mod.R2 > Rth;
+
+EccBin = 0.5:1:16.5;
+
+nsp=length(roi);
+nrc=ceil(sqrt(nsp));
+for r=1:length(roi)
+    SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{m,1})).mod.ROI,...
+        ck_GetROIidx(roilabels(r),rois) );
+    
+    ES{r}=[T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS) ...
+        T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS)];
+    subplot(nrc,nrc,r); hold on;
+    scatter(ES{r}(:,1),ES{r}(:,2),100,'Marker','o',...
+            'MarkerFaceColor','k','MarkerFaceAlpha',.2,...
+            'MarkerEdgeColor','none');
+%     for b=1:length(EccBin)
+%         bb=[EccBin(b)-0.5 EccBin(b)+0.5];
+%         PSZ=T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS);
+%         ECC=T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS);
+%         ES{r}=[ES{r}; EccBin(b) median(PSZ(ECC>=bb(1) & ECC<=bb(2)))];
+%     end
+    title(['Ecc vs pRF size [' roilabels{r} ', R>' num2str(Rth) ']'],...
+    'interpreter','none');
+    xlabel('Eccentricity');ylabel('pRF size');
+    set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
+end
+
+if SaveFigs
+    saveas(f5css,fullfile(pngfld, 'MRI_Ecc_vs_Size.png'));
+    saveas(f5css,fullfile(svgfld, 'MRI_Ecc_vs_Size.svg'));
+end
+if CloseFigs; close(f5css); end
+
+
+
+
+
+
+
+
+
+
+
+%%
+
 
 f5b=figure;
 set(f5b,'Position',[100 100 1000 1200]);
