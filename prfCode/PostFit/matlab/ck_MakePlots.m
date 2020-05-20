@@ -23,7 +23,8 @@ addpath('/Users/chris/Dropbox/MATLAB_NONGIT/TOOLBOX/BrewerMap')
 def_cmap = 'Spectral';
 % add matplotlib
 addpath(genpath('~/Documents/MATLAB/GENERAL_FUNCTIONS/matplotlib'))
-
+% add boundedline
+addpath(genpath('~/Documents/MATLAB/GENERAL_FUNCTIONS/boundedline'));
 ResType = 'mean'; % max / mean
 TT = ['Tables_' ResType];
 
@@ -1193,6 +1194,7 @@ if CloseFigs; close(f5); end
 
 %% More detail for CSS mHRF (for paper)
 Rth=5;
+maxEcc = 50;
 
 f5css=figure;
 set(f5css,'Position',[100 100 2000 1500]);
@@ -1205,16 +1207,44 @@ EccBin = 0.5:1:16.5;
 
 nsp=length(roi);
 nrc=ceil(sqrt(nsp));
+
 for r=1:length(roi)
+    ES{r} = [];
+    ESb{r} = [];
+    ESf{r} = [];
+    
     SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{m,1})).mod.ROI,...
         ck_GetROIidx(roilabels(r),rois) );
     
     ES{r}=[T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS) ...
-        T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS)];
+        T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS) ];
+    ES{r}( ES{r}(:,2) > 50,: ) = []; % remove insanely large pRF's
+    
     subplot(nrc,nrc,r); hold on;
-    scatter(ES{r}(:,1),ES{r}(:,2),100,'Marker','o',...
-            'MarkerFaceColor','k','MarkerFaceAlpha',.2,...
-            'MarkerEdgeColor','none');
+%     scatter(ES{r}(:,1),ES{r}(:,2),100,'Marker','o',...
+%             'MarkerFaceColor','k','MarkerFaceAlpha',.2,...
+%             'MarkerEdgeColor','none');
+        
+    % make table 
+    tbl = table(ES{r}(:,1),ES{r}(:,2),'VariableNames',{'ecc','sz'});
+    if ~isempty(tbl)
+        % remove inf's
+        tbl(isinf(tbl.sz),:)=[];
+        % fit
+        lm{r} = fitlm(tbl,'sz ~ 1 + ecc');
+        % CI
+        lmCI{r}=coefCI(lm{r},0.05);
+        if ~isnan(lm{r}.Coefficients.pValue(1))
+            % Prediction
+            x=[0;20];
+            [ypred,yci] = predict(lm{r},x);
+            yci2=yci(:,2)-ypred;
+            boundedline(x,ypred',yci2,'r','alpha')
+            fprintf([roilabels{r} ' n = ' num2str(size(tbl,1)) '\n'])
+            fprintf([roilabels{r} ' p = ' num2str(lm{r}.Coefficients.pValue(2)) '\n'])
+        end
+    end
+    
 %     for b=1:length(EccBin)
 %         bb=[EccBin(b)-0.5 EccBin(b)+0.5];
 %         PSZ=T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS);
@@ -1223,8 +1253,9 @@ for r=1:length(roi)
 %     end
     title(['Ecc vs pRF size [' roilabels{r} ', R>' num2str(Rth) ']'],...
     'interpreter','none');
+    title(roilabels{r});
     xlabel('Eccentricity');ylabel('pRF size');
-    set(gca, 'Box','off', 'xlim', [0 10], 'ylim',[0 10]);
+    set(gca, 'Box','off', 'xlim', [0 20], 'ylim',[0 25]);
 end
 
 if SaveFigs
@@ -1233,14 +1264,74 @@ if SaveFigs
 end
 if CloseFigs; close(f5css); end
 
+%% Create manuscript figure
+subctx_idx = [18:20];
+early_ctx_idx = [1:5 7:14];
+late_ctx_idx = [23 25:27 31 33:35 38];
+
+f_eccsz = figure;
+set(f_eccsz,'Position',[100 100 2000 1500]);
+
+subplot(1,3,1); hold on;
+lidx=1;
+cm=brewermap(length(subctx_idx),def_cmap);
+set(f_eccsz,'DefaultAxesColorOrder',cm);
+for idx=subctx_idx
+    x=[0;20];
+    [ypred,yci] = predict(lm{idx},x);
+    yci2=yci(:,2)-ypred;
+    plot(x,ypred','LineWidth',3)
+    L{lidx}=roilabels{idx}; lidx=lidx+1;
+end
+for idx=subctx_idx
+    x=[0;20];
+    [ypred,yci] = predict(lm{idx},x);
+    yci2=yci(:,2)-ypred;
+    boundedline(x,ypred',yci2,'o','alpha')
+end
+legend(L)
+set(gca,'ylim',[0 30], 'TickDir','out');
 
 
+subplot(1,3,2); hold on;
+lidx=1;
+cm=brewermap(length(early_ctx_idx),def_cmap);
+set(f_eccsz,'DefaultAxesColorOrder',cm);
+for idx=early_ctx_idx
+    x=[0;20];
+    [ypred,yci] = predict(lm{idx},x);
+    yci2=yci(:,2)-ypred;
+    plot(x,ypred','LineWidth',3)
+    L{lidx}=roilabels{idx}; lidx=lidx+1;
+end
+for idx=early_ctx_idx
+    x=[0;20];
+    [ypred,yci] = predict(lm{idx},x);
+    yci2=yci(:,2)-ypred;
+    boundedline(x,ypred',yci2,'o','alpha')
+end
+legend(L)
+set(gca,'ylim',[0 30], 'TickDir','out');
 
-
-
-
-
-
+subplot(1,3,3); hold on;
+lidx=1;
+cm=brewermap(length(late_ctx_idx),def_cmap);
+set(f_eccsz,'DefaultAxesColorOrder',cm);
+for idx=late_ctx_idx
+    x=[0;20];
+    [ypred,yci] = predict(lm{idx},x);
+    yci2=yci(:,2)-ypred;
+    plot(x,ypred','LineWidth',3)
+    L{lidx}=roilabels{idx}; lidx=lidx+1;
+end
+for idx=late_ctx_idx
+    x=[0;20];
+    [ypred,yci] = predict(lm{idx},x);
+    yci2=yci(:,2)-ypred;
+    boundedline(x,ypred',yci2,'o','alpha')
+end
+legend(L)
+set(gca,'ylim',[0 30], 'TickDir','out');
 
 
 %%
