@@ -1,5 +1,4 @@
 %% stats for linear models comparison
-% do V1 only for now
 
 %% DATA ===================================================================
 clear stats
@@ -96,18 +95,24 @@ for j=1:length(mdl_v1.CoefficientNames)
     end
 end
 
+msz = 40;
 subplot(2,2,1); 
 ll={}; US=[sigtype{1,:}]; hold on; ii=1;
 for i=1:length(US)
     sel=DT1.signal==categorical(i);
     if sum(sel)>0
-        scatter(DT1.ecc(sel),DT1.sz(sel),'filled','CData',CLR(i,:));
+        scatter(DT1.ecc(sel),DT1.sz(sel),msz,...
+            'Marker','o',...
+            'MarkerEdgeColor',CLR(i,:),'MarkerFaceColor',CLR(i,:),...
+            'MarkerEdgeAlpha',0,'MarkerFaceAlpha',0.2);       
         ll{ii}=sigtype{2,i};
         ii=ii+1;
     end
 end    
 legend(ll,'Location','NorthEastOutside');
 title('V1');xlabel('Ecc');ylabel('Sz');
+set(gca,'xlim',[0 12.5],'ylim',[0 7],'TickDir','out');
+
 
 subplot(2,2,2); 
 ll={}; US=[sigtype{1,:}]; hold on; ii=1;
@@ -121,6 +126,7 @@ for i=1:length(US)
             mdl_v1.Coefficients.Estimate(slidx).*x ...
             ];  
             plot(x,y, 'LineWidth',5, 'Color',CLR(i,:));
+            
         else
             j = find(v1idx==i,1,'first');
             y=[...
@@ -130,6 +136,7 @@ for i=1:length(US)
             mdl_v1.Coefficients.Estimate(slidx+j)).*x ...
             ];
             plot(x,y, 'LineWidth',3, 'Color',CLR(i,:));
+
         end
         ll{ii}=sigtype{2,i};
         ii=ii+1;
@@ -137,6 +144,7 @@ for i=1:length(US)
 end    
 legend(ll,'Location','NorthEastOutside');
 title('V1 FIT');xlabel('Ecc');ylabel('Sz');
+set(gca,'xlim',[0 12.5],'ylim',[0 7],'TickDir','out');
 
 % v4
 DT4=DT(DT.area==categorical(4) & DT.ecc<=MaxECC,:);
@@ -155,13 +163,18 @@ ll={}; US=[sigtype{1,:}]; hold on; ii=1;
 for i=1:length(US)
     sel=DT4.signal==categorical(i);
     if sum(sel)>0
-        scatter(DT4.ecc(sel),DT4.sz(sel),'filled','CData',CLR(i,:));
+        %scatter(DT4.ecc(sel),DT4.sz(sel),'filled','CData',CLR(i,:));
+        scatter(DT4.ecc(sel),DT4.sz(sel),msz,...
+            'Marker','o',...
+            'MarkerEdgeColor',CLR(i,:),'MarkerFaceColor',CLR(i,:),...
+            'MarkerEdgeAlpha',0,'MarkerFaceAlpha',0.25);   
         ll{ii}=sigtype{2,i};
         ii=ii+1;
     end
 end    
 legend(ll,'Location','NorthEastOutside');
 title('V4');xlabel('Ecc');ylabel('Sz');
+set(gca,'xlim',[0 12.5],'ylim',[0 7],'TickDir','out');
 
 subplot(2,2,4); 
 ll={}; US=[sigtype{1,:}]; hold on; ii=1;
@@ -191,6 +204,7 @@ for i=1:length(US)
 end    
 legend(ll,'Location','NorthEastOutside');
 title('V4 FIT');xlabel('Ecc');ylabel('Sz');
+set(gca,'xlim',[0 12.5],'ylim',[0 7],'TickDir','out');
 
 sgtitle(['MODEL: ' MMS{m} ', Rth_mri: ' num2str(Rth_mri) ...
     ', Rth_ephys:' num2str(Rth_ephys)],'interpreter','none')
@@ -229,6 +243,12 @@ for a = 1:length(areas) % loop over areas
                 stats.area(a).signalswithslope = [...
                     stats.area(a).signalswithslope s];
             end
+            
+            fprintf(['Area ' num2str(areas(a)) ', Signal: '  num2str(sn{s}) ...
+                ', slope: ' num2str(stats.area(a).signal(s).sl.Estimate) ...
+                ', n = ' num2str(stats.area(a).signal(s).anova.DF(2)+1) ...
+                ', t = ' num2str(stats.area(a).signal(s).sl.tStat) ...
+                ', p = ' num2str(stats.area(a).signal(s).sl.pValue) '\n']);
         end
     end
 end

@@ -771,7 +771,8 @@ fprintf(['MEDIAN NAMP: ' num2str(MM) '\n'])
 [p,h,stats] = signrank(DoG.normamp(vox_sel),1,'tail','right');
 fprintf(['nAmp > 1: Wilcoxon z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
-
+fprintf(['Median nAMP: ' num2str(median(DoG.normamp(vox_sel))) ', IQR: '...
+    num2str(iqr(DoG.normamp(vox_sel))) '\n'])
 
 subplot(1,3,2); hold on;
 bb = [DoG.ecc(vox_sel) lin.ecc(vox_sel)];
@@ -1191,8 +1192,7 @@ if SaveFigs
 end
 if CloseFigs; close(f5); end
 
-
-%% More detail for CSS mHRF (for paper)
+%% More detail for CSS mHRF (for paper) -----------------------------------
 Rth=5;
 maxEcc = 50;
 
@@ -1264,7 +1264,7 @@ if SaveFigs
 end
 if CloseFigs; close(f5css); end
 
-%% Create manuscript figure
+%% Create manuscript figure -----------------------------------------------
 subctx_idx = [18:20];
 early_ctx_idx = [1:5 7:14];
 late_ctx_idx = [23 25:27 31 33:35 38];
@@ -1333,10 +1333,7 @@ end
 legend(L)
 set(gca,'ylim',[0 30], 'TickDir','out');
 
-
-%%
-
-
+%% ------------------------------------------------------------------------
 f5b=figure;
 set(f5b,'Position',[100 100 1000 1200]);
 set(f5b,'DefaultAxesColorOrder',brewermap(2,def_cmap));
@@ -1379,7 +1376,7 @@ if SaveFigs; saveas(f5b,fullfile(figfld, 'MRI_Ecc_vs_Size_V1V4.png')); end
 if CloseFigs; close(f5b); end
 
 %% EPHYS ECC vs PRF Size ==================================================
-Rth=70; 
+Rth=25; 
 SNRth=2;
 
 m=unique(tMUA.Model);
@@ -1529,85 +1526,274 @@ for m=1:length(mm)
 %     scatter(eccsz(ss,5),eccsz(ss,7))
    
 end
+close all;
+
+
+% focus on CSS --------
+% exclude the problematic arrays
 
 %% EPHYS VFC MUA ==========================================================
-% MUA
-s=tMUA.R2>20;
-szm=tMUA.rfs<200;
 
+% scatter MUA =============================================================
+R2TH = 50;
+s=tMUA.R2>R2TH;
 model='css_ephys_cv1';
 
-fm=figure;
-set(fm,'Position',[100 100 800 800]);
-%[cmap,~,~] = brewermap(length(unique(tMUA.Array)),'Dark2');
-%set(fm,'DefaultAxesColorOrder',cmap);
+fm=figure; set(fm,'Position',[100 100 1800 1400]);
+[cmap,~,~] = brewermap(length(unique(tMUA.Array)),'spectral');
+set(fm,'DefaultAxesColorOrder',cmap);
+msz = 5;
+
+% Lick V1 ----
+m=strcmp(tMUA.Monkey,'lick') & strcmp(tMUA.Model,model);
+v=tMUA.Area==1;
 
 subplot(2,2,1);hold on;
-
-szm=tMUA.rfs<5;
-m=strcmp(tMUA.Monkey,'lick') & strcmp(tMUA.Model,model);
-plot([-10 20],[0 0],'k');
-plot([0 0],[-30 10],'k');
-v=tMUA.Area==1;
+plot([-10 20],[0 0],'k'); plot([0 0],[-30 10],'k');
+lt={'meridian','meridian'};
+nelec=0;
 for r=unique(tMUA.Array)'
     a=tMUA.Array==r;
-    scatter(tMUA.X(s & m & a & v),...
-        tMUA.Y(s & m & a & v),'Marker','*' )
+    currcol = cmap(r,:);
+    if sum(s & m & a & v) > 0
+        nelec=nelec+sum(s & m & a & v);
+        p=plot(tMUA.X(s & m & a & v),...
+            tMUA.Y(s & m & a & v),'o','Color',currcol,...
+            'LineStyle','none','LineWidth',1,...
+            'MarkerSize',msz,'MarkerFaceColor',currcol);
+        lt=[lt num2str(r)];
+    end
 end
-set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
-title('Lick V1 MUA')
+set(gca, 'Box','off', 'xlim', [-1 8], 'ylim',[-6 1]);
+title(['Lick V1 MUA (n = ' num2str(nelec) ')'])
+l=legend(lt); set(l,'Location','NorthEastOutside'); clear lt;
+
+% Lick V4 ----
+v=tMUA.Area==4;
 
 subplot(2,2,3);hold on;
-szm=tMUA.rfs<5;
-m=strcmp(tMUA.Monkey,'lick') & strcmp(tMUA.Model,model);
-plot([-10 20],[0 0],'k');
-plot([0 0],[-30 10],'k');
-v=tMUA.Area==4;
+plot([-10 20],[0 0],'k'); plot([0 0],[-30 10],'k');
+lt={'meridian','meridian'};
+nelec=0;
 for r=unique(tMUA.Array)'
     a=tMUA.Array==r;
-    scatter(tMUA.X(s & m & a & v),...
-        tMUA.Y(s & m & a & v),'Marker','*' )
-
+    currcol = cmap(r,:);
+    if sum(s & m & a & v) > 0
+        nelec=nelec+sum(s & m & a & v);
+        p=plot(tMUA.X(s & m & a & v),...
+            tMUA.Y(s & m & a & v),'o','Color',currcol,...
+            'LineStyle','none','LineWidth',1,...
+            'MarkerSize',msz,'MarkerFaceColor',currcol);
+        lt=[lt num2str(r)];
+    end
 end
-set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
-title('Lick V4 MUA')
+set(gca, 'Box','off', 'xlim', [-1 8], 'ylim',[-6 1]);
+% set(gca, 'Box','off', 'xlim', [-2 25], 'ylim',[-25 2]);
+title(['Lick V4 MUA (n = ' num2str(nelec) ')'])
+l=legend(lt); set(l,'Location','NorthEastOutside'); clear lt;
+
+% Aston V1 ----
+m=strcmp(tMUA.Monkey,'aston') & strcmp(tMUA.Model,model);
+v=tMUA.Area==1;
 
 subplot(2,2,2);hold on;
-m=strcmp(tMUA.Monkey,'aston') & strcmp(tMUA.Model,model);
-plot([-10 20],[0 0],'k');
-plot([0 0],[-30 10],'k');
-v=tMUA.Area==1;
+plot([-10 20],[0 0],'k'); plot([0 0],[-30 10],'k');
+lt={'meridian','meridian'};
+nelec=0;
 for r=unique(tMUA.Array)'
     a=tMUA.Array==r;
-    scatter(tMUA.X(s & m & a & v),...
-        tMUA.Y(s & m & a & v),'Marker','*' )
-
+    currcol = cmap(r,:);
+    if sum(s & m & a & v) > 0
+        nelec=nelec+sum(s & m & a & v);
+        p=plot(tMUA.X(s & m & a & v),...
+            tMUA.Y(s & m & a & v),'o','Color',currcol,...
+            'LineStyle','none','LineWidth',1,...
+            'MarkerSize',msz,'MarkerFaceColor',currcol);
+        lt=[lt num2str(r)];
+    end
 end
-set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
-title('Aston V1 MUA')
+set(gca, 'Box','off', 'xlim', [-1 8], 'ylim',[-6 1]);
+title(['Aston V1 MUA (n = ' num2str(nelec) ')'])
+l=legend(lt); set(l,'Location','NorthEastOutside'); clear lt;
+
+% Aston V4 ----
+v=tMUA.Area==4;
 
 subplot(2,2,4);hold on;
-m=strcmp(tMUA.Monkey,'aston') & strcmp(tMUA.Model,model);
-plot([-10 20],[0 0],'k');
-plot([0 0],[-30 10],'k');
-v=tMUA.Area==4;
+plot([-10 30],[0 0],'k'); plot([0 0],[-30 10],'k');
+lt={'meridian','meridian'};
+nelec=0;
 for r=unique(tMUA.Array)'
     a=tMUA.Array==r;
-    scatter(tMUA.X(s & m & a & v),...
-        tMUA.Y(s & m & a & v),'Marker','*' )
-
+    currcol = cmap(r,:);
+    if sum(s & m & a & v) > 0
+        nelec=nelec+sum(s & m & a & v);
+        p=plot(tMUA.X(s & m & a & v),...
+            tMUA.Y(s & m & a & v),'o','Color',currcol,...
+            'LineStyle','none','LineWidth',1,...
+            'MarkerSize',msz,'MarkerFaceColor',currcol);
+        lt=[lt num2str(r)];
+    end
 end
-set(gca, 'Box','off', 'xlim', [-5 10], 'ylim',[-10 5]);
+set(gca, 'Box','off', 'xlim', [-2 25], 'ylim',[-25 2]);
+title(['Aston V4 MUA (n = ' num2str(nelec) ')'])
+l=legend(lt); set(l,'Location','NorthEastOutside'); clear lt;
+
+% Heatmap MUA =============================================================
+fhm=figure; set(fhm,'Position',[100 100 1800 1000]);
+settings.PixPerDeg = 29.5032;
+settings.meshsize = 2000;   
+colormap(inferno)
+
+% Lick V1 ----
+m=strcmp(tMUA.Monkey,'lick') & strcmp(tMUA.Model,model);
+v=tMUA.Area==1;
+
+subplot(2,4,1);hold on;
+allprf=[];
+for r=unique(tMUA.Array)'
+    a=tMUA.Array==r;
+    if sum(s & m & a & v) > 0
+        allprf = [allprf; ...
+            tMUA.X(s & m & a & v) ...
+            tMUA.Y(s & m & a & v) ...
+            tMUA.rfs(s & m & a & v)];
+    end
+end
+
+res = ck_2dPRF_ephys(allprf(:,1),allprf(:,2),allprf(:,3));
+img=flipud(res.img); res.ymesh2 = fliplr(res.ymesh);
+% zoom in on plot
+xrange = [-3 8]; yrange = [-6 3];
+xrange_idx = [...
+    find(res.xmesh >= xrange(1),1,'first') find(res.xmesh <= xrange(2),1,'last')];
+yrange_idx = [...
+    find(res.ymesh2 >= yrange(1),1,'first') find(res.ymesh2 <= yrange(2),1,'last')];
+xrr=res.xmesh(xrange_idx); yrr=res.ymesh2(yrange_idx);
+% plot
+sumimg=sum(img,3);
+imagesc(sumimg./max(img(:)));
+set(gca,'xlim',xrange_idx,'ylim',...
+    yrange_idx,'Color','k','xtick',[],'ytick',[])
+colorbar;
+subplot(2,4,5); hold on;
+plot(1.2*res.xr,[0 0],'w'); plot([0 0],1.2*res.yr,'w');
+set(gca,'xlim',xrr,'ylim',yrr,'Color','k')
+colorbar; clear('res','img','sumimg');
+title('Lick V1 MUA')
+
+% Lick V4 ----
+v=tMUA.Area==4;
+
+subplot(2,4,2);hold on;
+allprf=[];
+for r=unique(tMUA.Array)'
+    a=tMUA.Array==r;
+    if sum(s & m & a & v) > 0
+        allprf = [allprf; ...
+            tMUA.X(s & m & a & v) ...
+            tMUA.Y(s & m & a & v) ...
+            tMUA.rfs(s & m & a & v)];
+    end
+end
+
+res = ck_2dPRF_ephys(allprf(:,1),allprf(:,2),allprf(:,3));
+img=flipud(res.img); res.ymesh2 = fliplr(res.ymesh);
+% zoom in on plot
+xrange = [-3 8]; yrange = [-6 3];
+xrange_idx = [...
+    find(res.xmesh >= xrange(1),1,'first') find(res.xmesh <= xrange(2),1,'last')];
+yrange_idx = [...
+    find(res.ymesh2 >= yrange(1),1,'first') find(res.ymesh2 <= yrange(2),1,'last')];
+xrr=res.xmesh(xrange_idx); yrr=res.ymesh2(yrange_idx);
+% plot
+sumimg=sum(img,3);
+imagesc(sumimg./max(img(:)));
+set(gca,'xlim',xrange_idx,'ylim',...
+    yrange_idx,'Color','k','xtick',[],'ytick',[])
+colorbar;
+subplot(2,4,6); hold on;
+plot(1.2*res.xr,[0 0],'w'); plot([0 0],1.2*res.yr,'w');
+set(gca,'xlim',xrr,'ylim',yrr,'Color','k')
+colorbar; clear('res','img','sumimg');
+title('Lick V4 MUA')
+
+% Aston V1 ----
+m=strcmp(tMUA.Monkey,'aston') & strcmp(tMUA.Model,model);
+v=tMUA.Area==1;
+
+subplot(2,4,3);hold on;
+allprf=[];
+for r=unique(tMUA.Array)'
+    a=tMUA.Array==r;
+    if sum(s & m & a & v) > 0
+        allprf = [allprf; ...
+            tMUA.X(s & m & a & v) ...
+            tMUA.Y(s & m & a & v) ...
+            tMUA.rfs(s & m & a & v)];
+    end
+end
+
+res = ck_2dPRF_ephys(allprf(:,1),allprf(:,2),allprf(:,3));
+img=flipud(res.img); res.ymesh2 = fliplr(res.ymesh);
+% zoom in on plot
+xrange = [-3 8]; yrange = [-6 3];
+xrange_idx = [...
+    find(res.xmesh >= xrange(1),1,'first') find(res.xmesh <= xrange(2),1,'last')];
+yrange_idx = [...
+    find(res.ymesh2 >= yrange(1),1,'first') find(res.ymesh2 <= yrange(2),1,'last')];
+xrr=res.xmesh(xrange_idx); yrr=res.ymesh2(yrange_idx);
+% plot
+sumimg=sum(img,3);
+imagesc(sumimg./max(img(:)));
+set(gca,'xlim',xrange_idx,'ylim',...
+    yrange_idx,'Color','k','xtick',[],'ytick',[])
+colorbar;
+subplot(2,4,7); hold on;
+plot(1.2*res.xr,[0 0],'w'); plot([0 0],1.2*res.yr,'w');
+set(gca,'xlim',xrr,'ylim',yrr,'Color','k')
+colorbar; clear('res','img','sumimg');
+title('Aston V1 MUA')
+
+% Aston V4 ----
+v=tMUA.Area==4;
+
+subplot(2,4,4);hold on;
+allprf=[];
+for r=unique(tMUA.Array)'
+    a=tMUA.Array==r;
+    if sum(s & m & a & v) > 0
+        allprf = [allprf; ...
+            tMUA.X(s & m & a & v) ...
+            tMUA.Y(s & m & a & v) ...
+            tMUA.rfs(s & m & a & v)];
+    end
+end
+
+res = ck_2dPRF_ephys(allprf(:,1),allprf(:,2),allprf(:,3));
+img=flipud(res.img); res.ymesh2 = fliplr(res.ymesh);
+% zoom in on plot
+xrange = [-5 25]; yrange = [-25 5];
+xrange_idx = [...
+    find(res.xmesh >= xrange(1),1,'first') find(res.xmesh <= xrange(2),1,'last')];
+yrange_idx = [...
+    find(res.ymesh2 >= yrange(1),1,'first') find(res.ymesh2 <= yrange(2),1,'last')];
+xrr=res.xmesh(xrange_idx); yrr=res.ymesh2(yrange_idx);
+% plot
+sumimg=sum(img,3);
+imagesc(sumimg./max(img(:)));
+set(gca,'xlim',xrange_idx,'ylim',...
+    yrange_idx,'Color','k','xtick',[],'ytick',[])
+colorbar;
+subplot(2,4,8); hold on;
+plot(1.2*res.xr,[0 0],'w'); plot([0 0],1.2*res.yr,'w');
+set(gca,'xlim',xrr,'ylim',yrr,'Color','k')
+colorbar; clear('res','img','sumimg');
 title('Aston V4 MUA')
-
-if SaveFigs 
-    saveas(fm,fullfile(figfld, ['EPHYS_VFC_MUA_' model '.png']));
-end
-if CloseFigs; close(fm); end
 
 %% Ephys VFC LFP GAMMA ====================================================
 % LFP Low Gamma
-s=tLFP.R2>20;
+s=tLFP.R2>50;
 
 model='css_ephys_cv1';
 b = 'lGamma';
@@ -1679,7 +1865,7 @@ end
 if CloseFigs; close(fm); end
 
 %% Ephys location difference & size difference  ---------------------------
-rth=25;
+rth=25; snrth=3;
 
 ephys_MMS = MMS(:,1);
 clear C R2m SZ
@@ -1693,17 +1879,41 @@ for m=1:length(ephys_MOD)
     R2m{m}=[R2m{m} tMUA.R2(s)];
     SZ{m}=[SZ{m} tMUA.R2(s) tMUA.rfs(s)];
     
+    PRF_EST(m,1).sig = 'MUA';
+    PRF_EST(m,1).R2 = tMUA.R2(s);
+    PRF_EST(m,1).X = tMUA.X(s);
+    PRF_EST(m,1).Y = tMUA.Y(s);
+    PRF_EST(m,1).S =  tMUA.rfs(s);
+    PRF_EST(m,1).A =  tMUA.Area(s);
+
     s = strcmp(tMUA.Model,'classicRF');
     C{m}=[C{m} tMUA.X(s)./668.745 tMUA.Y(s)./668.745 tMUA.rfs(s)./2];
     
+    PRF_EST(m,2).sig = 'MUACLASSIC';
+    PRF_EST(m,2).R2 = tMUA.SNR(s);
+    PRF_EST(m,2).X = tMUA.X(s);
+    PRF_EST(m,2).Y = tMUA.Y(s);
+    PRF_EST(m,2).S =  tMUA.rfs(s)./2;
+    PRF_EST(m,2).A =  tMUA.Area(s);
+
     s = strcmp(tLFP.Model,model);
     sig=unique(tLFP.SigType);
     lfp_order = [3 1 2 5 4];
+    cnt=1;
     for i=lfp_order
         b=strcmp(tLFP.SigType,sig{i});
         C{m}=[C{m} tLFP.R2(s & b) tLFP.X(s & b) tLFP.Y(s & b) tLFP.rfs(s & b)];
         R2m{m}=[R2m{m} tLFP.R2(s & b)];
         SZ{m}=[SZ{m} tLFP.R2(s & b) tLFP.rfs(s & b)];
+        
+        PRF_EST(m,2+cnt).sig = sig{i};
+        PRF_EST(m,2+cnt).R2 = tLFP.R2(s & b);
+        PRF_EST(m,2+cnt).X = tLFP.X(s & b);
+        PRF_EST(m,2+cnt).Y = tLFP.Y(s & b);
+        PRF_EST(m,2+cnt).S =  tLFP.rfs(s & b);
+        PRF_EST(m,2+cnt).A =  tLFP.Area(s & b);
+
+        cnt=cnt+1;
     end
     
     s= sum(R2m{m}>rth,2)==size(R2m{m},2);
@@ -1729,9 +1939,48 @@ for m=1:length(ephys_MOD)
         C{m}(s,23)./C{m}(s,4) ];
 end
 
+% compare MUA with classic
+for m=1%3 %1:length(ephys_MOD)
+    for area = [1 4]
+        fprintf(['=== AREA V' num2str(area) ' ===\n'])
+        % location
+        sel = PRF_EST(m,1).A == area & ...
+            PRF_EST(m,1).R2 > rth & ...
+            PRF_EST(m,2).R2 > snrth; % PRF_EST(m,2).R2 = SNR
+        dLOCATION = sqrt(...
+            (PRF_EST(m,1).X(sel)-PRF_EST(m,2).X(sel)).^2 + ...
+            (PRF_EST(m,1).Y(sel)-PRF_EST(m,2).Y(sel)).^2);
+        fprintf(['MODEL ' ephys_MOD{m} ', MUA vs CLASSIC distance ----\n'])
+        fprintf(['Mean ' num2str(mean(dLOCATION)) ', STD ' num2str(std(dLOCATION)) '\n'])
+        fprintf(['Median ' num2str(median(dLOCATION)) ', IQR ' num2str(iqr(dLOCATION)) '\n'])
+        %     figure;
+        %     subplot(1,2,1)
+        %     scatter(PRF_EST(m,1).X(sel),PRF_EST(m,2).X(sel))
+        %     subplot(1,2,2)
+        %     scatter(PRF_EST(m,1).Y(sel),PRF_EST(m,2).Y(sel))
+        % size
+        SIZE_MUA = [PRF_EST(m,1).S(sel) PRF_EST(m,2).S(sel)];
+        SIZE_MUA(isinf(SIZE_MUA(:,1)),:)=[];
+        [p,h,stats] = signrank(SIZE_MUA(:,1),SIZE_MUA(:,2));
+        fprintf(['MODEL ' ephys_MOD{m} ', MUA vs CLASSIC size ----\n'])
+        fprintf(['dSZ: Wilcoxon z = ' ...
+            num2str(stats.zval) ', p = ' num2str(p) '\n']);
+        fprintf(['Mean (mua-classic) ' num2str(nanmean(SIZE_MUA(:,1)-SIZE_MUA(:,2))) ...
+            ', STD ' num2str(nanstd(SIZE_MUA(:,1)-SIZE_MUA(:,2))) '\n'])
+        fprintf(['Median ' num2str(median(SIZE_MUA(:,1)-SIZE_MUA(:,2))) ...
+            ', IQR ' num2str(iqr(SIZE_MUA(:,1)-SIZE_MUA(:,2))) '\n'])
+        figure;
+        scatter(SIZE_MUA(:,1),SIZE_MUA(:,2),50,'Marker','o',...
+            'MarkerEdgeColor',[.3 .3 .3],'MarkerFaceColor',[.3 .3 .3],...
+            'MarkerFaceAlpha',0.5);
+    end
+end
+
 %% MUA model comparison ===================================================
 m=unique(tMUA.Model);
 R2=[];
+RTH = 0;
+
 for i=1:length(m)
     R2 = [R2 tMUA.R2(strcmp(tMUA.Model,m{i}))];
 end
@@ -1740,16 +1989,24 @@ v1=tLFP.Area(strcmp(tMUA.Model,m{1}))==1;
 v4=tLFP.Area(strcmp(tMUA.Model,m{1}))==4;
 
 f6=figure;
+msz=15;
 set(f6,'Position',[100 100 1200 1200]);
 for row=1:4
     for column=1:4
         subplot(4,4,((row-1)*4)+column); hold on;
         plot([0 100],[0 100],'k');
-        scatter(R2(v1,row+1), R2(v1,column+1),60,'Marker','.',...
-            'MarkerEdgeColor',[.3 .3 .3]);
-        scatter(R2(v4,row+1), R2(v4,column+1),60,'Marker','.',...
-            'MarkerEdgeColor',[.3 .8 .3]);
-        set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
+        
+        XY = [R2(v1,row+1), R2(v1,column+1)];
+        XYs = XY(XY(:,1)>RTH & XY(:,2)>RTH,:);
+        scatter(XYs(:,1), XYs(:,2),msz,'Marker','o',...
+            'MarkerEdgeColor',[.3 .3 .3],'MarkerFaceColor',[.3 .3 .3],...
+            'MarkerFaceAlpha',0.5);
+        XY = [R2(v4,row+1), R2(v4,column+1)];
+        XYs = XY(XY(:,1)>RTH & XY(:,2)>RTH,:);
+        scatter(XYs(:,1), XYs(:,2),msz,'Marker','o',...
+            'MarkerEdgeColor',[.3 .8 .3],'MarkerFaceColor',[.3 .8 .3],...
+            'MarkerFaceAlpha',0.5);
+        set(gca, 'Box','off', 'xlim', [-2 100], 'ylim',[-2 100]);
         xlabel(m{row+1},'interpreter','none'); 
         ylabel(m{column+1},'interpreter','none');
         title('MUA');
@@ -1763,15 +2020,43 @@ if SaveFigs
 end
 if CloseFigs; close(f6); end
 
+%% Stats model comparison R2 MUA
+for RTH = [0 25]
+    % stats V1
+    MR2=R2(v1,2:5);
+    sel=logical(sum(MR2>RTH,2));
+    [p,tbl,stats] = kruskalwallis(MR2(sel,:),{'css','dog','p-lin','u-lin'});
+    [c,m,h,gnames] = multcompare(stats);
+    for i=1:size(c,1)
+        fprintf(['V1 RTH-' num2str(RTH) ': ' gnames{c(i,1)} ' vs ' gnames{c(i,2)} ...
+            ', p = ' num2str(c(i,6))  '\n'])
+    end
+    % stats V4
+    MR2=R2(v4,2:5);
+    sel=logical(sum(MR2>RTH,2));
+    [p,tbl,stats] = kruskalwallis(MR2(sel,:),{'css','dog','p-lin','u-lin'});
+    [c,m,h,gnames] = multcompare(stats);
+    for i=1:size(c,1)
+        fprintf(['V4 RTH-' num2str(RTH) ': ' gnames{c(i,1)} ' vs ' gnames{c(i,2)} ...
+            ', p = ' num2str(c(i,6))  '\n'])
+    end
+end
+
 %% LFP model comparison ===================================================
 f7=figure; 
 set(f7,'Position',[100 100 1600 1200]);
 
+% scatter dots
 sig=unique(tLFP.SigType);
 lfp_order = [3 1 2 5 4];
-spn=1;
+spn=1; msz=15;
+
 for fb=lfp_order
     m=unique(tLFP.Model);
+    % reorder ---------
+    m=m([3 4 1 2]);
+    modname={'P-LIN','U-LIN','CSS','DoG'};
+    % -----------------
     R2=[];
     for i=1:length(m)
         R2 = [R2 tLFP.R2(...
@@ -1782,16 +2067,22 @@ for fb=lfp_order
     for m1=1:4
         for m2=m1+1:4
             subplot(length(sig),6,spn); hold on;
-            plot([0 100],[0 100],'k');
-            scatter(R2(v1,m1), R2(v1,m2),60,'Marker','.',...
-                'MarkerEdgeColor',[.3 .3 .3]);
-            scatter(R2(v4,m1), R2(v4,m2),60,'Marker','.',...
-                'MarkerEdgeColor',[.3 .8 .3]);
-            set(gca, 'Box','off', 'xlim', [0 100], 'ylim',[0 100]);
-            xlabel(m{m1},'interpreter','none');ylabel(m{m2},'interpreter','none')
+            plot([-5 100],[-5 100],'k');
+%             scatter(R2(v1,m1), R2(v1,m2),msz,'Marker','o',...
+%                 'MarkerEdgeColor',[.3 .3 .3],'MarkerEdgeAlpha',0,...
+%                 'MarkerFaceColor',[.3 .3 .3],'MarkerFaceAlpha',0.25);
+%             scatter(R2(v4,m1), R2(v4,m2),msz,'Marker','o',...
+%                 'MarkerEdgeColor',[.3 .8 .3],'MarkerEdgeAlpha',0,...
+%                 'MarkerFaceColor',[.3 .8 .3],'MarkerFaceAlpha',0.25);
+            scatter(R2(v4,m1), R2(v4,m2),msz,'Marker','o',...
+                'MarkerEdgeColor',[.3 .3 .3],'MarkerEdgeAlpha',0,...
+                'MarkerFaceColor',[.3 .3 .3],'MarkerFaceAlpha',0.25);
+            set(gca, 'Box','off', 'xlim', [-5 100], 'ylim',[-5 100],...
+                'xticklabels',{},'yticklabels',{},'TickDir','out');
+            xlabel(modname{m1},'interpreter','none');ylabel(modname{m2},'interpreter','none')
             title(sig{fb})
             if spn==1
-                legend({'','V1','V4'},'location','SouthEast');
+                %legend({'','V1','V4'},'location','SouthEast');
             end
             spn=spn+1;
         end
@@ -1801,6 +2092,7 @@ if SaveFigs
     saveas(f7,fullfile(figfld, 'EPHYS_LFP_ModelComparison.png'));
 end
 if CloseFigs; close(f7); end
+
 
 %% R2 for different ephys signals =========================================
 r2th=0;
@@ -1890,7 +2182,7 @@ end
 %         BETA_R2(7) BETA_RFS8) 
 %         LGAM_R2(9) LG_RFS(10) 
 %         HGAM_R2(11) HGAM_RFS(12)]
-r2th=20;
+r2th=25;
 
 ephys_MOD={'linear_ephys_cv1','linear_ephys_cv1_neggain',...
     'css_ephys_cv1','dog_ephys_cv1'};
@@ -2258,9 +2550,9 @@ warning on;
 rng(1); % seed the random number generator
 
 Rth_mri = 5; % R2 threshold MRI
-Rth_ephys = 70; % R2 threshold ephys
-mxS = 15; % maximum size
-MaxECC = 10; % max ecc to use for fitting
+Rth_ephys = 50; % R2 threshold ephys
+mxS = 1000;%25; % maximum size
+MaxECC = 25; % max ecc to use for fitting
 
 MODS = {...
     'linhrf_cv1_mhrf','linear_ephys_cv1';...
@@ -2279,7 +2571,7 @@ poscorr_only = true;
 warning off;
 cmROI = {'V1','V4'};
 fprintf('=======================\n');
-for m = 1:size(MODS,1)
+for m = [2 3] % 1:size(MODS,1)
     fprintf(['\nCrossmodal Correlation for Model: ' MODS{m} '\n']);
     
     s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
@@ -2557,7 +2849,7 @@ warning on;
 % - plot their size
 % - plot their prf profile
 
-R2th = 10; % minimum R2
+R2th = 25; % minimum R2
 R2enh = 5; % R2 improvement
    
 DoG = tMUA(...
@@ -2589,12 +2881,11 @@ if SaveFigs
 end
 if CloseFigs; close(f_neg1); end
     
-% ---
+%% ---
 
 f_neg3 = figure;
 set(f_neg3,'Position',[10 10 1300 1100]);
-chan_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh & ...
-    DoG.normamp~=0 & DoG.ecc<16;
+chan_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh;
 
 subplot(2,2,1); hold on;
 plot([0 15],[0 15],'r');
@@ -2616,14 +2907,47 @@ plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 set(gca,'ylim',[0 yy(2)+30]);
 title('NORMAMP')
 
+fprintf(['Median nAMP: ' num2str(median(DoG.normamp(chan_sel))) ', IQR: '...
+    num2str(iqr(DoG.normamp(chan_sel))) '\n'])
+
+% stats nAmp > 0
+% Wilcoxon 1-tailed < 1
+[p,h,stats] = signrank(DoG.normamp(chan_sel),0,'tail','right');
+fprintf(['nAmp > 0: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
 subplot(2,2,3); hold on;
 bb = [DoG.ecc(chan_sel) lin.ecc(chan_sel)];
+bb2 = [DoG.ang(chan_sel) lin.ang(chan_sel)];
 plot([1 2],bb)
 plot([1 2],mean(bb),'k','Linewidth',5)
 set(gca,'xtick',1:2,'xticklabels',{'DoG','LIN'},...
     'ylim',[0 20],'xlim',[0.8 2.2])
 ylabel('Eccentricity');
 title('Ecc Diff')
+
+% stats ecc
+% Wilcoxon 1-tailed < 1
+[p,h,stats] = signrank(bb(:,1),bb(:,2));
+fprintf(['dEcc ~= 0: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+fprintf(['\nMean dEcc ' num2str(mean(bb(:,1)-bb(:,2))) ' +/- std ' num2str(std(bb(:,1)-bb(:,2)))])
+fprintf(['\nMedian dEcc ' num2str(median(bb(:,1)-bb(:,2))) '\n'])
+
+% stats ang
+[p,h,stats] = signrank(bb2(:,1),bb2(:,2));
+fprintf(['dAng ~= 0: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+fprintf(['\nMean dAng ' num2str(mean(bb2(:,1)-bb2(:,2))) ' +/- std ' num2str(std(bb2(:,1)-bb2(:,2)))])
+fprintf(['\nMedian dAng ' num2str(median(bb2(:,1)-bb2(:,2))) '\n'])
+
+% mean position diff
+dp = sqrt(...
+    (DoG.X(chan_sel)-lin.X(chan_sel)).^2 + ...
+    (DoG.Y(chan_sel)-lin.Y(chan_sel)).^2);
+
+fprintf(['\nMean dPOS ' num2str(mean(dp)) ' +/- std ' num2str(std(dp)) '\n'])
+fprintf(['\nMedian dPOS ' num2str(median(dp)) ' IQR ' num2str(iqr(dp)) '\n'])
 
 subplot(2,2,4); hold on;
 histogram(lin.ecc(chan_sel)-DoG.ecc(chan_sel),-20:0.5:20,...
@@ -2641,7 +2965,7 @@ sgtitle(['MUA: pRFs POS LINEAR vs DoG model']);
 if SaveFigs
     saveas(f_neg3,fullfile(figfld,['EPHYS_NEG-PRF3_MUA.png']));
 end
-if CloseFigs; close(f_neg3); end
+%if CloseFigs; close(f_neg3); end
     
 %% What's specific about the good DoG fits LFP EDITION ====================
 % this doesn't happen for MUA
@@ -2831,7 +3155,7 @@ for fidx = 1:length(fb)
 end
 
 %% Value of exponential parameter for CSS across MUA ======================
-RTHRES = 10;
+RTHRES = 25;
 exptvals_MUA = tMUA.expt(strcmp(tMUA.Model,'css_ephys_cv1') & ...
     strcmp(tMUA.SigType,'MUA') & tMUA.R2 > RTHRES );
 fprintf(['Mean expt: ' num2str(nanmean(exptvals_MUA)) ...
