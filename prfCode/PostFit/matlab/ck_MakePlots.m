@@ -1885,7 +1885,8 @@ for m=1:length(ephys_MOD)
     PRF_EST(m,1).Y = tMUA.Y(s);
     PRF_EST(m,1).S =  tMUA.rfs(s);
     PRF_EST(m,1).A =  tMUA.Area(s);
-
+    PRF_EST(m,1).G =  tMUA.gain(s);
+    
     s = strcmp(tMUA.Model,'classicRF');
     C{m}=[C{m} tMUA.X(s)./668.745 tMUA.Y(s)./668.745 tMUA.rfs(s)./2];
     
@@ -1895,6 +1896,7 @@ for m=1:length(ephys_MOD)
     PRF_EST(m,2).Y = tMUA.Y(s);
     PRF_EST(m,2).S =  tMUA.rfs(s)./2;
     PRF_EST(m,2).A =  tMUA.Area(s);
+    PRF_EST(m,2).G =  tMUA.gain(s);
 
     s = strcmp(tLFP.Model,model);
     sig=unique(tLFP.SigType);
@@ -1912,6 +1914,7 @@ for m=1:length(ephys_MOD)
         PRF_EST(m,2+cnt).Y = tLFP.Y(s & b);
         PRF_EST(m,2+cnt).S =  tLFP.rfs(s & b);
         PRF_EST(m,2+cnt).A =  tLFP.Area(s & b);
+        PRF_EST(m,2+cnt).G =  tLFP.gain(s & b);
 
         cnt=cnt+1;
     end
@@ -1939,9 +1942,12 @@ for m=1:length(ephys_MOD)
         C{m}(s,23)./C{m}(s,4) ];
 end
 
+figure;
 % compare MUA with classic
-for m=1%3 %1:length(ephys_MOD)
+for m=3 %1:length(ephys_MOD)
+    pn=0;
     for area = [1 4]
+        pn=pn+1;
         fprintf(['=== AREA V' num2str(area) ' ===\n'])
         % location
         sel = PRF_EST(m,1).A == area & ...
@@ -1969,10 +1975,12 @@ for m=1%3 %1:length(ephys_MOD)
             ', STD ' num2str(nanstd(SIZE_MUA(:,1)-SIZE_MUA(:,2))) '\n'])
         fprintf(['Median ' num2str(median(SIZE_MUA(:,1)-SIZE_MUA(:,2))) ...
             ', IQR ' num2str(iqr(SIZE_MUA(:,1)-SIZE_MUA(:,2))) '\n'])
-        figure;
+        subplot(1,2,pn);
         scatter(SIZE_MUA(:,1),SIZE_MUA(:,2),50,'Marker','o',...
             'MarkerEdgeColor',[.3 .3 .3],'MarkerFaceColor',[.3 .3 .3],...
             'MarkerFaceAlpha',0.5);
+        title(['Area V' num2str(area)])
+        xlabel('MUA pRF size'); ylabel('Classic RF size')
     end
 end
 
@@ -1985,8 +1993,8 @@ for i=1:length(m)
     R2 = [R2 tMUA.R2(strcmp(tMUA.Model,m{i}))];
 end
 
-v1=tLFP.Area(strcmp(tMUA.Model,m{1}))==1;
-v4=tLFP.Area(strcmp(tMUA.Model,m{1}))==4;
+v1=tMUA.Area(strcmp(tMUA.Model,m{1}))==1;
+v4=tMUA.Area(strcmp(tMUA.Model,m{1}))==4;
 
 f6=figure;
 msz=15;
@@ -2046,12 +2054,19 @@ end
 f7=figure; 
 set(f7,'Position',[100 100 1600 1200]);
 
+m=unique(tMUA.Model);
+v1=tMUA.Area(strcmp(tMUA.Model,m{1}))==1;
+v4=tMUA.Area(strcmp(tMUA.Model,m{1}))==4;
+
 % scatter dots
 sig=unique(tLFP.SigType);
 lfp_order = [3 1 2 5 4];
-spn=1; msz=15;
+spn=1; fbn=1;
 
 for fb=lfp_order
+    lfpmods{fbn,1}=[];
+    lfpmods{fbn,2}=[];
+
     m=unique(tLFP.Model);
     % reorder ---------
     m=m([3 4 1 2]);
@@ -2063,21 +2078,29 @@ for fb=lfp_order
             strcmp(tLFP.Model,m{i}) & ...
             strcmp(tLFP.SigType,sig{fb}))];
     end
-    
+        
     for m1=1:4
+        lfpmods{fbn,1}=[lfpmods{fbn,1} R2(v1,m1)];
+        lfpmods{fbn,2}=[lfpmods{fbn,2} R2(v4,m1)];
         for m2=m1+1:4
             subplot(length(sig),6,spn); hold on;
             plot([-5 100],[-5 100],'k');
-            M1R2=R2(v1,m1); M1R2=M1R2(M1R2>0 & M2R2>0);
-            M2R2=R2(v1,m1); M1R2=M1R2(M1R2>0 & M2R2>0);
+
+%             M1R2=R2(v1,m1); 
+%             M2R2=R2(v1,m2);           
+%             M1R2=M1R2(M1R2>0 & M2R2>0);
+%             M2R2=M2R2(M1R2>0 & M2R2>0);
+            
             scatter(R2(v1,m1), R2(v1,m2),msz,'Marker','o',...
                 'MarkerEdgeColor',[.3 .3 .3],'MarkerEdgeAlpha',0,...
                 'MarkerFaceColor',[.3 .3 .3],'MarkerFaceAlpha',0.25);
 %             scatter(R2(v4,m1), R2(v4,m2),msz,'Marker','o',...
 %                 'MarkerEdgeColor',[.3 .8 .3],'MarkerEdgeAlpha',0,...
 %                 'MarkerFaceColor',[.3 .8 .3],'MarkerFaceAlpha',0.25);
+
 %             M1R2=R2(v4,m1); M1R2=M1R2(M1R2>0 & M2R2>0);
-%             M2R2=R2(v4,m1); M1R2=M1R2(M1R2>0 & M2R2>0);
+%             M2R2=R2(v4,m1); M1R2=M1R2(M1R2>0 & M2R2>0);          
+                        
 %             scatter(R2(v4,m1), R2(v4,m2),msz,'Marker','o',...
 %                 'MarkerEdgeColor',[.3 .3 .3],'MarkerEdgeAlpha',0,...
 %                 'MarkerFaceColor',[.3 .3 .3],'MarkerFaceAlpha',0.25);
@@ -2091,13 +2114,36 @@ for fb=lfp_order
             spn=spn+1;
         end
     end
+    fbn=fbn+1;
 end
 if SaveFigs
     saveas(f7,fullfile(figfld, 'EPHYS_LFP_ModelComparison.png'));
 end
 if CloseFigs; close(f7); end
 
+%% stats ======
+FreqNames = {'Theta','Alpha','Beta','Gamma-low','Gamma-high'};
 
+for fb=1:5
+    % stats V1
+    fprintf(['\n= V1 LFP-' FreqNames{fb} ' ================\n'])
+    [p,tbl,stats] = kruskalwallis(lfpmods{fb,1},modname);
+    fprintf(['H =' num2str(tbl{2,5}(1)) ', df = ' num2str(tbl{2,3}(1)) ', p = ' num2str(tbl{2,6}(1)) '\n'])
+    [c,m,h,gnames] = multcompare(stats);
+    for i=1:size(c,1)
+        fprintf([gnames{c(i,1)} ' vs ' gnames{c(i,2)} ...
+            ', p = ' num2str(c(i,6))  '\n'])
+    end
+    % stats V4
+    fprintf(['\n= V4 LFP-' FreqNames{fb} ' ================\n'])
+    [p,tbl,stats] = kruskalwallis(lfpmods{fb,2},modname);
+    fprintf(['H =' num2str(tbl{2,5}(1)) ', df = ' num2str(tbl{2,3}(1)) ', p = ' num2str(tbl{2,6}(1)) '\n'])
+    [c,m,h,gnames] = multcompare(stats);
+    for i=1:size(c,1)
+        fprintf([gnames{c(i,1)} ' vs ' gnames{c(i,2)} ...
+            ', p = ' num2str(c(i,6))  '\n'])
+    end
+end
 %% R2 for different ephys signals =========================================
 r2th=0;
 
@@ -2106,7 +2152,7 @@ ephys_MOD={'linear_ephys_cv1','linear_ephys_cv1_neggain',...
     'css_ephys_cv1','dog_ephys_cv1'};
 ephys_MMS = MMS(:,1);
 
-for m=1:length(ephys_MOD)
+for m=4%1:length(ephys_MOD)
     model=ephys_MOD{m};
     s = strcmp(tMUA.Model,model);
     RR=[RR tMUA.R2(s)];
@@ -2120,9 +2166,9 @@ for m=1:length(ephys_MOD)
     end
     LAB=['MUA';sig(lfp_order)];
     
-    f8=figure; set(f8,'Position',[100 100 1300 1200]);
+    f8=figure; 
+    set(f8,'Position',[100 100 1900 1350]);
     sgtitle(['R2 per Model: ' model],'interpreter','none');
-    r2th=0;
     
     c=0;d=0;
     for ref=1:6
@@ -2130,11 +2176,21 @@ for m=1:length(ephys_MOD)
         for fb=1:6
             d=d+1;
             s=(RR(:,ref)>r2th & RR(:,fb)>r2th);
-            subplot(6,6,d); hold on; plot([0 100],[0 100],'k');
-            scatter(RR(s,ref),RR(s,fb),120,[0.3 0.3 0.3],'Marker','.')
+            subplot(6,6,d); hold on; 
+            %scatter(RR(s,ref),RR(s,fb),120,[0.3 0.3 0.3],'Marker','.');
+            binscatter(RR(s,ref),RR(s,fb),25,...
+                'XLimits', [0 100],...
+                'YLimits', [0 100],...
+                'ShowEmptyBins', 'off')
+            colorbar; 
+            set(gca,'ColorScale','log');
+            colormap(inferno)
+            caxis([1 256]) 
+            plot([0 100],[0 100],'Color',[.7 .7 .7],'LineWidth',2);
             xlabel(LAB{ref});ylabel(LAB{fb});
-            title(['R2 ' model],'interpreter','none');
+            %title(['R2 ' model],'interpreter','none');
             set(gca,'xlim',[0 100],'ylim',[0 100]);
+            set(gca,'TickDir','out','xtick',[0 50 100],'ytick',[0 50 100]);
         end
     end
     if SaveFigs
@@ -2142,41 +2198,41 @@ for m=1:length(ephys_MOD)
     end
     if CloseFigs; close(f8); end
     
-    % Distance from diagonal ==============================================
-    f9=figure; set(f9,'Position',[100 100 1300 1200]);
-    LAB=['MUA';sig(lfp_order)];
-    sgtitle(['Differences Model: ' model],'interpreter','none');
-
-    c=0;d=0;
-    for ref=1:6
-        c=c+1;
-        for fb=1:6
-            d=d+1;
-            s=(RR(:,ref)>r2th & RR(:,fb)>r2th);
-            
-            subplot(6,6,d); hold on;
-            dRR = RR(s,fb)-RR(s,ref);
-            h = histogram(dRR,-100:1:100,'FaceColor','k','FaceAlpha',1);
-            YY = get(gca,'ylim');
-            plot([0 0],YY,'Color',[0.5 0.5 0.5],'LineWidth',2)
-            plot([mean(dRR) mean(dRR)],YY,'r','LineWidth',2)
-            plot([median(dRR) median(dRR)],YY,'b','LineWidth',2)
-            set(gca,'xlim',[-100 100])
-            xlabel(['dRR ' model],'interpreter','none');
-            ylabel('cnt','interpreter','none');
-            title(['R2 ' LAB{(fb)} '-' LAB{(ref)} ],...
-                'interpreter','none')
-            
-            if ref ==1 && fb ==1
-                legend({'HIST','0','MEAN','MEDIAN'});
-            end
-            
-        end
-    end
-    if SaveFigs
-        saveas(f9,fullfile(figfld, ['EPHYS_MUA_R2diff_' ephys_MOD{m} '.png']));  
-    end
-    if CloseFigs; close(f9); end
+%     % Distance from diagonal ==============================================
+%     f9=figure; set(f9,'Position',[100 100 1300 1200]);
+%     LAB=['MUA';sig(lfp_order)];
+%     sgtitle(['Differences Model: ' model],'interpreter','none');
+% 
+%     c=0;d=0;
+%     for ref=1:6
+%         c=c+1;
+%         for fb=1:6
+%             d=d+1;
+%             s=(RR(:,ref)>r2th & RR(:,fb)>r2th);
+%             
+%             subplot(6,6,d); hold on;
+%             dRR = RR(s,fb)-RR(s,ref);
+%             h = histogram(dRR,-100:1:100,'FaceColor','k','FaceAlpha',1);
+%             YY = get(gca,'ylim');
+%             plot([0 0],YY,'Color',[0.5 0.5 0.5],'LineWidth',2)
+%             plot([mean(dRR) mean(dRR)],YY,'r','LineWidth',2)
+%             plot([median(dRR) median(dRR)],YY,'b','LineWidth',2)
+%             set(gca,'xlim',[-100 100])
+%             xlabel(['dRR ' model],'interpreter','none');
+%             ylabel('cnt','interpreter','none');
+%             title(['R2 ' LAB{(fb)} '-' LAB{(ref)} ],...
+%                 'interpreter','none')
+%             
+%             if ref ==1 && fb ==1
+%                 legend({'HIST','0','MEAN','MEDIAN'});
+%             end
+%             
+%         end
+%     end
+%     if SaveFigs
+%         saveas(f9,fullfile(figfld, ['EPHYS_MUA_R2diff_' ephys_MOD{m} '.png']));  
+%     end
+%     if CloseFigs; close(f9); end
 end
 
 %% pRF size for different ephys signals ===================================
@@ -2554,7 +2610,7 @@ warning on;
 rng(1); % seed the random number generator
 
 Rth_mri = 5; % R2 threshold MRI
-Rth_ephys = 50; % R2 threshold ephys
+Rth_ephys = 25%50; % R2 threshold ephys
 mxS = 1000;%25; % maximum size
 MaxECC = 25; % max ecc to use for fitting
 
@@ -2575,7 +2631,7 @@ poscorr_only = true;
 warning off;
 cmROI = {'V1','V4'};
 fprintf('=======================\n');
-for m = [2 3] % 1:size(MODS,1)
+for m = [1 2 3] % 1:size(MODS,1)
     fprintf(['\nCrossmodal Correlation for Model: ' MODS{m} '\n']);
     
     s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
@@ -2588,9 +2644,11 @@ for m = [2 3] % 1:size(MODS,1)
         if strcmp(cmROI{r},'V1') % V1
             mri1(m).ECC = T(modidx.(MRI_MODEL{m})).mod.ecc(SSS);
             mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
+            mri1(m).G = T(modidx.(MRI_MODEL{m})).mod.gain(SSS);
         elseif strcmp(cmROI{r},'V4') % V4
             mri4(m).ECC = T(modidx.(MRI_MODEL{m})).mod.ecc(SSS);
             mri4(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
+            mri4(m).G = T(modidx.(MRI_MODEL{m})).mod.gain(SSS);
         end
     end
     
@@ -2608,11 +2666,14 @@ for m = [2 3] % 1:size(MODS,1)
     
     mua1(m).ECC = tMUA.ecc(s);
     mua1(m).S = tMUA.rfs(s);
+    mua1(m).G = tMUA.gain(s);
     % MUA V4
     s = strcmp(tMUA.Model,EPHYS_MODEL{m}) & ...
         tMUA.Area == 4 & tMUA.R2 > Rth_ephys & tMUA.rfs < mxS;
     mua4(m).ECC = tMUA.ecc(s);
     mua4(m).S = tMUA.rfs(s);
+    mua4(m).G = tMUA.gain(s);
+    
     % LFP
     freqband=unique(tLFP.SigType);
     for fb = 1: length(freqband)
@@ -2631,6 +2692,7 @@ for m = [2 3] % 1:size(MODS,1)
         lfp1(fb,m).freqband =  freqband{fb};
         lfp1(fb,m).ECC =  tLFP.ecc(s);
         lfp1(fb,m).S =  tLFP.rfs(s);
+        lfp1(fb,m).G =  tLFP.gain(s);
         
         % V4
         s = strcmp(tLFP.Model,EPHYS_MODEL{m}) & ...
@@ -2639,6 +2701,7 @@ for m = [2 3] % 1:size(MODS,1)
         lfp4(fb,m).freqband =  freqband{fb};
         lfp4(fb,m).ECC =  tLFP.ecc(s);
         lfp4(fb,m).S =  tLFP.rfs(s);
+        lfp4(fb,m).G =  tLFP.gain(s);
     end
     
     % Calculate  & bootstrap linear regressions
@@ -2980,7 +3043,7 @@ end
 % - plot their size
 % - plot their prf profile
 
-R2th = 10; % minimum R2
+R2th = 20; % minimum R2
 R2enh = 5; % R2 improvement
 
 fb = {'Alpha','Beta'};
@@ -3158,8 +3221,351 @@ for fidx = 1:length(fb)
     
 end
 
+%% manuscript version ----
+
+R2th = 20; % minimum R2
+R2enh = 5; % R2 improvement
+
+fb = {'Alpha','Beta'};
+
+%% ALPHA
+fidx = 1;
+
+DoG = tLFP(...
+    strcmp(tLFP.Model,'dog_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
+lin_n = tLFP(...
+    strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,fb{fidx}),:);
+lin = tLFP(...
+    strcmp(tLFP.Model,'linear_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
+
+
+f_neg2 = figure;
+set(f_neg2,'Position',[10 10 900 1200]);
+chan_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+chan_sel2 = lin_n.R2>R2th;
+
+subplot(3,2,1); hold on;
+% gain alpha U-LIN
+histogram(lin_n.gain(chan_sel2),-2000:50:2000,'FaceColor','k','FaceAlpha',0.5);
+xlabel('gain U-LIN - ALL ELEC');ylabel('nChannels');
+set(gca,'xlim',[-800 1800],'TickDir','out');
+MM=median(lin_n.gain(chan_sel2));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+10]);
+title('Gain')
+
+fprintf(['UNSELECTED - ALPHA MEDIAN GAIN: ' num2str(MM) ', IQR ' num2str(iqr(lin_n.gain(chan_sel))) '\n'])
+
+subplot(3,2,2); hold on;
+% gain alpha U-LIN
+histogram(lin_n.gain(chan_sel),-1000:50:1000,'FaceColor','k','FaceAlpha',0.5);
+xlabel('gain LIN-POSNEG');ylabel('nChannels');
+set(gca,'xlim',[-800 1700],'TickDir','out');
+MM=median(lin_n.gain(chan_sel));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+10]);
+title('Gain')
+
+fprintf(['ALPHA MEDIAN GAIN: ' num2str(MM) ', IQR ' num2str(iqr(lin_n.gain(chan_sel))) '\n'])
+
+% Wilcoxon 1-tailed < 1
+[p,h,stats] = signrank(lin_n.gain(chan_sel),0,'tail','left');
+fprintf(['Gain < 0: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+subplot(3,2,3); hold on;
+bb = [lin_n.ecc(chan_sel) lin.ecc(chan_sel)];
+% plot([1 2],bb)
+% plot([1 2],mean(bb),'k','Linewidth',5)
+errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
+    'ylim',[0 30],'xlim',[0.8 2.2],'TickDir','out')
+ylabel('Eccentricity');
+title('Ecc Diff')
+
+subplot(3,2,4); hold on;
+histogram(lin.ecc(chan_sel)-lin_n.ecc(chan_sel),-50:1:50,...
+    'FaceColor','k','FaceAlpha',0.5);
+xlabel('Ecc. Diff (PLIN-ULIN)');ylabel('nChannels');
+set(gca,'xlim',[-10 35],'TickDir','out');
+MM=median(bb(:,2)-bb(:,1));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+5]);
+title('Ecc Diff')
+
+% Wilcoxon 
+[p,h,stats] = signrank(bb(:,1),bb(:,2));
+fprintf(['ECC diff Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+fprintf(['ALPHA MEDIAN ECC DIFF: ' num2str(median(lin.ecc(chan_sel)-lin_n.ecc(chan_sel))) ...
+    ', IQR ' num2str(iqr(lin.ecc(chan_sel)-lin_n.ecc(chan_sel))) '\n'])
+
+subplot(3,2,5); hold on;
+bb = [lin_n.rfs(chan_sel) lin.rfs(chan_sel)];
+%plot([1 2],bb)
+%plot([1 2],mean(bb),'k','Linewidth',5)
+errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:2,'xticklabels',{'U-LIN','P-LIN'},...
+    'ylim',[0 6],'xlim',[0.8 2.2],'TickDir','out')
+ylabel('Size');
+title('Size Diff')
+
+subplot(3,2,6); hold on;
+histogram(lin.rfs(chan_sel)-lin_n.rfs(chan_sel),-10:0.5:10,...
+    'FaceColor','k','FaceAlpha',0.5);
+xlabel('Size Diff (POS-POSNEG)');ylabel('nChannels');
+MM=median(bb(:,2)-bb(:,1));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+10]);
+set(gca,'xlim',[-5 10],'TickDir','out');
+title('Size Diff')
+
+% Wilcoxon 
+[p,h,stats] = signrank(bb(:,1),bb(:,2));
+fprintf(['SZ diff Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+sgtitle([ fb{fidx} ': pRFs POS LINEAR vs POSNEG LINEAR model']);
+
+% ----
+
+f_neg3 = figure;
+set(f_neg3,'Position',[10 10 900 800]);
+chan_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh & ...
+    DoG.normamp~=0 & DoG.ecc<16;
+
+subplot(2,2,2); hold on;
+histogram(DoG.normamp(chan_sel),-10:5:200,'FaceColor','k','FaceAlpha',0.5);
+xlabel('INH nAMP');ylabel('nChannels');
+set(gca,'xlim',[-10 120]);
+MM=median(DoG.normamp(chan_sel));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+30],'TickDir','out');
+title('NORMAMP')
+
+fprintf(['ALPHA MEDIAN NAMP: ' num2str(MM) ', IQR ' num2str(iqr(DoG.normamp(chan_sel))) '\n'])
+
+% Wilcoxon 1-tailed < 1
+[p,h,stats] = signrank(lin_n.gain(chan_sel),0,'tail','left');
+fprintf(['Gain < 0: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+
+subplot(2,2,3); hold on;
+bb = [DoG.ecc(chan_sel) lin.ecc(chan_sel)];
+%plot([1 2],bb)
+%plot([1 2],mean(bb),'k','Linewidth',5)
+errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:2,'xticklabels',{'DoG','LIN'},...
+    'ylim',[0 25],'xlim',[0.8 2.2],'TickDir','out')
+ylabel('Eccentricity');
+title('Ecc Diff')
+
+% Wilcoxon 
+[p,h,stats] = signrank(bb(:,1),bb(:,2));
+fprintf(['ECC diff Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+subplot(2,2,4); hold on;
+histogram(lin.ecc(chan_sel)-DoG.ecc(chan_sel),-20:1:30,...
+    'FaceColor','k','FaceAlpha',0.5);
+xlabel('Ecc. Diff (POS-DoG)');ylabel('nChannels');
+set(gca,'xlim',[-5 30]);
+MM=median(bb(:,2)-bb(:,1));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+10],'TickDir','out');
+title('Ecc Diff')
+
+sgtitle([ fb{fidx} ': pRFs POS LINEAR vs DoG model']);
+
+fprintf(['ALPHA MEDIAN ECC DIFF: ' num2str(median(lin.ecc(chan_sel)-DoG.ecc(chan_sel))) ...
+    ', IQR ' num2str(iqr(lin.ecc(chan_sel)-DoG.ecc(chan_sel))) '\n'])
+
+
+if SaveFigs
+    saveas(f_neg3,fullfile(figfld,['EPHYS_NEG-PRF3_' fb{fidx} '.png']));
+end
+if CloseFigs; close(f_neg3); end
+    
+%% BETA
+fidx = 2;
+
+DoG = tLFP(...
+    strcmp(tLFP.Model,'dog_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
+lin_n = tLFP(...
+    strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,fb{fidx}),:);
+lin = tLFP(...
+    strcmp(tLFP.Model,'linear_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
+
+
+f_neg2 = figure;
+set(f_neg2,'Position',[10 10 900 1200]);
+chan_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+chan_sel2 = lin_n.R2>R2th;
+
+
+subplot(3,2,1); hold on;
+% gain alpha U-LIN
+histogram(lin_n.gain(chan_sel2),-1000:25:1000,'FaceColor','k','FaceAlpha',0.5);
+xlabel('gain U-LIN - ALL ELEC');ylabel('nChannels');
+set(gca,'xlim',[-300 300],'TickDir','out');
+MM=median(lin_n.gain(chan_sel2));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+10]);
+title('Gain')
+
+fprintf(['UNSELECTED - ALPHA MEDIAN GAIN: ' num2str(MM) ', IQR ' num2str(iqr(lin_n.gain(chan_sel))) '\n'])
+subplot(3,2,2); hold on;
+% gain alpha U-LIN
+histogram(lin_n.gain(chan_sel),-1000:25:1000,'FaceColor','k','FaceAlpha',0.5);
+xlabel('gain LIN-POSNEG');ylabel('nChannels');
+set(gca,'xlim',[-400 200],'TickDir','out');
+MM=median(lin_n.gain(chan_sel));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+10]);
+title('Gain')
+
+fprintf(['BETA MEDIAN GAIN: ' num2str(MM) ', IQR ' num2str(iqr(lin_n.gain(chan_sel))) '\n'])
+
+% Wilcoxon 1-tailed < 1
+[p,h,stats] = signrank(lin_n.gain(chan_sel),0,'tail','left');
+fprintf(['Gain < 0: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+subplot(3,2,3); hold on;
+bb = [lin_n.ecc(chan_sel) lin.ecc(chan_sel)];
+% plot([1 2],bb)
+% plot([1 2],mean(bb),'k','Linewidth',5)
+errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
+    'ylim',[0 30],'xlim',[0.8 2.2],'TickDir','out')
+ylabel('Eccentricity');
+title('Ecc Diff')
+
+subplot(3,2,4); hold on;
+histogram(lin.ecc(chan_sel)-lin_n.ecc(chan_sel),-5:1:35,...
+    'FaceColor','k','FaceAlpha',0.5);
+xlabel('Ecc. Diff (PLIN-ULIN)');ylabel('nChannels');
+set(gca,'xlim',[-5 30],'TickDir','out');
+MM=median(bb(:,2)-bb(:,1));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+5]);
+title('Ecc Diff')
+
+fprintf(['BETA MEDIAN ECC DIFF: ' num2str(median(lin.ecc(chan_sel)-lin_n.ecc(chan_sel))) ...
+    ', IQR ' num2str(iqr(lin.ecc(chan_sel)-lin_n.ecc(chan_sel))) '\n'])
+
+% Wilcoxon 
+[p,h,stats] = signrank(bb(:,1),bb(:,2));
+fprintf(['ECC diff Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+subplot(3,2,5); hold on;
+bb = [lin_n.rfs(chan_sel) lin.rfs(chan_sel)];
+%plot([1 2],bb)
+%plot([1 2],mean(bb),'k','Linewidth',5)
+errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:2,'xticklabels',{'U-LIN','P-LIN'},...
+    'ylim',[0 10],'xlim',[0.8 2.2],'TickDir','out')
+ylabel('Size');
+title('Size Diff')
+
+subplot(3,2,6); hold on;
+histogram(lin.rfs(chan_sel)-lin_n.rfs(chan_sel),-10:0.5:10,...
+    'FaceColor','k','FaceAlpha',0.5);
+xlabel('Size Diff (POS-POSNEG)');ylabel('nChannels');
+MM=median(bb(:,2)-bb(:,1));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+10]);
+set(gca,'xlim',[-5 10],'TickDir','out');
+title('Size Diff')
+
+% Wilcoxon 
+[p,h,stats] = signrank(bb(:,1),bb(:,2));
+fprintf(['SZ diff Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+sgtitle([ fb{fidx} ': pRFs POS LINEAR vs POSNEG LINEAR model']);
+
+% ----
+
+f_neg3 = figure;
+set(f_neg3,'Position',[10 10 900 800],'Renderer','painters');
+chan_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh & ...
+    DoG.normamp~=0 & DoG.ecc<16;
+
+subplot(2,2,2); hold on;
+histogram(DoG.normamp(chan_sel),-10:2:50,'FaceColor','k','FaceAlpha',0.5);
+xlabel('INH nAMP');ylabel('nChannels');
+set(gca,'xlim',[-5 35]);
+MM=median(DoG.normamp(chan_sel));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+30],'TickDir','out');
+title('NORMAMP')
+
+fprintf(['BETA MEDIAN NAMP: ' num2str(MM) ', IQR ' num2str(iqr(DoG.normamp(chan_sel))) '\n'])
+
+% Wilcoxon 1-tailed < 1
+[p,h,stats] = signrank(lin_n.gain(chan_sel),0,'tail','left');
+fprintf(['Gain < 0: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+
+subplot(2,2,3); hold on;
+bb = [DoG.ecc(chan_sel) lin.ecc(chan_sel)];
+%plot([1 2],bb)
+%plot([1 2],mean(bb),'k','Linewidth',5)
+errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:2,'xticklabels',{'DoG','LIN'},...
+    'ylim',[0 30],'xlim',[0.8 2.2],'TickDir','out')
+ylabel('Eccentricity');
+title('Ecc Diff')
+
+% Wilcoxon 
+[p,h,stats] = signrank(bb(:,1),bb(:,2));
+fprintf(['ECC diff Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+subplot(2,2,4); hold on;
+histogram(lin.ecc(chan_sel)-DoG.ecc(chan_sel),-20:1:30,...
+    'FaceColor','k','FaceAlpha',0.5);
+xlabel('Ecc. Diff (POS-DoG)');ylabel('nChannels');
+set(gca,'xlim',[-18 30]);
+MM=median(bb(:,2)-bb(:,1));
+yy=get(gca,'ylim');
+plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
+set(gca,'ylim',[0 yy(2)+10],'TickDir','out');
+title('Ecc Diff')
+
+sgtitle([ fb{fidx} ': pRFs POS LINEAR vs DoG model']);
+
+fprintf(['BETA MEDIAN ECC DIFF: ' num2str(median(lin.ecc(chan_sel)-DoG.ecc(chan_sel))) ...
+    ', IQR ' num2str(iqr(lin.ecc(chan_sel)-DoG.ecc(chan_sel))) '\n'])
+
+if SaveFigs
+    saveas(f_neg3,fullfile(figfld,['EPHYS_NEG-PRF3_' fb{fidx} '.png']));
+end
+if CloseFigs; close(f_neg3); end
+
 %% Value of exponential parameter for CSS across MUA ======================
+% Run the analysis for MRI first because we're going to want to do a
+% cross-signal comparison.
+
 RTHRES = 25;
+
+figure;
 exptvals_MUA = tMUA.expt(strcmp(tMUA.Model,'css_ephys_cv1') & ...
     strcmp(tMUA.SigType,'MUA') & tMUA.R2 > RTHRES );
 fprintf(['Mean expt: ' num2str(nanmean(exptvals_MUA)) ...
@@ -3178,3 +3584,535 @@ fprintf(['Wilcoxon EXPT < 1 : z = ' num2str(stats.zval) ', p = ' num2str(p) '\n'
 [p,h,stats] = ranksum(mm(:,1),ee(:,1));
 fprintf(['Mann-Whitney U EXPT MRI vs MUA : z = ' num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
+
+%% Value of exponential parameter for CSS across LFP ======================
+RTHRES = 25;
+sig=unique(tLFP.SigType);
+lfp_order = [3 1 2 5 4];
+spn=1; ll=[]; 
+figure;
+for fb=lfp_order
+    exptvals_LFP = tLFP.expt(strcmp(tLFP.Model,'css_ephys_cv1') & ...
+        strcmp(tLFP.SigType,sig{fb}) & tLFP.R2 > RTHRES );
+    fprintf(['Mean expt: ' num2str(nanmean(exptvals_LFP)) ...
+        ', Std ' num2str(nanstd(exptvals_LFP)) ...
+        ', Median ' num2str(median(exptvals_LFP)) ...
+        ', IQR :' num2str(iqr(exptvals_LFP)) '\n']);
+    
+    subplot(1,5,spn);histogram(exptvals_LFP,0:.05:2)
+    spn=spn+1;
+%     mm = [exptv(1).roi{xval};exptv(2).roi{xval}];
+%     mm = [mm ones(size(mm))]; % >>> MRI V1
+%     ee = [exptvals_MUA 2*ones(size(exptvals_MUA))]; % >>> MUA
+    ll = [ll; exptvals_LFP (2+spn)*ones(size(exptvals_LFP))];
+    % Wilcoxon 1-tailed < 1
+    [p,h,stats] = signrank(exptvals_LFP,1,'tail','left');
+    fprintf([sig{fb} ', Wilcoxon EXPT < 1 : z = ' num2str(stats.zval) ', p = ' num2str(p) '\n']);
+    % Mann-Whitney test
+    [p,h,stats] = ranksum(mm(:,1),exptvals_LFP);
+    fprintf(['Mann-Whitney U EXPT MRI vs LFP : z = ' num2str(stats.zval) ', p = ' num2str(p) '\n']);
+end
+[p,tbl,stats] = kruskalwallis(ll(:,1), ll(:,2));
+[c,m,h,gnames] = multcompare(stats);
+
+
+%% Manuscript comparison of location and size across ephys channels -------
+RTH=25; SNRTH = 3;
+
+% forget about theta here, it doesn't have good pRF fits
+
+% CSS -----
+modidx = 3; % 2 = U-LIN, 3 = CSS
+fprintf(['MODEL ' ephys_MOD{modidx} '\n']);
+% 1 = MUA, 2 = ClasRF, 3 = Theta, 4 = Alpha, 5 = Beta, 6 = Gamma-low, 7 =
+% Gamma-high
+
+SigCompNames = {};
+SigComp_nElec =[];
+SigCompDist = [];
+SigCompDist_columns = {'mean','std','median','iqr'};
+SigCompSz = [];
+SigCompSz_columns = {'mean_nS1','std_nS1','median_nS1','iqr_nS1',...
+    'mean_nS2','std_nS2','median_nS2','iqr_nS2',...
+    'mean_nS2/nS1','std_nS2/nS1','median_nS2/nS1','iqr_nS2/nS1'};
+
+rown=1;
+for sigidx1 = 1:7
+    for sigidx2 = 1:7 
+        SigCompNames{rown,1} = PRF_EST(modidx,sigidx1).sig;
+        SigCompNames{rown,2} = PRF_EST(modidx,sigidx2).sig;
+        
+        % threshold
+        if sigidx1 == 2
+            elec = PRF_EST(modidx,sigidx1).R2 > SNRTH & PRF_EST(modidx,sigidx2).R2 > RTH;
+        elseif sigidx2 == 2
+            elec = PRF_EST(modidx,sigidx1).R2 > RTH & PRF_EST(modidx,sigidx2).R2 > SNRTH;
+        else
+            elec = PRF_EST(modidx,sigidx1).R2 > RTH & PRF_EST(modidx,sigidx2).R2 > RTH;
+        end
+
+        % calculate distance
+        DIST = sqrt((PRF_EST(modidx,sigidx1).X(elec) - PRF_EST(modidx,sigidx2).X(elec)).^2 + ...
+            (PRF_EST(modidx,sigidx1).Y(elec) - PRF_EST(modidx,sigidx2).Y(elec)).^2);
+        SigCompDist = [SigCompDist; mean(DIST) std(DIST) median(DIST) iqr(DIST)];
+        
+        % calculate normalized size
+        nS1 = PRF_EST(modidx,sigidx1).S(elec)./PRF_EST(modidx,1).S(elec);
+        nS2 = PRF_EST(modidx,sigidx2).S(elec)./PRF_EST(modidx,1).S(elec);
+        SigCompSz = [SigCompSz;...
+            nanmean(nS1) nanstd(nS1) nanmedian(nS1) iqr(nS1) ...
+            nanmean(nS2) nanstd(nS2) nanmedian(nS2) iqr(nS2) ...
+            nanmean(nS2./nS1) nanstd(nS2./nS1) nanmedian(nS2./nS1) iqr(nS2./nS1)];
+        
+        SigComp_nElec = [SigComp_nElec;sum(elec)];
+        
+        rown = rown+1;
+    end
+end
+
+[sorted_names,sidx] = sortrows(SigCompNames);
+sorted_n = SigComp_nElec(sidx,:);
+sorted_dist = SigCompDist(sidx,:);
+sorted_sz = SigCompSz(sidx,:);
+
+uSig = unique(SigCompNames);
+nSig = size(unique(SigCompNames),1);
+
+DistMat_median = zeros(nSig);
+DistMat_iqr = zeros(nSig);
+DistMat_n = zeros(nSig);
+SzMat_median = zeros(nSig);
+SzMat_iqr = zeros(nSig);
+
+for i=1:nSig
+    ii=((i-1)*nSig)+1;
+    DistMat_median(:,i) = sorted_dist(ii:ii+nSig-1,3);
+    DistMat_iqr(:,i) = sorted_dist(ii:ii+nSig-1,4)./2;
+    DistMat_n(:,i) = sorted_n(ii:ii+nSig-1);
+    SzMat_median(:,i) = sorted_sz(ii:ii+nSig-1,11);
+    SzMat_iqr(:,i) = sorted_sz(ii:ii+nSig-1,12)./2;
+end
+
+
+% re-order for plot
+order=[4 3 5 1 2 7 6];
+DistMat_median = DistMat_median(order,:); 
+DistMat_median = DistMat_median(:,order); 
+DistMat_iqr = DistMat_iqr(order,:); 
+DistMat_iqr = DistMat_iqr(:,order); 
+SzMat_median = SzMat_median(order,:); 
+SzMat_median = SzMat_median(:,order); 
+SzMat_iqr = SzMat_iqr(order,:); 
+SzMat_iqr = SzMat_iqr(:,order); 
+DistMat_n = DistMat_n(order,:);
+DistMat_n = DistMat_n(:,order); 
+uSig = uSig(order);
+
+%
+fcss=figure;
+set(fcss,'Position',[10 10 2200 1200],'Renderer','painters');
+%colormap(viridis)
+colormap(brewermap([],'RdBu'));
+
+subplot(2,3,1);
+imagesc(DistMat_median)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45)
+caxis([0 1.5]);colorbar; 
+title('pRF distance median');
+
+subplot(2,3,2);
+imagesc(DistMat_iqr)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45)
+caxis([0 0.8]);colorbar; 
+title('pRF distance iqr');
+
+subplot(2,3,3);
+imagesc(DistMat_n)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45,'ColorScale','log');
+colorbar; 
+caxis([1 1700]) 
+title('n');
+
+subplot(2,3,4);
+imagesc(SzMat_median)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45)
+caxis([0 2]);colorbar; 
+title('pRF relative sz median');
+
+subplot(2,3,5);
+imagesc(SzMat_iqr)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45)
+caxis([0 2]);colorbar; 
+title('pRF relative sz iqr');
+
+subplot(2,3,6);
+nMask = DistMat_n >= 10;
+imagesc(nMask)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45);
+colorbar; 
+caxis([0 1]) 
+title('mask n > 10');
+
+sgtitle(['MODEL ' ephys_MOD{modidx}], 'interpreter','none')
+
+
+
+figure;
+errorbar(1:7,SzMat_median(:,2),SzMat_iqr(:,2));
+
+%%
+% U-LIN -----
+modidx = 2; % 2 = U-LIN, 3 = CSS
+fprintf(['MODEL ' ephys_MOD{modidx} '\n']);
+% 1 = MUA, 2 = ClasRF, 3 = Theta, 4 = Alpha, 5 = Beta, 6 = Gamma-low, 7 =
+% Gamma-high
+
+SigCompNames = {};
+SigComp_nElec =[];
+SigCompDist = [];
+SigCompDist_columns = {'mean','std','median','iqr'};
+SigCompSz = [];
+SigCompSz_columns = {'mean_nS1','std_nS1','median_nS1','iqr_nS1',...
+    'mean_nS2','std_nS2','median_nS2','iqr_nS2',...
+    'mean_nS2/nS1','std_nS2/nS1','median_nS2/nS1','iqr_nS2/nS1'};
+rown=1;
+for sigidx1 = 1:7
+    for sigidx2 = 1:7              
+        if (sigidx1 ==  4 || sigidx1 == 5) % split signal 1
+            for lfs1 = 1:3
+                if lfs1 == 1 % all
+                    flag1='';
+                    if (sigidx2 ==  4 || sigidx2 == 5) % split signal 2
+                        for lfs2 = 1:3
+                            if lfs2 == 1 % all
+                                flag2 = '';
+                                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx2).R2 > RTH;
+                            elseif lfs2 == 2 % gain > 0
+                                flag2 = '_pg';
+                                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx2).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx2).G > 0;
+                            elseif lfs2 == 3 % gain < 0
+                                flag2 = '_ng';
+                                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx2).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx2).G < 0;
+                            end
+                            DIST = sqrt((PRF_EST(modidx,sigidx1).X(elec) - PRF_EST(modidx,sigidx2).X(elec)).^2 + ...
+                                (PRF_EST(modidx,sigidx1).Y(elec) - PRF_EST(modidx,sigidx2).Y(elec)).^2);
+                            SigCompDist = [SigCompDist; mean(DIST) std(DIST) median(DIST) iqr(DIST)];
+                            nS1 = PRF_EST(modidx,sigidx1).S(elec)./PRF_EST(modidx,1).S(elec);
+                            nS2 = PRF_EST(modidx,sigidx2).S(elec)./PRF_EST(modidx,1).S(elec);
+                            SigCompSz = [SigCompSz;...
+                                nanmean(nS1) nanstd(nS1) nanmedian(nS1) iqr(nS1) ...
+                                nanmean(nS2) nanstd(nS2) nanmedian(nS2) iqr(nS2) ...
+                                nanmean(nS2./nS1) nanstd(nS2./nS1) nanmedian(nS2./nS1) iqr(nS2./nS1)];
+                            SigComp_nElec = [SigComp_nElec;sum(elec)];
+                            
+                            SigCompNames{rown,1} = [PRF_EST(modidx,sigidx1).sig flag1]; 
+                            SigCompNames{rown,2} = [PRF_EST(modidx,sigidx2).sig flag2];
+                            
+                            rown = rown+1;
+                        end
+                    else
+                        flag2 = '';
+                        elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                            PRF_EST(modidx,sigidx2).R2 > RTH;
+                        DIST = sqrt((PRF_EST(modidx,sigidx1).X(elec) - PRF_EST(modidx,sigidx2).X(elec)).^2 + ...
+                            (PRF_EST(modidx,sigidx1).Y(elec) - PRF_EST(modidx,sigidx2).Y(elec)).^2);
+                        SigCompDist = [SigCompDist; mean(DIST) std(DIST) median(DIST) iqr(DIST)];
+                        nS1 = PRF_EST(modidx,sigidx1).S(elec)./PRF_EST(modidx,1).S(elec);
+                        nS2 = PRF_EST(modidx,sigidx2).S(elec)./PRF_EST(modidx,1).S(elec);
+                        SigCompSz = [SigCompSz;...
+                            nanmean(nS1) nanstd(nS1) nanmedian(nS1) iqr(nS1) ...
+                            nanmean(nS2) nanstd(nS2) nanmedian(nS2) iqr(nS2) ...
+                            nanmean(nS2./nS1) std(nS2./nS1) nanmedian(nS2./nS1) iqr(nS2./nS1)];
+                        SigComp_nElec = [SigComp_nElec;sum(elec)];
+                        
+                        SigCompNames{rown,1} = [PRF_EST(modidx,sigidx1).sig flag1]; 
+                        SigCompNames{rown,2} = [PRF_EST(modidx,sigidx2).sig flag2];
+ 
+                        rown = rown+1;
+                        
+                    end
+                elseif lfs1 == 2 % gain > 0
+                    flag1 = '_pg';
+                    if (sigidx2 ==  4 || sigidx2 == 5) % split signal 2
+                        for lfs2 = 1:3
+                            if lfs2 == 1
+                                flag2='';
+                                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx1).G > 0 & ...
+                                    PRF_EST(modidx,sigidx2).R2 > RTH;
+                            elseif lfs2 == 2 % gain > 0
+                                flag2='_pg';
+                                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx1).G > 0 & ...
+                                    PRF_EST(modidx,sigidx2).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx2).G > 0;
+                            elseif lfs2 == 3 % gain < 0
+                                flag2='_ng';
+                                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx1).G > 0 & ...
+                                    PRF_EST(modidx,sigidx2).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx2).G < 0;
+                            end
+                            DIST = sqrt((PRF_EST(modidx,sigidx1).X(elec) - PRF_EST(modidx,sigidx2).X(elec)).^2 + ...
+                                (PRF_EST(modidx,sigidx1).Y(elec) - PRF_EST(modidx,sigidx2).Y(elec)).^2);
+                            SigCompDist = [SigCompDist; mean(DIST) std(DIST) median(DIST) iqr(DIST)];
+                            nS1 = PRF_EST(modidx,sigidx1).S(elec)./PRF_EST(modidx,1).S(elec);
+                            nS2 = PRF_EST(modidx,sigidx2).S(elec)./PRF_EST(modidx,1).S(elec);
+                            SigCompSz = [SigCompSz;...
+                                nanmean(nS1) nanstd(nS1) nanmedian(nS1) iqr(nS1) ...
+                                nanmean(nS2) nanstd(nS2) nanmedian(nS2) iqr(nS2) ...
+                                nanmean(nS2./nS1) nanstd(nS2./nS1) nanmedian(nS2./nS1) iqr(nS2./nS1)];
+                            SigComp_nElec = [SigComp_nElec;sum(elec)];
+                            
+                            SigCompNames{rown,1} = [PRF_EST(modidx,sigidx1).sig flag1]; 
+                            SigCompNames{rown,2} = [PRF_EST(modidx,sigidx2).sig flag2];
+                        
+                            rown = rown+1;
+                        end
+                    else
+                        flag2='';
+                        elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                            PRF_EST(modidx,sigidx1).G > 0 & ...
+                            PRF_EST(modidx,sigidx2).R2 > RTH;
+                        DIST = sqrt((PRF_EST(modidx,sigidx1).X(elec) - PRF_EST(modidx,sigidx2).X(elec)).^2 + ...
+                            (PRF_EST(modidx,sigidx1).Y(elec) - PRF_EST(modidx,sigidx2).Y(elec)).^2);
+                        SigCompDist = [SigCompDist; mean(DIST) std(DIST) median(DIST) iqr(DIST)];
+                        nS1 = PRF_EST(modidx,sigidx1).S(elec)./PRF_EST(modidx,1).S(elec);
+                        nS2 = PRF_EST(modidx,sigidx2).S(elec)./PRF_EST(modidx,1).S(elec);
+                        SigCompSz = [SigCompSz;...
+                            nanmean(nS1) nanstd(nS1) nanmedian(nS1) iqr(nS1) ...
+                            nanmean(nS2) nanstd(nS2) nanmedian(nS2) iqr(nS2) ...
+                            nanmean(nS2./nS1) nanstd(nS2./nS1) nanmedian(nS2./nS1) iqr(nS2./nS1)];
+                        SigComp_nElec = [SigComp_nElec;sum(elec)];
+                        
+                        SigCompNames{rown,1} = [PRF_EST(modidx,sigidx1).sig flag1]; 
+                        SigCompNames{rown,2} = [PRF_EST(modidx,sigidx2).sig flag2];
+                        
+                        rown = rown+1;
+                    end
+                elseif lfs1 == 3 % gain < 0
+                    flag1='_ng';
+                    if (sigidx2 ==  4 || sigidx2 == 5) % split signal 2
+                        for lfs2 = 1:3
+                            if lfs2 == 1
+                                flag2='';
+                                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx1).G < 0 & ...
+                                    PRF_EST(modidx,sigidx2).R2 > RTH;
+                            elseif lfs2 == 2 % gain > 0
+                                flag2='_pg';
+                                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx1).G < 0 & ...
+                                    PRF_EST(modidx,sigidx2).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx2).G > 0;
+                            elseif lfs2 == 3 % gain < 0
+                                flag2='_ng';
+                                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx1).G < 0 & ...
+                                    PRF_EST(modidx,sigidx2).R2 > RTH & ...
+                                    PRF_EST(modidx,sigidx2).G < 0;
+                            end
+                            DIST = sqrt((PRF_EST(modidx,sigidx1).X(elec) - PRF_EST(modidx,sigidx2).X(elec)).^2 + ...
+                                (PRF_EST(modidx,sigidx1).Y(elec) - PRF_EST(modidx,sigidx2).Y(elec)).^2);
+                            SigCompDist = [SigCompDist; mean(DIST) std(DIST) median(DIST) iqr(DIST)];
+                            nS1 = PRF_EST(modidx,sigidx1).S(elec)./PRF_EST(modidx,1).S(elec);
+                            nS2 = PRF_EST(modidx,sigidx2).S(elec)./PRF_EST(modidx,1).S(elec);
+                            SigCompSz = [SigCompSz;...
+                                nanmean(nS1) nanstd(nS1) nanmedian(nS1) iqr(nS1) ...
+                                nanmean(nS2) nanstd(nS2) nanmedian(nS2) iqr(nS2) ...
+                                nanmean(nS2./nS1) nanstd(nS2./nS1) nanmedian(nS2./nS1) iqr(nS2./nS1)];
+                            SigComp_nElec = [SigComp_nElec;sum(elec)];
+                            
+                            SigCompNames{rown,1} = [PRF_EST(modidx,sigidx1).sig flag1]; 
+                            SigCompNames{rown,2} = [PRF_EST(modidx,sigidx2).sig flag2];
+                        
+                            rown = rown+1;
+                        end
+                    else
+                        flag2='';
+                        elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                            PRF_EST(modidx,sigidx1).G < 0 & ...
+                            PRF_EST(modidx,sigidx2).R2 > RTH;
+                        DIST = sqrt((PRF_EST(modidx,sigidx1).X(elec) - PRF_EST(modidx,sigidx2).X(elec)).^2 + ...
+                            (PRF_EST(modidx,sigidx1).Y(elec) - PRF_EST(modidx,sigidx2).Y(elec)).^2);
+                        SigCompDist = [SigCompDist; mean(DIST) std(DIST) median(DIST) iqr(DIST)];
+                        nS1 = PRF_EST(modidx,sigidx1).S(elec)./PRF_EST(modidx,1).S(elec);
+                        nS2 = PRF_EST(modidx,sigidx2).S(elec)./PRF_EST(modidx,1).S(elec);
+                        SigCompSz = [SigCompSz;...
+                            nanmean(nS1) nanstd(nS1) nanmedian(nS1) iqr(nS1) ...
+                            nanmean(nS2) nanstd(nS2) nanmedian(nS2) iqr(nS2) ...
+                            nanmean(nS2./nS1) nanstd(nS2./nS1) nanmedian(nS2./nS1) iqr(nS2./nS1)];
+                        SigComp_nElec = [SigComp_nElec;sum(elec)];
+                        
+                        SigCompNames{rown,1} = [PRF_EST(modidx,sigidx1).sig flag1]; 
+                        SigCompNames{rown,2} = [PRF_EST(modidx,sigidx2).sig flag2];
+                        
+                        rown = rown+1;
+                    end
+                end
+            end
+        else %do not split signal 1
+            flag1='';
+            if (sigidx2 ==  4 || sigidx2 == 5) % split signal 2
+                for lfs2 = 1:3
+                    if lfs2 == 1
+                        flag2='';
+                        elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                            PRF_EST(modidx,sigidx2).R2 > RTH;
+                    elseif lfs2 == 2 % gain > 0
+                        flag2='_pg';
+                        elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                            PRF_EST(modidx,sigidx2).R2 >  RTH & ...
+                            PRF_EST(modidx,sigidx2).G > 0;
+                    elseif lfs2 == 3 % gain < 0
+                        flag2='_ng';
+                        elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                            PRF_EST(modidx,sigidx2).R2 > RTH & ...
+                            PRF_EST(modidx,sigidx2).G < 0;
+                    end
+                    DIST = sqrt((PRF_EST(modidx,sigidx1).X(elec) - PRF_EST(modidx,sigidx2).X(elec)).^2 + ...
+                        (PRF_EST(modidx,sigidx1).Y(elec) - PRF_EST(modidx,sigidx2).Y(elec)).^2);
+                    SigCompDist = [SigCompDist; mean(DIST) std(DIST) median(DIST) iqr(DIST)];
+                    nS1 = PRF_EST(modidx,sigidx1).S(elec)./PRF_EST(modidx,1).S(elec);
+                    nS2 = PRF_EST(modidx,sigidx2).S(elec)./PRF_EST(modidx,1).S(elec);
+                    SigCompSz = [SigCompSz;...
+                        nanmean(nS1) nanstd(nS1) nanmedian(nS1) iqr(nS1) ...
+                        nanmean(nS2) nanstd(nS2) nanmedian(nS2) iqr(nS2) ...
+                        nanmean(nS2./nS1) nanstd(nS2./nS1) nanmedian(nS2./nS1) iqr(nS2./nS1)];
+                    SigComp_nElec = [SigComp_nElec;sum(elec)];
+                    
+                    SigCompNames{rown,1} = [PRF_EST(modidx,sigidx1).sig flag1]; 
+                    SigCompNames{rown,2} = [PRF_EST(modidx,sigidx2).sig flag2];
+                        
+                    rown = rown+1;
+                end
+            else
+                flag2='';
+                elec = PRF_EST(modidx,sigidx1).R2 > RTH & ...
+                    PRF_EST(modidx,sigidx2).R2 > RTH;
+                DIST = sqrt((PRF_EST(modidx,sigidx1).X(elec) - PRF_EST(modidx,sigidx2).X(elec)).^2 + ...
+                    (PRF_EST(modidx,sigidx1).Y(elec) - PRF_EST(modidx,sigidx2).Y(elec)).^2);
+                SigCompDist = [SigCompDist; mean(DIST) std(DIST) median(DIST) iqr(DIST)];
+                nS1 = PRF_EST(modidx,sigidx1).S(elec)./PRF_EST(modidx,1).S(elec);
+                nS2 = PRF_EST(modidx,sigidx2).S(elec)./PRF_EST(modidx,1).S(elec);
+                SigCompSz = [SigCompSz;...
+                    nanmean(nS1) nanstd(nS1) nanmedian(nS1) iqr(nS1) ...
+                    nanmean(nS2) nanstd(nS2) nanmedian(nS2) iqr(nS2) ...
+                    nanmean(nS2./nS1) nanstd(nS2./nS1) nanmedian(nS2./nS1) iqr(nS2./nS1)];
+                SigComp_nElec = [SigComp_nElec;sum(elec)];
+                
+                SigCompNames{rown,1} = [PRF_EST(modidx,sigidx1).sig flag1]; 
+                SigCompNames{rown,2} = [PRF_EST(modidx,sigidx2).sig flag2];
+                        
+                rown = rown+1;
+            end
+        end      
+    end
+end
+
+[sorted_names,sidx] = sortrows(SigCompNames);
+sorted_n = SigComp_nElec(sidx,:);
+sorted_dist = SigCompDist(sidx,:);
+sorted_sz = SigCompSz(sidx,:);
+
+uSig = unique(SigCompNames);
+nSig = size(unique(SigCompNames),1);
+
+DistMat_median = zeros(nSig);
+DistMat_iqr = zeros(nSig);
+DistMat_n = zeros(nSig);
+SzMat_median = zeros(nSig);
+SzMat_iqr = zeros(nSig);
+
+for i=1:nSig
+    ii=((i-1)*nSig)+1;
+    DistMat_median(:,i) = sorted_dist(ii:ii+nSig-1,3);
+    DistMat_iqr(:,i) = sorted_dist(ii:ii+nSig-1,4)./2;
+    DistMat_n(:,i) = sorted_n(ii:ii+nSig-1);
+    SzMat_median(:,i) = sorted_sz(ii:ii+nSig-1,11);
+    SzMat_iqr(:,i) = sorted_sz(ii:ii+nSig-1,12)./2;
+end
+
+
+% re-order for plot
+order=[8 7 9 1:6 11 10];
+DistMat_median = DistMat_median(order,:); 
+DistMat_median = DistMat_median(:,order); 
+DistMat_iqr = DistMat_iqr(order,:); 
+DistMat_iqr = DistMat_iqr(:,order); 
+SzMat_median = SzMat_median(order,:); 
+SzMat_median = SzMat_median(:,order); 
+SzMat_iqr = SzMat_iqr(order,:); 
+SzMat_iqr = SzMat_iqr(:,order); 
+DistMat_n = DistMat_n(order,:);
+DistMat_n = DistMat_n(:,order); 
+uSig = uSig(order);
+
+
+
+%
+fulin=figure;
+set(fulin,'Position',[10 10 2200 1200],'Renderer','painters');
+colormap(brewermap([],'RdBu'));
+%colormap(viridis)
+
+subplot(2,3,1);
+imagesc(DistMat_median)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45)
+caxis([0 3]);colorbar; 
+title('pRF distance median');
+
+subplot(2,3,2);
+imagesc(DistMat_iqr)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45)
+caxis([0 3]);colorbar; 
+title('pRF distance iqr');
+
+subplot(2,3,3);
+imagesc(DistMat_n)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45,'ColorScale','log');
+colorbar; 
+caxis([1 1700]) 
+title('n');
+
+subplot(2,3,4);
+imagesc(SzMat_median)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45)
+caxis([0 2]);colorbar; 
+title('pRF relative sz median');
+
+subplot(2,3,5);
+imagesc(SzMat_iqr)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45)
+caxis([0 2]);colorbar; 
+title('pRF relative sz iqr');
+
+subplot(2,3,6);
+nMask = DistMat_n >= 10;
+imagesc(nMask)
+set(gca,'TickDir','out','xtick',1:11,'xticklabels',uSig, 'yticklabels',uSig,...
+    'XTickLabelRotation',45);
+colorbar; 
+caxis([0 1]) 
+title('mask n > 10');
+
+sgtitle(['MODEL ' ephys_MOD{modidx}], 'interpreter','none')
+
+figure;
+errorbar(1:11,SzMat_median(:,2),SzMat_iqr(:,2));
