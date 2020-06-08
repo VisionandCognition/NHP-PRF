@@ -2144,15 +2144,19 @@ for fb=1:5
             ', p = ' num2str(c(i,6))  '\n'])
     end
 end
+
 %% R2 for different ephys signals =========================================
 r2th=0;
 
-RR=[];
 ephys_MOD={'linear_ephys_cv1','linear_ephys_cv1_neggain',...
     'css_ephys_cv1','dog_ephys_cv1'};
 ephys_MMS = MMS(:,1);
 
-for m=4%1:length(ephys_MOD)
+for m=3:4%1:length(ephys_MOD)
+    RR=[];
+
+    fprintf(['\n============ ' ephys_MOD{m} ' ===========\n'])
+    
     model=ephys_MOD{m};
     s = strcmp(tMUA.Model,model);
     RR=[RR tMUA.R2(s)];
@@ -2233,6 +2237,17 @@ for m=4%1:length(ephys_MOD)
 %         saveas(f9,fullfile(figfld, ['EPHYS_MUA_R2diff_' ephys_MOD{m} '.png']));  
 %     end
 %     if CloseFigs; close(f9); end
+
+
+    % Stats
+    [p,tbl,stats] = kruskalwallis(RR,LAB');
+    fprintf(['H =' num2str(tbl{2,5}(1)) ', df = ' num2str(tbl{2,3}(1)) ', p = ' num2str(tbl{2,6}(1)) '\n'])
+    [c,m,h,gnames] = multcompare(stats);
+    for i=1:size(c,1)
+        fprintf([gnames{c(i,1)} ' (' num2str(m(c(i,1),1)) ' +/- ' num2str(m(c(i,1),2)) ') vs ' ...
+            gnames{c(i,2)} ' (' num2str(m(c(i,2),1)) ' +/- ' num2str(m(c(i,2),2)) '), p = ' num2str(c(i,6))  '\n'])
+    end    
+    close all
 end
 
 %% pRF size for different ephys signals ===================================
@@ -3422,7 +3437,7 @@ plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 set(gca,'ylim',[0 yy(2)+10]);
 title('Gain')
 
-fprintf(['UNSELECTED - ALPHA MEDIAN GAIN: ' num2str(MM) ', IQR ' num2str(iqr(lin_n.gain(chan_sel))) '\n'])
+fprintf(['UNSELECTED - BETA MEDIAN GAIN: ' num2str(MM) ', IQR ' num2str(iqr(lin_n.gain(chan_sel))) '\n'])
 subplot(3,2,2); hold on;
 % gain alpha U-LIN
 histogram(lin_n.gain(chan_sel),-1000:25:1000,'FaceColor','k','FaceAlpha',0.5);
