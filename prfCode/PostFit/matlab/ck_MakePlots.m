@@ -1643,7 +1643,7 @@ l=legend(lt); set(l,'Location','NorthEastOutside'); clear lt;
 fhm=figure; set(fhm,'Position',[100 100 1800 1000]);
 settings.PixPerDeg = 29.5032;
 settings.meshsize = 2000;   
-colormap(inferno)
+colormap(inferno) 
 
 % Lick V1 ----
 m=strcmp(tMUA.Monkey,'lick') & strcmp(tMUA.Model,model);
@@ -2053,6 +2053,7 @@ end
 %% LFP model comparison ===================================================
 f7=figure; 
 set(f7,'Position',[100 100 1600 1200]);
+msz=15;
 
 m=unique(tMUA.Model);
 v1=tMUA.Area(strcmp(tMUA.Model,m{1}))==1;
@@ -2152,7 +2153,7 @@ ephys_MOD={'linear_ephys_cv1','linear_ephys_cv1_neggain',...
     'css_ephys_cv1','dog_ephys_cv1'};
 ephys_MMS = MMS(:,1);
 
-for m=3:4%1:length(ephys_MOD)
+for m=1:2%1:length(ephys_MOD)
     RR=[];
 
     fprintf(['\n============ ' ephys_MOD{m} ' ===========\n'])
@@ -2625,7 +2626,7 @@ warning on;
 rng(1); % seed the random number generator
 
 Rth_mri = 5; % R2 threshold MRI
-Rth_ephys = 25%50; % R2 threshold ephys
+Rth_ephys = 25; % R2 threshold ephys
 mxS = 1000;%25; % maximum size
 MaxECC = 25; % max ecc to use for fitting
 
@@ -2646,7 +2647,7 @@ poscorr_only = true;
 warning off;
 cmROI = {'V1','V4'};
 fprintf('=======================\n');
-for m = [1 2 3] % 1:size(MODS,1)
+for m = 2%[1 2 3] % 1:size(MODS,1)
     fprintf(['\nCrossmodal Correlation for Model: ' MODS{m} '\n']);
     
     s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
@@ -2746,6 +2747,10 @@ for m = [1 2 3] % 1:size(MODS,1)
     ck_xmod_stats;
     XMOD(m).model = MMS{m}; 
     XMOD(m).stats = stats;
+    
+    if m==2
+        ck_xmod_stats_lowfreqlfp;
+    end
     
     % =====================================================================
     DoBootstrapApproach = false;
@@ -3599,7 +3604,6 @@ fprintf(['Wilcoxon EXPT < 1 : z = ' num2str(stats.zval) ', p = ' num2str(p) '\n'
 [p,h,stats] = ranksum(mm(:,1),ee(:,1));
 fprintf(['Mann-Whitney U EXPT MRI vs MUA : z = ' num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
-
 %% Value of exponential parameter for CSS across LFP ======================
 RTHRES = 25;
 sig=unique(tLFP.SigType);
@@ -3629,7 +3633,6 @@ for fb=lfp_order
 end
 [p,tbl,stats] = kruskalwallis(ll(:,1), ll(:,2));
 [c,m,h,gnames] = multcompare(stats);
-
 
 %% Manuscript comparison of location and size across ephys channels -------
 RTH=25; SNRTH = 3;

@@ -278,6 +278,22 @@ for a = 1:length(areas) % loop over areas
     stats.area(a).full.mdl = mdl2;
     stats.area(a).full.anova = anova(mdl2);
     stats.area(a).full.signals = sn(stats.area(a).signalswithslope);
+    
+    fprintf('========================================\n')
+    fprintf(['All significant signal types in one model V' num2str(areas(a)) '\n']);
+    fprintf('========================================\n')
+    fprintf('Eccentricity\n')
+    fprintf(['F = ' num2str(stats.area(a).full.anova.F(2)) ...
+        ', df = ' num2str(stats.area(a).full.anova.DF(2)) ...
+        ', p = ' num2str(stats.area(a).full.anova.pValue(2)) '\n']);
+    fprintf('Signal\n')
+    fprintf(['F = ' num2str(stats.area(a).full.anova.F(1)) ...
+        ', df = ' num2str(stats.area(a).full.anova.DF(1)) ...
+        ', p = ' num2str(stats.area(a).full.anova.pValue(1)) '\n']);
+    fprintf('Ecc*Signal\n')
+    fprintf(['F = ' num2str(stats.area(a).full.anova.F(3)) ...
+        ', df = ' num2str(stats.area(a).full.anova.DF(3)) ...
+        ', p = ' num2str(stats.area(a).full.anova.pValue(3)) '\n']);
 end
 clear signal2;
 
@@ -285,6 +301,9 @@ clear signal2;
 for a = 1:length(areas) % loop over areas
     ss = stats.area(a).signalswithslope; ss(ss==1)=[];
     sidx=1;
+    fprintf('========================================\n')
+    fprintf(['MRI vs EPHYS V' num2str(areas(a)) '\n']);
+    fprintf('========================================\n')
     for s = ss
         sel = ...
             DT.area == categorical(areas(a)) & ...
@@ -309,6 +328,22 @@ for a = 1:length(areas) % loop over areas
         stats.area(a).sig_vsMRI(sidx).name = sn{s};
         stats.area(a).sig_vsMRI(sidx).mdl = mdl2;
         stats.area(a).sig_vsMRI(sidx).anova = anova(mdl2);
+        
+        fprintf(['MRI vs ' stats.area(a).sig_vsMRI(sidx).name '\n']);       
+        
+        fprintf('Eccentricity\n')
+        fprintf(['F = ' num2str(stats.area(a).sig_vsMRI(sidx).anova.F(2)) ...
+            ', df = ' num2str(stats.area(a).sig_vsMRI(sidx).anova.DF(2)) ...
+            ', p = ' num2str(stats.area(a).sig_vsMRI(sidx).anova.pValue(2)) '\n']);
+        fprintf('Signal\n')
+        fprintf(['F = ' num2str(stats.area(a).sig_vsMRI(sidx).anova.F(1)) ...
+            ', df = ' num2str(stats.area(a).sig_vsMRI(sidx).anova.DF(1)) ...
+            ', p = ' num2str(stats.area(a).sig_vsMRI(sidx).anova.pValue(1)) '\n']);
+        fprintf('Ecc*Signal\n')
+        fprintf(['F = ' num2str(stats.area(a).sig_vsMRI(sidx).anova.F(3)) ...
+            ', df = ' num2str(stats.area(a).sig_vsMRI(sidx).anova.DF(3)) ...
+            ', p = ' num2str(stats.area(a).sig_vsMRI(sidx).anova.pValue(3)) '\n']);
+        
         sidx=sidx+1;
     end
 end
