@@ -36,7 +36,8 @@ for gz = 1:ngauss
     gw = normpdf(xmesh,a,c);
     gv = normpdf(ymesh,b,c);
     Z = gv'*gw;
-    Z = Z./sum(sum(Z)); %Could normalise by sum
+    %Z = Z./sum(Z(:)); %Could normalise by sum (surface under Gauss = 1)
+    Z = Z./max(Z(:)); %Could normalise by max (peak = 1)
     if gz == 1
         ZZ = zeros(size(Z,1),size(Z,2),ngauss,'single');
     end

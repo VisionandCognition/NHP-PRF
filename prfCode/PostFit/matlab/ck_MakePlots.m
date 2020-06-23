@@ -1672,7 +1672,7 @@ yrange_idx = [...
 xrr=res.xmesh(xrange_idx); yrr=res.ymesh2(yrange_idx);
 % plot
 sumimg=sum(img,3);
-imagesc(sumimg./max(img(:)));
+imagesc(sumimg);
 set(gca,'xlim',xrange_idx,'ylim',...
     yrange_idx,'Color','k','xtick',[],'ytick',[])
 colorbar;
@@ -1708,7 +1708,7 @@ yrange_idx = [...
 xrr=res.xmesh(xrange_idx); yrr=res.ymesh2(yrange_idx);
 % plot
 sumimg=sum(img,3);
-imagesc(sumimg./max(img(:)));
+imagesc(sumimg);
 set(gca,'xlim',xrange_idx,'ylim',...
     yrange_idx,'Color','k','xtick',[],'ytick',[])
 colorbar;
@@ -1745,7 +1745,7 @@ yrange_idx = [...
 xrr=res.xmesh(xrange_idx); yrr=res.ymesh2(yrange_idx);
 % plot
 sumimg=sum(img,3);
-imagesc(sumimg./max(img(:)));
+imagesc(sumimg);
 set(gca,'xlim',xrange_idx,'ylim',...
     yrange_idx,'Color','k','xtick',[],'ytick',[])
 colorbar;
@@ -1781,7 +1781,7 @@ yrange_idx = [...
 xrr=res.xmesh(xrange_idx); yrr=res.ymesh2(yrange_idx);
 % plot
 sumimg=sum(img,3);
-imagesc(sumimg./max(img(:)));
+imagesc(sumimg);
 set(gca,'xlim',xrange_idx,'ylim',...
     yrange_idx,'Color','k','xtick',[],'ytick',[])
 colorbar;
