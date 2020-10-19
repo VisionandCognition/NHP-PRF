@@ -9,6 +9,11 @@ fprintf('Moving to root folder for this script\n')
 cd(fullfile('/Users','chris','Documents','MRI_ANALYSIS',...
     'NHP-PRF','prfCode','PostFit','matlab'));
 
+
+%% ========================================================================
+%  INITIATE ---------------------------------------------------------------
+%  ========================================================================
+
 %% Paths ==================================================================
 fprintf('Setting up paths\n')
 BaseFld = pwd;
@@ -19,10 +24,10 @@ ResFld = ...
 TT='Tables_mean';
 
 % add colorbrewer
-addpath('/Users/chris/Dropbox/MATLAB_NONGIT/TOOLBOX/BrewerMap')
+addpath(genpath('~/Documents/MATLAB/GENERAL_FUNCTIONS/BrewerMap'));
 def_cmap = 'Spectral';
 % add matplotlib
-addpath(genpath('~/Documents/MATLAB/GENERAL_FUNCTIONS/matplotlib'))
+addpath(genpath('~/Documents/MATLAB/GENERAL_FUNCTIONS/matplotlib'));
 % add boundedline
 addpath(genpath('~/Documents/MATLAB/GENERAL_FUNCTIONS/boundedline'));
 ResType = 'mean'; % max / mean
@@ -31,8 +36,7 @@ TT = ['Tables_' ResType];
 % figure saving folder
 pngfld = fullfile(pwd,'fig_png');
 svgfld = fullfile(pwd,'fig_svg');
-[~,~] = mkdir(pngfld);
-[~,~] = mkdir(svgfld);
+[~,~] = mkdir(pngfld); [~,~] = mkdir(svgfld);
 
 %% Load ===================================================================
 fprintf(['Loading results table. '...
@@ -209,6 +213,14 @@ plot(x,y./max(y,2));
 ym = nanmean(y,1); 
 hold on; plot(x,ym,'k','Linewidth',5)
 close(f_dog)
+
+
+
+
+
+%% ========================================================================
+%  FMRI PRF ANALYSIS ------------------------------------------------------
+%  ========================================================================
 
 %% Number of significant voxels per ROI (split by monkey and model) =======
 RTHRES = 5;
@@ -1375,6 +1387,15 @@ end
 if SaveFigs; saveas(f5b,fullfile(figfld, 'MRI_Ecc_vs_Size_V1V4.png')); end
 if CloseFigs; close(f5b); end
 
+
+
+
+
+
+%% ========================================================================
+%  EPHYS PRF ANALYSIS -----------------------------------------------------
+%  ========================================================================
+
 %% EPHYS ECC vs PRF Size ==================================================
 Rth=25; 
 SNRth=2;
@@ -1526,7 +1547,7 @@ for m=1:length(mm)
 %     scatter(eccsz(ss,5),eccsz(ss,7))
    
 end
-close all;
+%close all;
 
 
 % focus on CSS --------
@@ -2336,6 +2357,14 @@ for m=1:length(ephys_MOD)
     end
     if CloseFigs; close(f11); end
 end
+
+
+
+
+
+%% ========================================================================
+%  FMRI-EPHYS PRF ANALYSIS ------------------------------------------------
+%  ========================================================================
 
 %% Correlate MRI-ephys RESAMPLE ON MAP-GRID ===============================
 % based on the full map X,Y,size
