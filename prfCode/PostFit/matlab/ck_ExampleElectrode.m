@@ -301,7 +301,7 @@ for fb=1:5
     saveas(f,fullfile(svgfld, ['ExampleElectrode_LFP-' num2str(fb) '.svg']));
 end
 
-close all;
+%close all;
 
 
 

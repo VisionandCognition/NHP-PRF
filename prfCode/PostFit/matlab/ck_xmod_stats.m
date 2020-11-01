@@ -392,7 +392,7 @@ for s=2:7
         end
     end
 end   
-set(gca,'xlim',[1.5 7.5],'ylim',[0 0.5])
+set(gca,'xlim',[1.5 7.5],'ylim',[-0.1 0.5])
 set(gca,'xtick',1:7,'xticklabels',sigtype(2,:))
 ylabel('Ecc-Sz SLOPE'); 
 title('V1','interpreter','none');
@@ -437,7 +437,7 @@ for s=2:7
         end
     end
 end   
-set(gca,'xlim',[1.5 7.5],'ylim',[0 0.5])
+set(gca,'xlim',[1.5 7.5],'ylim',[-0.10 0.5])
 set(gca,'xtick',1:7,'xticklabels',sigtype(2,:))
 ylabel('Ecc-Sz SLOPE'); 
 title('V4','interpreter','none');

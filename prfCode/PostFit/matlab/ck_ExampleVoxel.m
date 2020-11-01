@@ -184,4 +184,4 @@ legend({'Data','Model'})
 saveas(f,fullfile(pngfld, 'ExampleVoxel.png'));
 saveas(f,fullfile(svgfld, 'ExampleVoxel.svg'));
 
-close all;
+%close all;

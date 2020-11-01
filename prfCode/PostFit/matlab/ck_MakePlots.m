@@ -259,23 +259,34 @@ for s = 1:length(SUBS)
 end
 saveas(ff,fullfile(pngfld, 'MRI_nVoxSign_ROI.png'));
 saveas(ff,fullfile(svgfld, 'MRI_nVoxSign_ROI.svg'));
-close(ff);
+if CloseFigs; close(ff); end
     
-ff = figure;
-set(ff,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
-set(ff,'Position',[10 10 1600 1000]);
+ff2 = figure;
+set(ff2,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+set(ff2,'Position',[10 10 1600 1000]);
 
 paneln=1; 
 for s = 1: length(SUBS)
     fprintf(['SUB: ' SUBS{s} '\n'])
     for rowmod=1:4
             subplot(4,2,paneln); hold on;
+            nvox=[];
+            for r=1:length(roi)
+                nvox = [nvox; sum(...
+                    T(modidx.(MRI_MODELS{rowmod,1})).mod.R2 > RTHRES & ...
+                    strcmp(T(modidx.(MRI_MODELS{rowmod,1})).mod.Monkey,SUBS{s}) & ...
+                    ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois) ) ) ...
+                     sum(strcmp(T(modidx.(MRI_MODELS{rowmod,1})).mod.Monkey,SUBS{s}) & ...
+                    ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois) ) ) ];
+            end
             for xval=1:size(nvox,1)
                 bar(xval,nvox(xval,1)./nvox(xval,2));
             end
             title(['SUB ' SUBS{s} ', ' MMS{rowmod,1} ' proportion Vox with R2 > ' ...
                 num2str(RTHRES)],'interpreter','none');
-            xlabel('ROI'); ylabel('nVox','interpreter','none');
+            xlabel('ROI'); ylabel('Proportion Vox','interpreter','none');
             set(gca, 'Box','off','ylim',[0 .6]);
             set(gca,'xtick',1:length(nvox),'xticklabels',roilabels,'TickDir','out');
             xtickangle(45)
@@ -283,114 +294,174 @@ for s = 1: length(SUBS)
     end
 end
 
-if SaveFigs; saveas(ff,fullfile(pngfld, 'MRI_propVoxSign_ROI.png')); end
-if SaveFigs; saveas(ff,fullfile(svgfld, 'MRI_propVoxSign_ROI.svg')); end
-if CloseFigs; close(ff); end
+if SaveFigs; saveas(ff2,fullfile(pngfld, 'MRI_propVoxSign_ROI.png')); end
+if SaveFigs; saveas(ff2,fullfile(svgfld, 'MRI_propVoxSign_ROI.svg')); end
+if CloseFigs; close(ff2); end
 
-%% MRI scatter plots & differences R2 =====================================
+%% MRI scatter plots & differences R2 per ROI =============================
 RTHRES = 0; % only include when one of the models fits above threshold
 
-% scatter plots ---
-% Different ROIS in different colors
-f=figure;
-set(f,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
-set(f,'Position',[10 10 1300 600]);
-% All ROIS together in black
-fsc=figure;
-set(fsc,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
-set(fsc,'Position',[10 10 1300 600]);
-% % All vox together in black
-% fa=figure;
-% set(fa,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
-% set(fa,'Position',[10 10 1300 600]);
-
-% 
-figure(f);
-paneln=1;
-for rowmod=1:4
-    for colmod=rowmod+1:4
-        subplot(2,3,paneln); hold on;
-        for r=1:length(roi)
-            s_R2 = T(modidx.(MRI_MODELS{rowmod,1})).mod.R2 >= RTHRES  | ...
-                T(modidx.(MRI_MODELS{colmod,1})).mod.R2 >= RTHRES;
-            SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
-                ck_GetROIidx(roilabels(r),rois) );
-            scatter(...
-                T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS),...
-                T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS),...
-                100,'Marker','.');
-        end
-        plot([-2 100],[-2 100],'k','Linewidth',1);
-        title([MMS{rowmod,1} ' vs ' MMS{colmod,1}],'interpreter','none');
-        xlabel(MMS{rowmod,1},'interpreter','none');
-        ylabel(MMS{colmod,1},'interpreter','none');
-        set(gca, 'Box','off', 'xlim', [-2 100], 'ylim',[-2 100]);
-        paneln=paneln+1;
+for sidx = 0:2 % both monkeys and individuals   
+    % scatter plots ---
+    % Different ROIS in different colors
+    f=figure;
+    set(f,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+    set(f,'Position',[10 10 1300 600]);
+    
+    % Tell us what's happening
+    if sidx
+        fprintf(['Monkey ' SUBS{sidx} '\n']);
+        marker = [' ' SUBS{sidx}];
+    else
+        fprintf(['Both monkeys\n']);
+        marker = ' both';
     end
-end
-if SaveFigs; saveas(f,fullfile(pngfld, 'MRI_ModelComparison_ROI_R2.png')); end
-if SaveFigs; saveas(f,fullfile(svgfld, 'MRI_ModelComparison_ROI_R2.svg')); end
-if CloseFigs; close(f); end
-
-figure(fsc)
-paneln=1;
-for rowmod=1:4
-    for colmod=rowmod+1:4
-        subplot(2,3,paneln); hold on;
-        XY=[];
-        for r=1:length(roi)
-            s_R2 = T(modidx.(MRI_MODELS{rowmod,1})).mod.R2 >= RTHRES  | ...
-                T(modidx.(MRI_MODELS{colmod,1})).mod.R2 >= RTHRES;
-            SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
-                ck_GetROIidx(roilabels(r),rois) );
-            XY=[XY; [T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS) ...
-                T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)] ];
+    
+    % plot scatter per area
+    figure(f); paneln=1;
+    for rowmod=1:4
+        for colmod=rowmod+1:4
+            subplot(2,3,paneln); hold on;
+            PerROI(sidx+1,paneln).Models = {MRI_MODELS{rowmod,1},MRI_MODELS{colmod,1}};
+            PerROI(sidx+1,paneln).mR2 = []; PerROI(sidx+1,paneln).seR2 = [];
+            for r=1:length(roi)
+                s_R2 = T(modidx.(MRI_MODELS{rowmod,1})).mod.R2 >= RTHRES  | ...
+                    T(modidx.(MRI_MODELS{colmod,1})).mod.R2 >= RTHRES;
+                if sidx
+                    s_Monkey = strcmp(T(modidx.(MRI_MODELS{rowmod,1})).mod.Monkey,SUBS{sidx});
+                    SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois)) & s_Monkey;
+                else
+                    SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois));
+                end
+                scatter(...
+                    T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS),...
+                    T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS),...
+                    100,'Marker','.');
+                PerROI(sidx+1,paneln).roi(r).sub = marker(2:end);
+                PerROI(sidx+1,paneln).roi(r).name = roilabels(r);
+                PerROI(sidx+1,paneln).roi(r).R2 = [...
+                    T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS),...
+                    T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)];
+                PerROI(sidx+1,paneln).mR2 = [PerROI(sidx+1,paneln).mR2; ...
+                    nanmean(T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS)),...
+                    nanmean(T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS))];
+                PerROI(sidx+1,paneln).seR2 = [PerROI(sidx+1,paneln).seR2; ...
+                    nanstd(T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS))./...
+                    sqrt(length(T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS))),...
+                    nanstd(T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS))./...
+                    sqrt(length(T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)))];
+                % stats per ROI
+                [PerROI(sidx+1,paneln).roi(r).p,...
+                    PerROI(sidx+1,paneln).roi(r).h,...
+                    PerROI(sidx+1,paneln).roi(r).stats] = signrank(...
+                    PerROI(sidx+1,paneln).roi(r).R2(:,1),...
+                    PerROI(sidx+1,paneln).roi(r).R2(:,2));
+                PerROI(sidx+1,paneln).roi(r).dir = ...
+                    diff(PerROI(sidx+1,paneln).mR2(r,:))./...
+                    abs(diff(PerROI(sidx+1,paneln).mR2(r,:)));
+            end
+            plot([-2 100],[-2 100],'k','Linewidth',1);
+            title([MMS{rowmod,1} ' vs ' MMS{colmod,1}],'interpreter','none');
+            xlabel(MMS{rowmod,1},'interpreter','none');
+            ylabel(MMS{colmod,1},'interpreter','none');
+            set(gca, 'Box','off', 'xlim', [-2 100], 'ylim',[-2 100]);
+            paneln=paneln+1;
         end
-        binscatter(XY(:,1),XY(:,2),100); colorbar; 
-        set(gca,'ColorScale','log');
-        colormap(inferno)
-        plot([-2 100],[-2 100],'k','Linewidth',1);
-        title([MMS{rowmod,1} ' vs ' MMS{colmod,1}],'interpreter','none');
-        xlabel(MMS{rowmod,1},'interpreter','none');
-        ylabel(MMS{colmod,1},'interpreter','none');
-        set(gca, 'Box','off', 'xlim', [-2 100], 'ylim',[-2 100]);
-        caxis([1 1e4])  
-        paneln=paneln+1;
     end
+    suptitle(['SUBJECT' marker])
+    if SaveFigs; saveas(f,fullfile(pngfld, ['MRI_ModelComparison_ROI_R2' marker '.png'])); end
+    if SaveFigs; saveas(f,fullfile(svgfld, ['MRI_ModelComparison_ROI_R2' marker '.svg'])); end
+    if CloseFigs; close(f); end
 end
-if SaveFigs; saveas(fsc,fullfile(pngfld, 'MRI_ModelComparison_R2.png')); end
-if SaveFigs; saveas(fsc,fullfile(svgfld, 'MRI_ModelComparison_R2.svg')); end
-if CloseFigs; close(fsc); end
 
+% Report stats per ROI ----
+fprintf('Compare CSS against P-LIN per ROI -----\n');
+nBetter = sum([PerROI(1,2).roi(:).p] < 0.05 & [PerROI(1,2).roi(:).dir] > 0);
+nWorse = sum([PerROI(1,2).roi(:).p] < 0.05 & [PerROI(1,2).roi(:).dir] < 0);
+nSimilar = sum([PerROI(1,2).roi(:).p] > 0.05);
+nROI = length(PerROI(1,2).roi);
+fprintf('- Both together -\n');
+fprintf([num2str(nBetter) '/' num2str(nROI) ' CSS better\n']);
+fprintf([num2str(nWorse) '/' num2str(nROI) ' CSS worse\n']);
+fprintf([num2str(nSimilar) '/' num2str(nROI) ' no difference\n']);
 
-% figure(fa)
-% paneln=1;
-% for rowmod=1:4
-%     for colmod=rowmod+1:4
-%         subplot(2,3,paneln); hold on;
-%         XY=[];
-%         s_R2 = T(modidx.(MRI_MODELS{rowmod,1})).mod.R2 >= RTHRES  | ...
-%             T(modidx.(MRI_MODELS{colmod,1})).mod.R2 >= RTHRES;
-%         SSS = s_R2;
-%         XY=[XY; [T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS) ...
-%             T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)] ];
-%         binscatter(XY(:,1),XY(:,2),100); colorbar;
-%         set(gca,'ColorScale','log');
-%         colormap(inferno)
-%         plot([-2 100],[-2 100],'k','Linewidth',1);
-%         title([MMS{rowmod,1} ' vs ' MMS{colmod,1}],'interpreter','none');
-%         xlabel(MMS{rowmod,1},'interpreter','none');
-%         ylabel(MMS{colmod,1},'interpreter','none');
-%         set(gca, 'Box','off', 'xlim', [-2 100], 'ylim',[-2 100]);
-%         caxis([1 1e4])  
-%         paneln=paneln+1;
-%     end
-% end
-% if SaveFigs; saveas(fa,fullfile(pngfld, 'MRI_ModelComparison_allvox_R2.png')); end
-% if SaveFigs; saveas(fa,fullfile(svgfld, 'MRI_ModelComparison_allvox_R2.svg')); end
-% if CloseFigs; close(fa); end
+nBetter = sum([PerROI(2,2).roi(:).p] < 0.05 & [PerROI(2,2).roi(:).dir] > 0);
+nWorse = sum([PerROI(2,2).roi(:).p] < 0.05 & [PerROI(2,2).roi(:).dir] < 0);
+nSimilar = sum([PerROI(2,2).roi(:).p] > 0.05);
+nROI = length(PerROI(2,2).roi);
+fprintf(['- ' SUBS{1} ' -\n']);
+fprintf([num2str(nBetter) '/' num2str(nROI) ' CSS better\n']);
+fprintf([num2str(nWorse) '/' num2str(nROI) ' CSS worse\n']);
+fprintf([num2str(nSimilar) '/' num2str(nROI) ' no difference\n']);
 
+nBetter = sum([PerROI(3,2).roi(:).p] < 0.05 & [PerROI(3,2).roi(:).dir] > 0);
+nWorse = sum([PerROI(3,2).roi(:).p] < 0.05 & [PerROI(3,2).roi(:).dir] < 0);
+nSimilar = sum([PerROI(3,2).roi(:).p] > 0.05);
+nROI = length(PerROI(3,2).roi);
+fprintf(['- ' SUBS{2} ' -\n']);
+fprintf([num2str(nBetter) '/' num2str(nROI) ' CSS better\n']);
+fprintf([num2str(nWorse) '/' num2str(nROI) ' CSS worse\n']);
+fprintf([num2str(nSimilar) '/' num2str(nROI) ' no difference\n']);
 
+%% MRI scatter plots & differences R2 all voxels ==========================
+RTHRES = 0; % only include when one of the models fits above threshold
+
+for sidx = 0:2 % both monkeys and individuals   
+
+    % All ROIS together in black
+    fsc=figure;
+    set(fsc,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
+    set(fsc,'Position',[10 10 1300 600]);
+    
+    % Tell us what's happening
+    if sidx
+        fprintf(['Monkey ' SUBS{sidx} '\n']);
+        marker = [' ' SUBS{sidx}];
+    else
+        fprintf(['Both monkeys\n']);
+        marker = ' both';
+    end
+    
+    % plot scatter over all voxels
+    figure(fsc); paneln=1;
+    for rowmod=1:4
+        for colmod=rowmod+1:4
+            subplot(2,3,paneln); hold on;
+            XY=[];
+            for r=1:length(roi) 
+                s_R2 = T(modidx.(MRI_MODELS{rowmod,1})).mod.R2 >= RTHRES  | ...
+                    T(modidx.(MRI_MODELS{colmod,1})).mod.R2 >= RTHRES;
+                if sidx
+                    s_Monkey = strcmp(T(modidx.(MRI_MODELS{rowmod,1})).mod.Monkey,SUBS{sidx});
+                    SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois)) & s_Monkey;
+                else
+                    SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois));
+                end
+                XY=[XY; [T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS) ...
+                    T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)] ];
+            end
+            binscatter(XY(:,1),XY(:,2),100); colorbar; 
+            set(gca,'ColorScale','log');
+            colormap(inferno)
+            plot([-2 100],[-2 100],'k','Linewidth',1);
+            title([MMS{rowmod,1} ' vs ' MMS{colmod,1}],'interpreter','none');
+            xlabel(MMS{rowmod,1},'interpreter','none');
+            ylabel(MMS{colmod,1},'interpreter','none');
+            set(gca, 'Box','off', 'xlim', [-2 100], 'ylim',[-2 100]);
+            caxis([1 1e4])  
+            paneln=paneln+1;
+        end
+    end
+    suptitle(['SUBJECT' marker])
+    if SaveFigs; saveas(fsc,fullfile(pngfld, ['MRI_ModelComparison_R2' marker '.png'])); end
+    if SaveFigs; saveas(fsc,fullfile(svgfld, ['MRI_ModelComparison_R2' marker '.svg'])); end
+    if CloseFigs; close(fsc); end
+
+end
 
 % stats
 MR2 = [T(2).mod.R2 T(4).mod.R2 T(7).mod.R2 T(8).mod.R2];
@@ -402,32 +473,51 @@ for i=1:size(c,1)
         ', p = ' num2str(c(i,6))  '\n'])
 end
 
+
+
 % diff distributions plots -----
-idx=1;
-for rowmod=1:4
-    for colmod=rowmod+1:4
-        diffmat{idx}=[];
-        for r=1:length(roi)
-            SSS = s_R2 & ...
-                ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
-                ck_GetROIidx(roilabels(r),rois) );
-            
-            [n,x] = hist(...
-                T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)-...
-                T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS), 100);
-            f = n./sum(SSS);
-            
-            m = mean(T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)-...
-                T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS));
-            sd = std(T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)-...
-                T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS));
-            se = sd ./ sqrt(sum(SSS));
-            diffmat{idx} = [diffmat{idx}; m sd se];
+for sidx = 0:2 % both monkeys and individuals
+    % Tell us what's happening
+    if sidx
+        fprintf(['Monkey ' SUBS{sidx} '\n']);
+        marker = [' ' SUBS{sidx}];
+    else
+        fprintf(['Both monkeys\n']);
+        marker = ' both';
+    end
+    
+    
+    idx=1;
+    for rowmod=1:4
+        for colmod=rowmod+1:4
+            diffmat{sidx+1,idx}=[];
+            for r=1:length(roi)               
+                if sidx
+                    s_Monkey = strcmp(T(modidx.(MRI_MODELS{rowmod,1})).mod.Monkey,SUBS{sidx});
+                    SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois)) & s_Monkey;
+                else
+                    SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{rowmod,1})).mod.ROI,...
+                        ck_GetROIidx(roilabels(r),rois));
+                end
+                [n,x] = hist(...
+                    T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)-...
+                    T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS), 100);
+                f = n./sum(SSS);
+                
+                m = mean(T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)-...
+                    T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS));
+                sd = std(T(modidx.(MRI_MODELS{colmod,1})).mod.R2(SSS)-...
+                    T(modidx.(MRI_MODELS{rowmod,1})).mod.R2(SSS));
+                se = sd ./ sqrt(sum(SSS));
+                diffmat{sidx+1,idx} = [diffmat{sidx+1,idx}; m sd se];
+            end
+            idx=idx+1;
         end
-        idx=idx+1;
     end
 end
 
+    
 f2=figure;
 set(f2,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 set(f2,'Position',[100 100 1800 1000]);
@@ -436,11 +526,11 @@ cc=1;
 for rowmod=1:4
     for colmod=rowmod+1:4
         subplot(3,2,cc); hold on;
-        for xval=1:length(diffmat{cc})
-            bar(xval,diffmat{cc}(xval,1));
+        for xval=1:length(diffmat{1,cc})
+            bar(xval,diffmat{1,cc}(xval,1));
         end
-        for xval=1:length(diffmat{cc})
-            errorbar(xval,diffmat{cc}(xval,1),diffmat{cc}(xval,3),...
+        for xval=1:length(diffmat{1,cc})
+            errorbar(xval,diffmat{1,cc}(xval,1),diffmat{cc}(xval,3),...
                 'k-','Linestyle','none');
         end
         set(gca,'xtick',1:length(diffmat{cc}),...
@@ -455,54 +545,90 @@ end
 if SaveFigs; saveas(f2,fullfile(figfld, 'MRI_ModelComparison_ROI_R2.png')); end
 if CloseFigs; close(f2); end
 
-
-% only CSS and DoG vs P-LIN
+%% only CSS and DoG vs P-LIN
 
 f3=figure;
 set(f3,'DefaultAxesColorOrder',brewermap(length(roi),def_cmap));
 set(f3,'Position',[100 100 1200 1000]);
 
-subplot(3,1,1); hold on;
-for xval=1:length(diffmat{2})
-    bar(xval,diffmat{2}(xval,1));
+%subplot(3,1,1); hold on;
+subplot(2,2,1); hold on;
+for xval=1:length(diffmat{2,2})
+    bar(xval,diffmat{2,2}(xval,1));
 end
-for xval=1:length(diffmat{2})
-    errorbar(xval,diffmat{2}(xval,1),diffmat{2}(xval,3),...
+for xval=1:length(diffmat{2,2})
+    errorbar(xval,diffmat{2,2}(xval,1),diffmat{2,2}(xval,3),...
         'k-','Linestyle','none');
 end
-set(gca,'xtick',1:length(diffmat{2}),...
+set(gca,'xtick',1:length(diffmat{2,2}),...
     'xticklabels',roilabels,'ylim',[-0.1 2.5],'TickDir','out');
 xlabel('ROI'); ylabel('Diff R2');
-title('CSS - P-LIN','interpreter','none');
+title('M1: CSS - P-LIN','interpreter','none');
 xtickangle(45)
 
-subplot(3,1,2); hold on;
-for xval=1:length(diffmat{3})
-    bar(xval,diffmat{3}(xval,1));
+%subplot(3,1,2); hold on;
+subplot(2,2,2); hold on;
+
+for xval=1:length(diffmat{2,3})
+    bar(xval,diffmat{2,3}(xval,1));
 end
-for xval=1:length(diffmat{3})
-    errorbar(xval,diffmat{3}(xval,1),diffmat{3}(xval,3),...
+for xval=1:length(diffmat{2,3})
+    errorbar(xval,diffmat{2,3}(xval,1),diffmat{2,3}(xval,3),...
         'k-','Linestyle','none');
 end
-set(gca,'xtick',1:length(diffmat{3}),...
+set(gca,'xtick',1:length(diffmat{2,3}),...
     'xticklabels',roilabels,'ylim',[-0.1 2.5],'TickDir','out');
 xlabel('ROI'); ylabel('Diff R2');
-title('DoG - P-LIN','interpreter','none');
+title('M1: DoG - P-LIN','interpreter','none');
 xtickangle(45)
 
-subplot(3,1,3); hold on;
-for xval=1:length(diffmat{6})
-    bar(xval,diffmat{6}(xval,1));
+
+subplot(2,2,3); hold on;
+for xval=1:length(diffmat{3,2})
+    bar(xval,diffmat{3,2}(xval,1));
 end
-for xval=1:length(diffmat{6})
-    errorbar(xval,diffmat{6}(xval,1),diffmat{6}(xval,3),...
+for xval=1:length(diffmat{3,2})
+    errorbar(xval,diffmat{3,2}(xval,1),diffmat{3,2}(xval,3),...
         'k-','Linestyle','none');
 end
-set(gca,'xtick',1:length(diffmat{6}),...
-    'xticklabels',roilabels,'ylim',[-2.1 2.1],'TickDir','out');
+set(gca,'xtick',1:length(diffmat{3,2}),...
+    'xticklabels',roilabels,'ylim',[-0.1 2.5],'TickDir','out');
 xlabel('ROI'); ylabel('Diff R2');
-title('DoG - CSS','interpreter','none');
+title('M2: CSS - P-LIN','interpreter','none');
 xtickangle(45)
+
+%subplot(3,1,2); hold on;
+subplot(2,2,4); hold on;
+for xval=1:length(diffmat{3,3})
+    bar(xval,diffmat{3,3}(xval,1));
+end
+for xval=1:length(diffmat{3,3})
+    errorbar(xval,diffmat{3,3}(xval,1),diffmat{3,3}(xval,3),...
+        'k-','Linestyle','none');
+end
+set(gca,'xtick',1:length(diffmat{3,3}),...
+    'xticklabels',roilabels,'ylim',[-0.1 2.5],'TickDir','out');
+xlabel('ROI'); ylabel('Diff R2');
+title('M2: DoG - P-LIN','interpreter','none');
+xtickangle(45)
+
+
+
+
+
+% subplot(3,1,3); hold on;
+% for xval=1:length(diffmat{6})
+%     bar(xval,diffmat{6}(xval,1));
+% end
+% for xval=1:length(diffmat{6})
+%     errorbar(xval,diffmat{6}(xval,1),diffmat{6}(xval,3),...
+%         'k-','Linestyle','none');
+% end
+% set(gca,'xtick',1:length(diffmat{6}),...
+%     'xticklabels',roilabels,'ylim',[-2.1 2.1],'TickDir','out');
+% xlabel('ROI'); ylabel('Diff R2');
+% title('DoG - CSS','interpreter','none');
+% xtickangle(45)
 
 if SaveFigs; saveas(f3,fullfile(figfld, 'MRI_SelModelComparison_ROI_R2.png')); end
 if CloseFigs; close(f3); end
@@ -682,26 +808,49 @@ lin = tMRI(...
     strcmp(tMRI.Model,'linhrf_cv1_mhrf'),:);
 
 f_neg2 = figure;
+set(f_neg2,'Position',[10 10 1200 1000]);
+
 vox_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh & ...
     (lin_n.ecc<25 & lin.ecc<25 & DoG.ecc<25) & ....
     (lin_n.rfs<20 & lin.rfs<20 & DoG.rfs<20);
 
+fprintf('-------------\n');
+
 subplot(2,3,1); hold on;
-histogram(lin_n.gain(vox_sel),-10:0.1:10,'FaceColor','k','FaceAlpha',0.5);
+histogram(lin_n.gain(vox_sel),-100:0.1:100,...
+    'Normalization','probability','FaceColor','k','FaceAlpha',0.75);
 xlabel('gain LIN-POSNEG');ylabel('nvoxels');
-set(gca,'xlim',[-2.1 1.1]);
+set(gca,'xlim',[-2.6 2.6]);
 MM=median(lin_n.gain(vox_sel));
 yy=get(gca,'ylim');
-plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
-set(gca,'ylim',[0 yy(2)+130],'TickDir','out');
-title('Gain')
-fprintf(['MEDIAN GAIN: ' num2str(MM) '\n'])
+plot([MM MM], [0 1],'k','Linewidth',2)
+set(gca,'ylim',[0 0.3],'TickDir','out');
+title('Gain SELECTED voxels')
+fprintf(['MEDIAN GAIN SEL: ' num2str(MM) '\n'])
 
 % Wilcoxon 1-tailed < 1
 [p,h,stats] = signrank(lin_n.gain(vox_sel),0,'tail','left');
-fprintf(['Gain < 0: Wilcoxon z = ' ...
+fprintf(['Gain SEL < 0: Wilcoxon z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
+% all vox
+subplot(2,3,4); hold on;
+histogram(lin_n.gain,-100:0.1:100,...
+    'Normalization','probability','FaceColor','k','FaceAlpha',0.75);
+xlabel('gain LIN-POSNEG');ylabel('nvoxels');
+set(gca,'xlim',[-2.6 2.6]);
+MM=median(lin_n.gain);
+yy=get(gca,'ylim');
+plot([MM MM], [0 1],'k','Linewidth',2)
+set(gca,'ylim',[0 0.3],'TickDir','out');
+title('Gain ALL voxels')
+fprintf(['MEDIAN GAIN ALL: ' num2str(MM) '\n'])
+
+% Wilcoxon 1-tailed < 1
+[p,h,stats] = signrank(lin_n.gain,0,'tail','right');
+fprintf(['Gain ALL < 0: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+fprintf('-------------\n');
 
 subplot(2,3,2); hold on;
 bb = [lin_n.ecc(vox_sel) lin.ecc(vox_sel)];
@@ -760,8 +909,7 @@ if CloseFigs; close(f_neg2); end
 fprintf(['Wilcoxon z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
-
-% ---------
+%% ---------
 
 f_neg3 = figure;
 set(f_neg3,'Position',[10 10 1300 1100]);
@@ -1221,21 +1369,40 @@ nsp=length(roi);
 nrc=ceil(sqrt(nsp));
 
 for r=1:length(roi)
-    ES{r} = [];
+    ES{r} = []; ES_m{r} = [];
     ESb{r} = [];
     ESf{r} = [];
     
     SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{m,1})).mod.ROI,...
         ck_GetROIidx(roilabels(r),rois) );
+    s_Monkey = strcmp(T(modidx.(MRI_MODELS{m,1})).mod.Monkey,'danny');
+    SSS_m1 = s_R2 & ismember( T(modidx.(MRI_MODELS{m,1})).mod.ROI,...
+        ck_GetROIidx(roilabels(r),rois)) & s_Monkey;
+    s_Monkey = strcmp(T(modidx.(MRI_MODELS{m,1})).mod.Monkey,'eddy');
+    SSS_m2 = s_R2 & ismember( T(modidx.(MRI_MODELS{m,1})).mod.ROI,...
+        ck_GetROIidx(roilabels(r),rois)) & s_Monkey;
     
     ES{r}=[T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS) ...
         T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS) ];
     ES{r}( ES{r}(:,2) > 50,: ) = []; % remove insanely large pRF's
     
+    ES_m{1,r}=[T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS_m1) ...
+        T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS_m1) ];
+    ES_m{2,r}=[T(modidx.(MRI_MODELS{m,1})).mod.ecc(SSS_m2) ...
+        T(modidx.(MRI_MODELS{m,1})).mod.rfs(SSS_m2) ];
+    
     subplot(nrc,nrc,r); hold on;
-%     scatter(ES{r}(:,1),ES{r}(:,2),100,'Marker','o',...
+    
+
+%     scatter(ES{r}(:,1),ES{r}(:,2),10,'Marker','o',...
 %             'MarkerFaceColor','k','MarkerFaceAlpha',.2,...
 %             'MarkerEdgeColor','none');
+    scatter(ES_m{1,r}(:,1),ES_m{1,r}(:,2),10,'Marker','o',...
+            'MarkerFaceColor','b','MarkerFaceAlpha',.2,...
+            'MarkerEdgeColor','none');
+    scatter(ES_m{2,r}(:,1),ES_m{2,r}(:,2),10,'Marker','o',...
+            'MarkerFaceColor','k','MarkerFaceAlpha',.2,...
+            'MarkerEdgeColor','none');
         
     % make table 
     tbl = table(ES{r}(:,1),ES{r}(:,2),'VariableNames',{'ecc','sz'});
@@ -1252,8 +1419,9 @@ for r=1:length(roi)
             [ypred,yci] = predict(lm{r},x);
             yci2=yci(:,2)-ypred;
             boundedline(x,ypred',yci2,'r','alpha')
-            fprintf([roilabels{r} ' n = ' num2str(size(tbl,1)) '\n'])
-            fprintf([roilabels{r} ' p = ' num2str(lm{r}.Coefficients.pValue(2)) '\n'])
+            %fprintf([roilabels{r} ' n = ' num2str(size(tbl,1)) '\n'])
+            %fprintf([roilabels{r} ' p = ' num2str(lm{r}.Coefficients.pValue(2)) '\n'])
+            fprintf([roilabels{r} ' n = ' num2str(lm{r}.Coefficients.Estimate(2)) '\n'])
         end
     end
     
@@ -1904,9 +2072,10 @@ for m=1:length(ephys_MOD)
     PRF_EST(m,1).R2 = tMUA.R2(s);
     PRF_EST(m,1).X = tMUA.X(s);
     PRF_EST(m,1).Y = tMUA.Y(s);
-    PRF_EST(m,1).S =  tMUA.rfs(s);
-    PRF_EST(m,1).A =  tMUA.Area(s);
-    PRF_EST(m,1).G =  tMUA.gain(s);
+    PRF_EST(m,1).S = tMUA.rfs(s);
+    PRF_EST(m,1).A = tMUA.Area(s);
+    PRF_EST(m,1).G = tMUA.gain(s);
+    PRF_EST(m,1).M = tMUA.Monkey(s);
     
     s = strcmp(tMUA.Model,'classicRF');
     C{m}=[C{m} tMUA.X(s)./668.745 tMUA.Y(s)./668.745 tMUA.rfs(s)./2];
@@ -1915,10 +2084,11 @@ for m=1:length(ephys_MOD)
     PRF_EST(m,2).R2 = tMUA.SNR(s);
     PRF_EST(m,2).X = tMUA.X(s);
     PRF_EST(m,2).Y = tMUA.Y(s);
-    PRF_EST(m,2).S =  tMUA.rfs(s)./2;
-    PRF_EST(m,2).A =  tMUA.Area(s);
-    PRF_EST(m,2).G =  tMUA.gain(s);
-
+    PRF_EST(m,2).S = tMUA.rfs(s)./2;
+    PRF_EST(m,2).A = tMUA.Area(s);
+    PRF_EST(m,2).G = tMUA.gain(s);
+    PRF_EST(m,2).M = tMUA.Monkey(s);
+    
     s = strcmp(tLFP.Model,model);
     sig=unique(tLFP.SigType);
     lfp_order = [3 1 2 5 4];
@@ -1936,7 +2106,9 @@ for m=1:length(ephys_MOD)
         PRF_EST(m,2+cnt).S =  tLFP.rfs(s & b);
         PRF_EST(m,2+cnt).A =  tLFP.Area(s & b);
         PRF_EST(m,2+cnt).G =  tLFP.gain(s & b);
-
+        
+        PRF_EST(m,2+cnt).M = tLFP.Monkey(s & b);
+        
         cnt=cnt+1;
     end
     
@@ -1973,10 +2145,14 @@ for m=3 %1:length(ephys_MOD)
         % location
         sel = PRF_EST(m,1).A == area & ...
             PRF_EST(m,1).R2 > rth & ...
-            PRF_EST(m,2).R2 > snrth; % PRF_EST(m,2).R2 = SNR
+            PRF_EST(m,2).R2 >= snrth;
         dLOCATION = sqrt(...
             (PRF_EST(m,1).X(sel)-PRF_EST(m,2).X(sel)).^2 + ...
             (PRF_EST(m,1).Y(sel)-PRF_EST(m,2).Y(sel)).^2);
+        
+        mselect = PRF_EST(m,1).M(sel);
+        m3idx = strcmp(mselect,'aston'); m4idx = strcmp(mselect,'lick');
+        
         fprintf(['MODEL ' ephys_MOD{m} ', MUA vs CLASSIC distance ----\n'])
         fprintf(['Mean ' num2str(mean(dLOCATION)) ', STD ' num2str(std(dLOCATION)) '\n'])
         fprintf(['Median ' num2str(median(dLOCATION)) ', IQR ' num2str(iqr(dLOCATION)) '\n'])
@@ -1987,7 +2163,11 @@ for m=3 %1:length(ephys_MOD)
         %     scatter(PRF_EST(m,1).Y(sel),PRF_EST(m,2).Y(sel))
         % size
         SIZE_MUA = [PRF_EST(m,1).S(sel) PRF_EST(m,2).S(sel)];
-        SIZE_MUA(isinf(SIZE_MUA(:,1)),:)=[];
+        rmINF = isinf(SIZE_MUA(:,1));
+        SIZE_MUA(rmINF,:)=[];
+        m3idx(rmINF,:)=[];
+        m4idx(rmINF,:)=[];
+        
         [p,h,stats] = signrank(SIZE_MUA(:,1),SIZE_MUA(:,2));
         fprintf(['MODEL ' ephys_MOD{m} ', MUA vs CLASSIC size ----\n'])
         fprintf(['dSZ: Wilcoxon z = ' ...
@@ -1996,10 +2176,27 @@ for m=3 %1:length(ephys_MOD)
             ', STD ' num2str(nanstd(SIZE_MUA(:,1)-SIZE_MUA(:,2))) '\n'])
         fprintf(['Median ' num2str(median(SIZE_MUA(:,1)-SIZE_MUA(:,2))) ...
             ', IQR ' num2str(iqr(SIZE_MUA(:,1)-SIZE_MUA(:,2))) '\n'])
-        subplot(1,2,pn);
-        scatter(SIZE_MUA(:,1),SIZE_MUA(:,2),50,'Marker','o',...
-            'MarkerEdgeColor',[.3 .3 .3],'MarkerFaceColor',[.3 .3 .3],...
-            'MarkerFaceAlpha',0.5);
+        subplot(1,2,pn);hold on;
+        splim=[3 8];
+        plot([0 10],[0 10],'-r');
+%         % all
+%         scatter(SIZE_MUA(:,1),SIZE_MUA(:,2),50,'Marker','o',...
+%             'MarkerEdgeColor',[.3 .3 .3],'MarkerFaceColor',[.3 .3 .3],...
+%             'MarkerFaceAlpha',0.5);
+        % split by monkey
+        scatter(SIZE_MUA(m3idx,1),SIZE_MUA(m3idx,2),50,'Marker','o',...
+            'MarkerEdgeColor','none',...
+            'MarkerFaceColor',[.0 .0 .5],'MarkerFaceAlpha',0.3);
+        polyfit(SIZE_MUA(m3idx,1),SIZE_MUA(m3idx,2),1)
+        
+        
+        
+        scatter(SIZE_MUA(m4idx,1),SIZE_MUA(m4idx,2),50,'Marker','o',...
+            'MarkerEdgeColor','none',...
+            'MarkerFaceColor',[.3 .3 .3],'MarkerFaceAlpha',0.3);
+        
+        plot([0 10],[0 10],'-r');
+        set(gca, 'xlim',[0 splim(pn)],'ylim',[0 splim(pn)]);
         title(['Area V' num2str(area)])
         xlabel('MUA pRF size'); ylabel('Classic RF size')
     end
@@ -2654,10 +2851,11 @@ warning on;
 % This analysis takes a while!! Do not overuse...
 rng(1); % seed the random number generator
 
-Rth_mri = 5; % R2 threshold MRI
+Rth_mri = 10; % R2 threshold MRI
 Rth_ephys = 25; % R2 threshold ephys
 mxS = 1000;%25; % maximum size
 MaxECC = 25; % max ecc to use for fitting
+selVFC = true;
 
 MODS = {...
     'linhrf_cv1_mhrf','linear_ephys_cv1';...
@@ -2671,12 +2869,12 @@ MMS={'linear','linear_ng','css','dog'};
 nbtstr = 200;
 np = 100;
 pth = 01;
-poscorr_only = true;
+poscorr_only = false;
 
 warning off;
 cmROI = {'V1','V4'};
 fprintf('=======================\n');
-for m = 2%[1 2 3] % 1:size(MODS,1)
+for m = 3%[1 2 3] % 1:size(MODS,1)
     fprintf(['\nCrossmodal Correlation for Model: ' MODS{m} '\n']);
     
     s_R2 = T(modidx.(MRI_MODEL{m})).mod.R2 > Rth_mri & ...
@@ -2686,6 +2884,13 @@ for m = 2%[1 2 3] % 1:size(MODS,1)
     for r = 1:size(cmROI,2)
         SSS = s_R2 & ismember( T(modidx.(MRI_MODELS{m})).mod.ROI,...
             ck_GetROIidx(cmROI(r),rois) );
+        
+        if selVFC
+            VFSEL = T(modidx.(MRI_MODEL{m})).mod.X >= 0 & ...
+                T(modidx.(MRI_MODEL{m})).mod.Y <=0;
+            SSS = SSS & VFSEL;
+        end
+        
         if strcmp(cmROI{r},'V1') % V1
             mri1(m).ECC = T(modidx.(MRI_MODEL{m})).mod.ecc(SSS);
             mri1(m).S = T(modidx.(MRI_MODEL{m})).mod.rfs(SSS);
@@ -3106,6 +3311,7 @@ for fidx = 1:length(fb)
     lin = tLFP(...
         strcmp(tLFP.Model,'linear_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
     
+    %% ---
     f_neg1 = figure;
     set(f_neg1,'Position',[10 10 1200 1000]);
     chan_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh;    
@@ -3141,8 +3347,7 @@ for fidx = 1:length(fb)
     end
     if CloseFigs; close(f_neg1); end
     
-    % ---
-    
+    %% ---
     f_neg2 = figure;
     set(f_neg2,'Position',[10 10 1300 1600]);
     chan_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
@@ -3214,8 +3419,7 @@ for fidx = 1:length(fb)
     end
     if CloseFigs; close(f_neg2); end
     
-    % ----
-    
+    %% ----
     f_neg3 = figure;
     set(f_neg3,'Position',[10 10 1300 1100]);
     chan_sel = DoG.R2>R2th & DoG.R2>lin.R2+R2enh & ...
@@ -3286,16 +3490,25 @@ lin_n = tLFP(...
     strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,fb{fidx}),:);
 lin = tLFP(...
     strcmp(tLFP.Model,'linear_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
+css = tLFP(...
+    strcmp(tLFP.Model,'css_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
 
-
+%% U-LIN ----
 f_neg2 = figure;
+roi=1; % only do this for V1 channels
 set(f_neg2,'Position',[10 10 900 1200]);
-chan_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
-chan_sel2 = lin_n.R2>R2th;
+chan_sel = lin_n.Area==roi & lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+chan_sel2 = lin_n.Area==roi & lin_n.R2>R2th;
+
+chan_pgain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain>0;
+chan_ngain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain<0;
 
 subplot(3,2,1); hold on;
 % gain alpha U-LIN
 histogram(lin_n.gain(chan_sel2),-2000:50:2000,'FaceColor','k','FaceAlpha',0.5);
+histogram(lin_n.gain(chan_ngain),-2000:50:2000,'FaceColor','r','FaceAlpha',0.5);
+histogram(lin_n.gain(chan_pgain),-2000:50:2000,'FaceColor','b','FaceAlpha',0.5);
+
 xlabel('gain U-LIN - ALL ELEC');ylabel('nChannels');
 set(gca,'xlim',[-800 1800],'TickDir','out');
 MM=median(lin_n.gain(chan_sel2));
@@ -3315,7 +3528,7 @@ MM=median(lin_n.gain(chan_sel));
 yy=get(gca,'ylim');
 plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 set(gca,'ylim',[0 yy(2)+10]);
-title('Gain')
+title('Gain selected channels (based on R2 ULIN>PLIN')
 
 fprintf(['ALPHA MEDIAN GAIN: ' num2str(MM) ', IQR ' num2str(iqr(lin_n.gain(chan_sel))) '\n'])
 
@@ -3326,20 +3539,70 @@ fprintf(['Gain < 0: Wilcoxon z = ' ...
 
 subplot(3,2,3); hold on;
 bb = [lin_n.ecc(chan_sel) lin.ecc(chan_sel)];
+
+mEcc = [mean(lin_n.ecc(chan_ngain)) mean(lin.ecc(chan_ngain)) ...
+    mean(lin_n.ecc(chan_pgain))  mean(lin.ecc(chan_pgain)) ];
+sdEcc = [std(lin_n.ecc(chan_ngain)) std(lin.ecc(chan_ngain)) ...
+    std(lin_n.ecc(chan_pgain))  std(lin.ecc(chan_pgain)) ];
+
+mdEcc = [median(lin_n.ecc(chan_ngain)) median(lin.ecc(chan_ngain)) ...
+    median(lin_n.ecc(chan_pgain))  median(lin.ecc(chan_pgain)) ];
+iqrEcc = [iqr(lin_n.ecc(chan_ngain)) iqr(lin.ecc(chan_ngain)) ...
+    iqr(lin_n.ecc(chan_pgain))  iqr(lin.ecc(chan_pgain)) ]./2;
+
 % plot([1 2],bb)
 % plot([1 2],mean(bb),'k','Linewidth',5)
-errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
-set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
-    'ylim',[0 30],'xlim',[0.8 2.2],'TickDir','out')
+% errorbar([1 2],mean(bb),std(bb),...
+%     'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+% set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
+%     'ylim',[0 30],'xlim',[0.8 2.2],'TickDir','out')
+
+% errorbar(1:4,mEcc,sdEcc,...
+%     'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+errorbar(1:4,mdEcc,iqrEcc,...
+    'ko','MarkerSize',4,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:4,'xticklabels',{'ULIN-N','PLIN-N','ULIN-P','PLIN-P'},...
+    'ylim',[0 25],'xlim',[0.8 4.2],'TickDir','out')
+
 ylabel('Eccentricity');
-title('Ecc Diff')
+title('Ecc')
+
+% Ecc difference
+fprintf('-- STATS Ecc --\n');
+fprintf(['mEcc nGain U-LIN: ' num2str(mEcc(1)) ', STD ' num2str(sdEcc(1)) '\n'])
+fprintf(['mEcc pGain U-LIN: ' num2str(mEcc(3)) ', STD ' num2str(sdEcc(3)) '\n'])
+fprintf(['mdEcc nGain U-LIN: ' num2str(mdEcc(1)) ', IQR ' num2str(iqrEcc(1)) '\n'])
+fprintf(['mdEcc pGain U-LIN: ' num2str(mdEcc(3)) ', IQR ' num2str(iqrEcc(3)) '\n'])
+[p,h,stats] = ranksum(lin_n.ecc(chan_ngain),lin_n.ecc(chan_pgain));
+fprintf(['Ecc difference pos gain U-LIN vs neg gain U-LIN: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+fprintf(['mEcc nGain U-LIN: ' num2str(mEcc(1)) ', STD ' num2str(sdEcc(1)) '\n'])
+fprintf(['mEcc nGain P-LIN: ' num2str(mEcc(2)) ', STD ' num2str(sdEcc(2)) '\n'])
+fprintf(['mdEcc nGain U-LIN: ' num2str(mdEcc(1)) ', STD ' num2str(iqrEcc(1)) '\n'])
+fprintf(['mdEcc nGain P-LIN: ' num2str(mdEcc(2)) ', STD ' num2str(iqrEcc(2)) '\n'])
+[p,h,stats] = signrank(lin_n.ecc(chan_ngain),lin.ecc(chan_ngain));
+fprintf(['Ecc difference neg gains U-LIN vs P-LIN : Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+fprintf(['mEcc pGain U-LIN: ' num2str(mEcc(3)) ', STD ' num2str(sdEcc(3)) '\n'])
+fprintf(['mEcc pGain P-LIN: ' num2str(mEcc(4)) ', STD ' num2str(sdEcc(4)) '\n'])
+fprintf(['mdEcc pGain U-LIN: ' num2str(mdEcc(3)) ', STD ' num2str(iqrEcc(3)) '\n'])
+fprintf(['mdEcc pGain P-LIN: ' num2str(mdEcc(4)) ', STD ' num2str(iqrEcc(4)) '\n'])
+[p,h,stats] = ranksum(lin_n.ecc(chan_pgain),lin.ecc(chan_pgain));
+fprintf(['Ecc difference pos gains U-LIN vs P-LIN : Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
 subplot(3,2,4); hold on;
-histogram(lin.ecc(chan_sel)-lin_n.ecc(chan_sel),-50:1:50,...
+% histogram(lin.ecc(chan_sel)-lin_n.ecc(chan_sel),-50:1:50,...
+%     'FaceColor','k','FaceAlpha',0.5);
+histogram(lin.ecc(chan_ngain)-lin_n.ecc(chan_ngain),-50:1:50,...
     'FaceColor','k','FaceAlpha',0.5);
-xlabel('Ecc. Diff (PLIN-ULIN)');ylabel('nChannels');
+xlabel('Ecc. Diff (PLIN-ULIN_N)','interpreter','none');ylabel('nChannels');
 set(gca,'xlim',[-10 35],'TickDir','out');
-MM=median(bb(:,2)-bb(:,1));
+
+MM=median(lin.ecc(chan_ngain)-lin_n.ecc(chan_ngain));
+
 yy=get(gca,'ylim');
 plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 set(gca,'ylim',[0 yy(2)+5]);
@@ -3355,19 +3618,65 @@ fprintf(['ALPHA MEDIAN ECC DIFF: ' num2str(median(lin.ecc(chan_sel)-lin_n.ecc(ch
 
 subplot(3,2,5); hold on;
 bb = [lin_n.rfs(chan_sel) lin.rfs(chan_sel)];
+
+mSz = [mean(lin_n.rfs(chan_ngain)) mean(lin.rfs(chan_ngain)) ...
+    mean(lin_n.rfs(chan_pgain))  mean(lin.rfs(chan_pgain)) ];
+sdSz = [std(lin_n.rfs(chan_ngain)) std(lin.rfs(chan_ngain)) ...
+    std(lin_n.rfs(chan_pgain))  std(lin.rfs(chan_pgain)) ];
+
+mdSz = [median(lin_n.rfs(chan_ngain)) median(lin.rfs(chan_ngain)) ...
+    median(lin_n.rfs(chan_pgain))  median(lin.rfs(chan_pgain)) ];
+iqrSz = [iqr(lin_n.rfs(chan_ngain)) iqr(lin.rfs(chan_ngain)) ...
+    iqr(lin_n.rfs(chan_pgain))  iqr(lin.rfs(chan_pgain)) ]./2;
+
 %plot([1 2],bb)
 %plot([1 2],mean(bb),'k','Linewidth',5)
-errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
-set(gca,'xtick',1:2,'xticklabels',{'U-LIN','P-LIN'},...
-    'ylim',[0 6],'xlim',[0.8 2.2],'TickDir','out')
+% errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+% set(gca,'xtick',1:2,'xticklabels',{'U-LIN','P-LIN'},...
+%     'ylim',[0 6],'xlim',[0.8 2.2],'TickDir','out')
+%errorbar(1:4,mSz,sdSz,'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+errorbar(1:4,mdSz,iqrSz,'ko','MarkerSize',4,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:4,'xticklabels',{'ULIN-N','PLIN-N','ULIN-P','PLIN-P'},...
+    'ylim',[0 6],'xlim',[0.8 4.2],'TickDir','out')
 ylabel('Size');
-title('Size Diff')
+title('Size')
+
+
+% Sz difference
+fprintf('-- STATS Sz --\n');
+fprintf(['mSz nGain U-LIN: ' num2str(mSz(1)) ', STD ' num2str(sdSz(1)) '\n'])
+fprintf(['mSz pGain U-LIN: ' num2str(mSz(3)) ', STD ' num2str(sdSz(3)) '\n'])
+fprintf(['mdSz nGain U-LIN: ' num2str(mdSz(1)) ', IQR ' num2str(iqrSz(1)) '\n'])
+fprintf(['mdSz pGain U-LIN: ' num2str(mdSz(3)) ', IQR ' num2str(iqrSz(3)) '\n'])
+[p,h,stats] = ranksum(lin_n.rfs(chan_ngain),lin_n.rfs(chan_pgain));
+fprintf(['Sz difference pos gain U-LIN vs neg gain U-LIN: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+fprintf(['mSz nGain U-LIN: ' num2str(mSz(1)) ', STD ' num2str(sdSz(1)) '\n'])
+fprintf(['mSz nGain P-LIN: ' num2str(mSz(2)) ', STD ' num2str(sdSz(2)) '\n'])
+fprintf(['mdSz nGain U-LIN: ' num2str(mdSz(1)) ', IQR ' num2str(iqrSz(1)) '\n'])
+fprintf(['mdSz nGain P-LIN: ' num2str(mdSz(2)) ', IQR ' num2str(iqrSz(2)) '\n'])
+[p,h,stats] = ranksum(lin_n.rfs(chan_ngain),lin.rfs(chan_ngain));
+fprintf(['Sz difference neg gains U-LIN vs P-LIN : Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+fprintf(['mSz pGain U-LIN: ' num2str(mSz(3)) ', STD ' num2str(sdSz(3)) '\n'])
+fprintf(['mSz pGain P-LIN: ' num2str(mSz(4)) ', STD ' num2str(sdSz(4)) '\n'])
+fprintf(['mdSz pGain U-LIN: ' num2str(mdSz(3)) ', IQR ' num2str(iqrSz(3)) '\n'])
+fprintf(['mdSz pGain P-LIN: ' num2str(mdSz(4)) ', IQR ' num2str(iqrSz(4)) '\n'])
+[p,h,stats] = ranksum(lin_n.rfs(chan_pgain),lin.rfs(chan_pgain));
+fprintf(['Ecc difference pos gains U-LIN vs P-LIN : Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+
 
 subplot(3,2,6); hold on;
-histogram(lin.rfs(chan_sel)-lin_n.rfs(chan_sel),-10:0.5:10,...
+% histogram(lin.rfs(chan_sel)-lin_n.rfs(chan_sel),-10:0.5:10,...
+%     'FaceColor','k','FaceAlpha',0.5);
+histogram(lin.rfs(chan_ngain)-lin_n.rfs(chan_ngain),-10:0.5:10,...
     'FaceColor','k','FaceAlpha',0.5);
 xlabel('Size Diff (POS-POSNEG)');ylabel('nChannels');
-MM=median(bb(:,2)-bb(:,1));
+% MM=median(bb(:,2)-bb(:,1));
+MM=median(lin.rfs(chan_ngain)-lin_n.rfs(chan_ngain));
+
 yy=get(gca,'ylim');
 plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 set(gca,'ylim',[0 yy(2)+10]);
@@ -3379,9 +3688,9 @@ title('Size Diff')
 fprintf(['SZ diff Wilcoxon z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
-sgtitle([ fb{fidx} ': pRFs POS LINEAR vs POSNEG LINEAR model']);
+sgtitle([ fb{fidx} ': pRFs P-LIN vs U-LIN']);
 
-% ----
+%% ----
 
 f_neg3 = figure;
 set(f_neg3,'Position',[10 10 900 800]);
@@ -3452,19 +3761,27 @@ lin_n = tLFP(...
     strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,fb{fidx}),:);
 lin = tLFP(...
     strcmp(tLFP.Model,'linear_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
+css = tLFP(...
+    strcmp(tLFP.Model,'css_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
 
-
+%% ----
 f_neg2 = figure;
+roi=1; % only do this for V1 channels
 set(f_neg2,'Position',[10 10 900 1200]);
-chan_sel = lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
-chan_sel2 = lin_n.R2>R2th;
+chan_sel = lin_n.Area==roi & lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+chan_sel2 = lin_n.Area==roi & lin_n.R2>R2th;
 
+chan_pgain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain>0;
+chan_ngain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain<0;
 
 subplot(3,2,1); hold on;
 % gain alpha U-LIN
-histogram(lin_n.gain(chan_sel2),-1000:25:1000,'FaceColor','k','FaceAlpha',0.5);
+histogram(lin_n.gain(chan_sel2),-2000:50:2000,'FaceColor','k','FaceAlpha',0.5);
+histogram(lin_n.gain(chan_ngain),-2000:50:2000,'FaceColor','r','FaceAlpha',0.5);
+histogram(lin_n.gain(chan_pgain),-2000:50:2000,'FaceColor','b','FaceAlpha',0.5);
+
 xlabel('gain U-LIN - ALL ELEC');ylabel('nChannels');
-set(gca,'xlim',[-300 300],'TickDir','out');
+set(gca,'xlim',[-800 1800],'TickDir','out');
 MM=median(lin_n.gain(chan_sel2));
 yy=get(gca,'ylim');
 plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
@@ -3472,16 +3789,17 @@ set(gca,'ylim',[0 yy(2)+10]);
 title('Gain')
 
 fprintf(['UNSELECTED - BETA MEDIAN GAIN: ' num2str(MM) ', IQR ' num2str(iqr(lin_n.gain(chan_sel))) '\n'])
+
 subplot(3,2,2); hold on;
 % gain alpha U-LIN
-histogram(lin_n.gain(chan_sel),-1000:25:1000,'FaceColor','k','FaceAlpha',0.5);
+histogram(lin_n.gain(chan_sel),-1000:50:1000,'FaceColor','k','FaceAlpha',0.5);
 xlabel('gain LIN-POSNEG');ylabel('nChannels');
-set(gca,'xlim',[-400 200],'TickDir','out');
+set(gca,'xlim',[-800 1700],'TickDir','out');
 MM=median(lin_n.gain(chan_sel));
 yy=get(gca,'ylim');
 plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 set(gca,'ylim',[0 yy(2)+10]);
-title('Gain')
+title('Gain selected channels (based on R2 ULIN>PLIN')
 
 fprintf(['BETA MEDIAN GAIN: ' num2str(MM) ', IQR ' num2str(iqr(lin_n.gain(chan_sel))) '\n'])
 
@@ -3492,48 +3810,142 @@ fprintf(['Gain < 0: Wilcoxon z = ' ...
 
 subplot(3,2,3); hold on;
 bb = [lin_n.ecc(chan_sel) lin.ecc(chan_sel)];
+
+mEcc = [mean(lin_n.ecc(chan_ngain)) mean(lin.ecc(chan_ngain)) ...
+    mean(lin_n.ecc(chan_pgain))  mean(lin.ecc(chan_pgain)) ];
+sdEcc = [std(lin_n.ecc(chan_ngain)) std(lin.ecc(chan_ngain)) ...
+    std(lin_n.ecc(chan_pgain))  std(lin.ecc(chan_pgain)) ];
+
+mdEcc = [median(lin_n.ecc(chan_ngain)) median(lin.ecc(chan_ngain)) ...
+    median(lin_n.ecc(chan_pgain))  median(lin.ecc(chan_pgain)) ];
+iqrEcc = [iqr(lin_n.ecc(chan_ngain)) iqr(lin.ecc(chan_ngain)) ...
+    iqr(lin_n.ecc(chan_pgain))  iqr(lin.ecc(chan_pgain)) ]./2;
+
 % plot([1 2],bb)
 % plot([1 2],mean(bb),'k','Linewidth',5)
-errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
-set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
-    'ylim',[0 30],'xlim',[0.8 2.2],'TickDir','out')
+% errorbar([1 2],mean(bb),std(bb),...
+%     'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+% set(gca,'xtick',1:2,'xticklabels',{'LIN-N','LIN'},...
+%     'ylim',[0 30],'xlim',[0.8 2.2],'TickDir','out')
+
+% errorbar(1:4,mEcc,sdEcc,...
+%     'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+errorbar(1:4,mdEcc,iqrEcc,...
+    'ko','MarkerSize',4,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:4,'xticklabels',{'ULIN-N','PLIN-N','ULIN-P','PLIN-P'},...
+    'ylim',[0 35],'xlim',[0.8 4.2],'TickDir','out')
+
 ylabel('Eccentricity');
-title('Ecc Diff')
+title('Ecc')
+
+% Ecc difference
+fprintf('-- STATS Ecc --\n');
+fprintf(['mEcc nGain U-LIN: ' num2str(mEcc(1)) ', STD ' num2str(sdEcc(1)) '\n'])
+fprintf(['mEcc pGain U-LIN: ' num2str(mEcc(3)) ', STD ' num2str(sdEcc(3)) '\n'])
+fprintf(['mdEcc nGain U-LIN: ' num2str(mdEcc(1)) ', IQR ' num2str(iqrEcc(1)) '\n'])
+fprintf(['mdEcc pGain U-LIN: ' num2str(mdEcc(3)) ', IQR ' num2str(iqrEcc(3)) '\n'])
+[p,h,stats] = ranksum(lin_n.ecc(chan_ngain),lin_n.ecc(chan_pgain));
+fprintf(['Ecc difference pos gain U-LIN vs neg gain U-LIN: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+fprintf(['mEcc nGain U-LIN: ' num2str(mEcc(1)) ', STD ' num2str(sdEcc(1)) '\n'])
+fprintf(['mEcc nGain P-LIN: ' num2str(mEcc(2)) ', STD ' num2str(sdEcc(2)) '\n'])
+fprintf(['mdEcc nGain U-LIN: ' num2str(mdEcc(1)) ', STD ' num2str(iqrEcc(1)) '\n'])
+fprintf(['mdEcc nGain P-LIN: ' num2str(mdEcc(2)) ', STD ' num2str(iqrEcc(2)) '\n'])
+[p,h,stats] = ranksum(lin_n.ecc(chan_ngain),lin.ecc(chan_ngain));
+fprintf(['Ecc difference neg gains U-LIN vs P-LIN : Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+fprintf(['mEcc pGain U-LIN: ' num2str(mEcc(3)) ', STD ' num2str(sdEcc(3)) '\n'])
+fprintf(['mEcc pGain P-LIN: ' num2str(mEcc(4)) ', STD ' num2str(sdEcc(4)) '\n'])
+fprintf(['mdEcc pGain U-LIN: ' num2str(mdEcc(3)) ', STD ' num2str(iqrEcc(3)) '\n'])
+fprintf(['mdEcc pGain P-LIN: ' num2str(mdEcc(4)) ', STD ' num2str(iqrEcc(4)) '\n'])
+[p,h,stats] = ranksum(lin_n.ecc(chan_pgain),lin.ecc(chan_pgain));
+fprintf(['Ecc difference pos gains U-LIN vs P-LIN : Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
 subplot(3,2,4); hold on;
-histogram(lin.ecc(chan_sel)-lin_n.ecc(chan_sel),-5:1:35,...
+% histogram(lin.ecc(chan_sel)-lin_n.ecc(chan_sel),-50:1:50,...
+%     'FaceColor','k','FaceAlpha',0.5);
+histogram(lin.ecc(chan_ngain)-lin_n.ecc(chan_ngain),-50:1:50,...
     'FaceColor','k','FaceAlpha',0.5);
-xlabel('Ecc. Diff (PLIN-ULIN)');ylabel('nChannels');
-set(gca,'xlim',[-5 30],'TickDir','out');
-MM=median(bb(:,2)-bb(:,1));
+xlabel('Ecc. Diff (PLIN-ULIN_N)','interpreter','none');ylabel('nChannels');
+set(gca,'xlim',[-10 35],'TickDir','out');
+
+MM=median(lin.ecc(chan_ngain)-lin_n.ecc(chan_ngain));
+
 yy=get(gca,'ylim');
 plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 set(gca,'ylim',[0 yy(2)+5]);
 title('Ecc Diff')
-
-fprintf(['BETA MEDIAN ECC DIFF: ' num2str(median(lin.ecc(chan_sel)-lin_n.ecc(chan_sel))) ...
-    ', IQR ' num2str(iqr(lin.ecc(chan_sel)-lin_n.ecc(chan_sel))) '\n'])
 
 % Wilcoxon 
 [p,h,stats] = signrank(bb(:,1),bb(:,2));
 fprintf(['ECC diff Wilcoxon z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
+fprintf(['BETA MEDIAN ECC DIFF: ' num2str(median(lin.ecc(chan_sel)-lin_n.ecc(chan_sel))) ...
+    ', IQR ' num2str(iqr(lin.ecc(chan_sel)-lin_n.ecc(chan_sel))) '\n'])
+
 subplot(3,2,5); hold on;
 bb = [lin_n.rfs(chan_sel) lin.rfs(chan_sel)];
+
+mSz = [mean(lin_n.rfs(chan_ngain)) mean(lin.rfs(chan_ngain)) ...
+    mean(lin_n.rfs(chan_pgain))  mean(lin.rfs(chan_pgain)) ];
+sdSz = [std(lin_n.rfs(chan_ngain)) std(lin.rfs(chan_ngain)) ...
+    std(lin_n.rfs(chan_pgain))  std(lin.rfs(chan_pgain)) ];
+
+mdSz = [median(lin_n.rfs(chan_ngain)) median(lin.rfs(chan_ngain)) ...
+    median(lin_n.rfs(chan_pgain))  median(lin.rfs(chan_pgain)) ];
+iqrSz = [iqr(lin_n.rfs(chan_ngain)) iqr(lin.rfs(chan_ngain)) ...
+    iqr(lin_n.rfs(chan_pgain))  iqr(lin.rfs(chan_pgain)) ]./2;
+
 %plot([1 2],bb)
 %plot([1 2],mean(bb),'k','Linewidth',5)
-errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
-set(gca,'xtick',1:2,'xticklabels',{'U-LIN','P-LIN'},...
-    'ylim',[0 10],'xlim',[0.8 2.2],'TickDir','out')
+% errorbar([1 2],mean(bb),std(bb),'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+% set(gca,'xtick',1:2,'xticklabels',{'U-LIN','P-LIN'},...
+%     'ylim',[0 6],'xlim',[0.8 2.2],'TickDir','out')
+%errorbar(1:4,mSz,sdSz,'ko','MarkerSize',10,'MarkerFaceColor','k','Linewidth',2)
+errorbar(1:4,mdSz,iqrSz,'ko','MarkerSize',4,'MarkerFaceColor','k','Linewidth',2)
+set(gca,'xtick',1:4,'xticklabels',{'ULIN-N','PLIN-N','ULIN-P','PLIN-P'},...
+    'ylim',[0 6],'xlim',[0.8 4.2],'TickDir','out')
 ylabel('Size');
-title('Size Diff')
+title('Size')
+
+
+% Sz difference
+fprintf('-- STATS Sz --\n');
+fprintf(['mSz nGain U-LIN: ' num2str(mSz(1)) ', STD ' num2str(sdSz(1)) '\n'])
+fprintf(['mSz pGain U-LIN: ' num2str(mSz(3)) ', STD ' num2str(sdSz(3)) '\n'])
+fprintf(['mdSz nGain U-LIN: ' num2str(mdSz(1)) ', IQR ' num2str(iqrSz(1)) '\n'])
+fprintf(['mdSz pGain U-LIN: ' num2str(mdSz(3)) ', IQR ' num2str(iqrSz(3)) '\n'])
+[p,h,stats] = ranksum(lin_n.rfs(chan_ngain),lin_n.rfs(chan_pgain));
+fprintf(['Sz difference pos gain U-LIN vs neg gain U-LIN: Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+fprintf(['mSz nGain U-LIN: ' num2str(mSz(1)) ', STD ' num2str(sdSz(1)) '\n'])
+fprintf(['mSz nGain P-LIN: ' num2str(mSz(2)) ', STD ' num2str(sdSz(2)) '\n'])
+fprintf(['mdSz nGain U-LIN: ' num2str(mdSz(1)) ', IQR ' num2str(iqrSz(1)) '\n'])
+fprintf(['mdSz nGain P-LIN: ' num2str(mdSz(2)) ', IQR ' num2str(iqrSz(2)) '\n'])
+[p,h,stats] = ranksum(lin_n.rfs(chan_ngain),lin.rfs(chan_ngain));
+fprintf(['Sz difference neg gains U-LIN vs P-LIN : Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+fprintf(['mSz pGain U-LIN: ' num2str(mSz(3)) ', STD ' num2str(sdSz(3)) '\n'])
+fprintf(['mSz pGain P-LIN: ' num2str(mSz(4)) ', STD ' num2str(sdSz(4)) '\n'])
+fprintf(['mdSz pGain U-LIN: ' num2str(mdSz(3)) ', IQR ' num2str(iqrSz(3)) '\n'])
+fprintf(['mdSz pGain P-LIN: ' num2str(mdSz(4)) ', IQR ' num2str(iqrSz(4)) '\n'])
+[p,h,stats] = ranksum(lin_n.rfs(chan_pgain),lin.rfs(chan_pgain));
+fprintf(['Sz difference pos gains U-LIN vs P-LIN : Wilcoxon z = ' ...
+    num2str(stats.zval) ', p = ' num2str(p) '\n']);
+
+
 
 subplot(3,2,6); hold on;
-histogram(lin.rfs(chan_sel)-lin_n.rfs(chan_sel),-10:0.5:10,...
+% histogram(lin.rfs(chan_sel)-lin_n.rfs(chan_sel),-10:0.5:10,...
+%     'FaceColor','k','FaceAlpha',0.5);
+histogram(lin.rfs(chan_ngain)-lin_n.rfs(chan_ngain),-10:0.5:10,...
     'FaceColor','k','FaceAlpha',0.5);
 xlabel('Size Diff (POS-POSNEG)');ylabel('nChannels');
-MM=median(bb(:,2)-bb(:,1));
+% MM=median(bb(:,2)-bb(:,1));
+MM=median(lin.rfs(chan_ngain)-lin_n.rfs(chan_ngain));
+
 yy=get(gca,'ylim');
 plot([MM MM], [0 yy(2)+40],'k','Linewidth',5)
 set(gca,'ylim',[0 yy(2)+10]);
@@ -3545,9 +3957,9 @@ title('Size Diff')
 fprintf(['SZ diff Wilcoxon z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
-sgtitle([ fb{fidx} ': pRFs POS LINEAR vs POSNEG LINEAR model']);
+sgtitle([ fb{fidx} ': pRFs P-LIN vs U-LIN']);
 
-% ----
+%% ----
 
 f_neg3 = figure;
 set(f_neg3,'Position',[10 10 900 800],'Renderer','painters');
@@ -3622,7 +4034,10 @@ fprintf(['Mean expt: ' num2str(nanmean(exptvals_MUA)) ...
     ', Median ' num2str(median(exptvals_MUA)) '\n']);
 histogram(exptvals_MUA,0:.05:2)
 
-mm = [exptv(1).roi{xval};exptv(2).roi{xval}];
+
+
+
+mm = [exptv(1).roi{1};exptv(2).roi{1}];
 mm = [mm ones(size(mm))];
 ee = [exptvals_MUA 2*ones(size(exptvals_MUA))];
 
@@ -3662,6 +4077,86 @@ for fb=lfp_order
 end
 [p,tbl,stats] = kruskalwallis(ll(:,1), ll(:,2));
 [c,m,h,gnames] = multcompare(stats);
+
+%% Manuscript comparison exponential parameter
+RTHRES = 25;
+clear exptvals_MUA exptvals_LFP exptvals_MRI kw
+rois2 = [1 4];
+f=figure;
+for r=1:length(rois2)
+    kw{r}=[];
+    exptvals_MRI{r} = [exptv(1).roi{rois2(r)};exptv(2).roi{rois2(r)}];  
+    kw{r}=[kw{r}; exptvals_MRI{r} ones(size(exptvals_MRI{r}))];
+    exptvals_MUA{r} = tMUA.expt(strcmp(tMUA.Model,'css_ephys_cv1') & ...
+        strcmp(tMUA.SigType,'MUA') & tMUA.Area==rois2(r) & tMUA.R2 > RTHRES );
+    kw{r}=[kw{r}; exptvals_MUA{r} 2*ones(size(exptvals_MUA{r}))];
+    sig=unique(tLFP.SigType);
+    lfp_order = [3 1 2 5 4]; spn=1;
+    
+    cl=2;
+    for fb=lfp_order
+        cl=cl+1;
+        exptvals_LFP{r,spn} = tLFP.expt(strcmp(tLFP.Model,'css_ephys_cv1') & ...
+            strcmp(tLFP.SigType,sig{fb}) & tLFP.Area==rois2(r) & tLFP.R2 > RTHRES );
+        if size(exptvals_LFP{r,spn},1)>3
+            kw{r}=[kw{r}; exptvals_LFP{r,spn} cl*ones(size(exptvals_LFP{r,spn}))];
+        end
+        spn=spn+1;
+    end
+    
+    figure(f);
+    subplot(1,2,r); hold on;
+    bar(1:7,[mean(exptvals_MRI{r}) ...
+        mean(exptvals_MUA{r}) ...
+        mean(exptvals_LFP{r,1}) ...
+        mean(exptvals_LFP{r,2}) ...
+        mean(exptvals_LFP{r,3}) ...
+        mean(exptvals_LFP{r,4}) ...
+        mean(exptvals_LFP{r,5})]);
+    errorbar(1:7,[mean(exptvals_MRI{r}) ...
+        mean(exptvals_MUA{r}) ...
+        mean(exptvals_LFP{r,1}) ...
+        mean(exptvals_LFP{r,2}) ...
+        mean(exptvals_LFP{r,3}) ...
+        mean(exptvals_LFP{r,4}) ...
+        mean(exptvals_LFP{r,5})],...
+        [std(exptvals_MRI{r}) ...
+        std(exptvals_MUA{r}) ...
+        std(exptvals_LFP{r,1}) ...
+        std(exptvals_LFP{r,2}) ...
+        std(exptvals_LFP{r,3}) ...
+        std(exptvals_LFP{r,4}) ...
+        std(exptvals_LFP{r,5})],'ko','Linestyle','none')
+    set(gca,'xlim',[.5 7.5],'ylim',[0 1.1])
+    
+    
+    
+    fprintf('-- Compare < 1 --\n');
+    fprintf(['AREA V' num2str(rois2(r)) '\n']);
+    
+    [p,h,stats] = signrank(exptvals_MRI{r},1,'tail','left');
+    fprintf(['MRI, Wilcoxon EXPT < 1 : z = ' num2str(stats.zval) ', p = ' num2str(p) '\n']);
+    [p,h,stats] = signrank(exptvals_MUA{r},1,'tail','left');
+    fprintf(['MUA, Wilcoxon EXPT < 1 : z = ' num2str(stats.zval) ', p = ' num2str(p) '\n']);
+    for i=1:5
+        if ~isempty(exptvals_LFP{r,i})
+            [p,h,stats] = signrank(exptvals_LFP{r,i},1,'tail','left');
+            if isfield(stats,'zval')
+                fprintf(['LFP-' num2str(i) ', Wilcoxon EXPT < 1 : z = ' num2str(stats.zval) ', p = ' num2str(p) '\n']);
+            end
+        end
+    end
+    
+    fprintf('-- Compare across signals --\n');
+    fprintf(['AREA V' num2str(rois2(r)) '\n']);
+    [expcss(r).p,expcss(r).tbl,expcss(r).stats] = kruskalwallis(kw{r}(:,1), kw{r}(:,2));
+    [expcss(r).c,expcss(r).m,expcss(r).h,expcss(r).gnames] = multcompare(expcss(r).stats);
+end
+close(f)
+
+
+
+
 
 %% Manuscript comparison of location and size across ephys channels -------
 RTH=25; SNRTH = 3;
