@@ -3493,8 +3493,14 @@ lin = tLFP(...
 css = tLFP(...
     strcmp(tLFP.Model,'css_ephys_cv1') & strcmp(tLFP.SigType,fb{fidx}),:);
 
+lin_nGAM1 = tLFP(...
+    strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,'lGamma'),:);
+lin_nGAM2 = tLFP(...
+    strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,'hGamma'),:);
+
+
 %% U-LIN ----
-f_neg2 = figure;
+f_neg2 = figure; 
 roi=1; % only do this for V1 channels
 set(f_neg2,'Position',[10 10 900 1200]);
 chan_sel = lin_n.Area==roi & lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
@@ -3503,6 +3509,10 @@ chan_sel2 = lin_n.Area==roi & lin_n.R2>R2th;
 chan_pgain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain>0;
 chan_ngain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain<0;
 
+chan_gam1 = lin_n.Area==roi & lin_nGAM1.R2>R2th;
+chan_gam2 = lin_n.Area==roi & lin_nGAM2.R2>R2th;
+
+figure(f_neg2);
 subplot(3,2,1); hold on;
 % gain alpha U-LIN
 histogram(lin_n.gain(chan_sel2),-2000:50:2000,'FaceColor','k','FaceAlpha',0.5);
@@ -3689,6 +3699,215 @@ fprintf(['SZ diff Wilcoxon z = ' ...
     num2str(stats.zval) ', p = ' num2str(p) '\n']);
 
 sgtitle([ fb{fidx} ': pRFs P-LIN vs U-LIN']);
+
+
+%%
+fextra=figure;
+subplot(2,2,1);hold on;
+plot([0 5],[0 5]);
+scatter(lin_n.ecc(chan_ngain),lin_nGAM1.ecc(chan_ngain));
+%set(gca,'xlim',[0 5],'ylim',[0 5]);
+subplot(2,2,2);hold on;
+plot([0 5],[0 5]);
+scatter(lin_n.ecc(chan_pgain),lin_nGAM1.ecc(chan_pgain));
+%set(gca,'xlim',[0 5],'ylim',[0 5]);
+subplot(2,2,3);hold on;
+plot([0 5],[0 5]);
+scatter(lin_n.ecc(chan_ngain),lin_nGAM2.ecc(chan_ngain));
+%set(gca,'xlim',[0 5],'ylim',[0 5]);
+subplot(2,2,4);hold on;
+plot([0 5],[0 5]);
+scatter(lin_n.ecc(chan_pgain),lin_nGAM2.ecc(chan_pgain));
+%set(gca,'xlim',[0 5],'ylim',[0 5]);
+
+%%
+% distance
+lin_n = tLFP(...
+    strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,'Alpha'),:);
+
+roi=1; % only do this for V1 channels
+chan_sel = lin_n.Area==roi & lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+chan_sel2 = lin_n.Area==roi & lin_n.R2>R2th;
+
+chan_pgain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain>0;
+chan_ngain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain<0;
+
+chan_gam1 = lin_n.Area==roi & lin_nGAM1.R2>R2th;
+chan_gam2 = lin_n.Area==roi & lin_nGAM2.R2>R2th;
+[mean(sqrt((lin_n.X(chan_ngain)-lin_nGAM1.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM1.Y(chan_ngain)).^2)) ...
+    std(sqrt((lin_n.X(chan_ngain)-lin_nGAM1.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM1.Y(chan_ngain)).^2))./sqrt(sum(chan_ngain))]
+[mean(sqrt((lin_n.X(chan_pgain)-lin_nGAM1.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM1.Y(chan_pgain)).^2)) ...
+    std(sqrt((lin_n.X(chan_pgain)-lin_nGAM1.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM1.Y(chan_pgain)).^2))./sqrt(sum(chan_pgain))]
+
+[mean(sqrt((lin_n.X(chan_ngain)-lin_nGAM2.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM1.Y(chan_ngain)).^2)) ...
+    std(sqrt((lin_n.X(chan_ngain)-lin_nGAM2.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM2.Y(chan_ngain)).^2))./sqrt(sum(chan_ngain))]
+[mean(sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2)) ...
+    std(sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2))./sqrt(sum(chan_pgain))]
+
+
+% size
+[mean(lin_n.rfs(chan_ngain)-lin_nGAM1.rfs(chan_ngain)) ...
+    std(lin_n.rfs(chan_ngain)-lin_nGAM1.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+[mean(lin_n.rfs(chan_pgain)-lin_nGAM1.rfs(chan_pgain)) ...
+    std(lin_n.rfs(chan_pgain)-lin_nGAM1.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
+
+% normalized size
+[mean(lin_n.rfs(chan_ngain)./lin_nGAM1.rfs(chan_ngain)) ...
+    std(lin_n.rfs(chan_ngain)./lin_nGAM1.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+[mean(lin_n.rfs(chan_pgain)./lin_nGAM1.rfs(chan_pgain)) ...
+    std(lin_n.rfs(chan_pgain)./lin_nGAM1.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
+
+[mean(lin_n.rfs(chan_ngain)./lin_nGAM2.rfs(chan_ngain)) ...
+    std(lin_n.rfs(chan_ngain)./lin_nGAM2.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+[mean(lin_n.rfs(chan_pgain)./lin_nGAM2.rfs(chan_pgain)) ...
+    std(lin_n.rfs(chan_pgain)./lin_nGAM2.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
+
+% distance in relation to size
+distn = sqrt((lin_n.X(chan_ngain)-lin_nGAM1.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM1.Y(chan_ngain)).^2);
+distp = sqrt((lin_n.X(chan_pgain)-lin_nGAM1.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM1.Y(chan_pgain)).^2);
+sz2n=lin_n.rfs(chan_ngain)+lin_nGAM1.rfs(chan_ngain);
+sz2p=lin_n.rfs(chan_pgain)+lin_nGAM1.rfs(chan_pgain);
+figure;hold on;
+scatter(distn,sz2n);
+scatter(distp,sz2p);
+plot([0 20],[0 20]);
+set(gca,'xlim',[0 20],'ylim',[0 20]);
+legend({'negative', 'positive'});
+
+[mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))]
+[mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))]
+
+distn = sqrt((lin_n.X(chan_ngain)-lin_nGAM2.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM2.Y(chan_ngain)).^2);
+distp = sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2);
+sz2n=lin_n.rfs(chan_ngain)+lin_nGAM2.rfs(chan_ngain);
+sz2p=lin_n.rfs(chan_pgain)+lin_nGAM2.rfs(chan_pgain);
+figure;hold on;
+scatter(distn,sz2n);
+scatter(distp,sz2p);
+plot([0 20],[0 20]);
+set(gca,'xlim',[0 20],'ylim',[0 20]);
+legend({'negative', 'positive'});
+[mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))]
+[mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))]
+
+
+
+%% Beta
+% distance
+lin_n = tLFP(...
+    strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,'Beta'),:);
+
+roi=1; % only do this for V1 channels
+chan_sel = lin_n.Area==roi & lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+chan_sel2 = lin_n.Area==roi & lin_n.R2>R2th;
+
+chan_pgain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain>0;
+chan_ngain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain<0;
+
+chan_gam1 = lin_n.Area==roi & lin_nGAM1.R2>R2th;
+chan_gam2 = lin_n.Area==roi & lin_nGAM2.R2>R2th;
+
+[mean(sqrt((lin_n.X(chan_ngain)-lin_nGAM1.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM1.Y(chan_ngain)).^2)) ...
+    std(sqrt((lin_n.X(chan_ngain)-lin_nGAM1.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM1.Y(chan_ngain)).^2))./sqrt(sum(chan_ngain))]
+[mean(sqrt((lin_n.X(chan_pgain)-lin_nGAM1.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM1.Y(chan_pgain)).^2)) ...
+    std(sqrt((lin_n.X(chan_pgain)-lin_nGAM1.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM1.Y(chan_pgain)).^2))./sqrt(sum(chan_pgain))]
+
+[mean(sqrt((lin_n.X(chan_ngain)-lin_nGAM2.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM1.Y(chan_ngain)).^2)) ...
+    std(sqrt((lin_n.X(chan_ngain)-lin_nGAM2.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM2.Y(chan_ngain)).^2))./sqrt(sum(chan_ngain))]
+[mean(sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2)) ...
+    std(sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2))./sqrt(sum(chan_pgain))]
+
+% size
+[mean(lin_n.rfs(chan_ngain)-lin_nGAM1.rfs(chan_ngain)) ...
+    std(lin_n.rfs(chan_ngain)-lin_nGAM1.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+[mean(lin_n.rfs(chan_pgain)-lin_nGAM1.rfs(chan_pgain)) ...
+    std(lin_n.rfs(chan_pgain)-lin_nGAM1.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
+
+% normalized size
+[mean(lin_n.rfs(chan_ngain)./lin_nGAM1.rfs(chan_ngain)) ...
+    std(lin_n.rfs(chan_ngain)./lin_nGAM1.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+[mean(lin_n.rfs(chan_pgain)./lin_nGAM1.rfs(chan_pgain)) ...
+    std(lin_n.rfs(chan_pgain)./lin_nGAM1.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
+
+[mean(lin_n.rfs(chan_ngain)./lin_nGAM2.rfs(chan_ngain)) ...
+    std(lin_n.rfs(chan_ngain)./lin_nGAM2.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+[mean(lin_n.rfs(chan_pgain)./lin_nGAM2.rfs(chan_pgain)) ...
+    std(lin_n.rfs(chan_pgain)./lin_nGAM2.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
+
+% distance in relation to size
+distn = sqrt((lin_n.X(chan_ngain)-lin_nGAM1.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM1.Y(chan_ngain)).^2);
+distp = sqrt((lin_n.X(chan_pgain)-lin_nGAM1.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM1.Y(chan_pgain)).^2);
+sz2n=lin_n.rfs(chan_ngain)+lin_nGAM1.rfs(chan_ngain);
+sz2p=lin_n.rfs(chan_pgain)+lin_nGAM1.rfs(chan_pgain);
+figure;hold on;
+scatter(distn,sz2n);
+scatter(distp,sz2p);
+plot([0 20],[0 20]);
+set(gca,'xlim',[0 20],'ylim',[0 20]);
+legend({'negative', 'positive'});
+
+figure;hold on;
+[mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))...
+    median(distn./sz2n) iqr(distn./sz2n)./2]
+histogram(distn./sz2n,100,'Normalization','probability')
+[mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))...
+    median(distp./sz2p) iqr(distp./sz2p)./2]
+histogram(distp./sz2p,100,'Normalization','probability')
+title('Low Gamma'); 
+
+
+distn = sqrt((lin_n.X(chan_ngain)-lin_nGAM2.X(chan_ngain)).^2 + ...
+    (lin_n.Y(chan_ngain)-lin_nGAM2.Y(chan_ngain)).^2);
+distp = sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
+    (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2);
+sz2n=lin_n.rfs(chan_ngain)+lin_nGAM2.rfs(chan_ngain);
+sz2p=lin_n.rfs(chan_pgain)+lin_nGAM2.rfs(chan_pgain);
+figure;hold on;
+scatter(distn,sz2n);
+scatter(distp,sz2p);
+plot([0 20],[0 20]);
+set(gca,'xlim',[0 20],'ylim',[0 20]);
+legend({'negative', 'positive'});
+
+figure;hold on;
+[mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))...
+    median(distn./sz2n) iqr(distn./sz2n)./2]
+histogram(distn./sz2n,100,'Normalization','probability')
+[mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))...
+    median(distp./sz2p) iqr(distp./sz2p)./2]
+histogram(distp./sz2p,100,'Normalization','probability')
+title('High Gamma'); 
+
+
+
+
+
+
+
+
+
 
 %% ----
 
