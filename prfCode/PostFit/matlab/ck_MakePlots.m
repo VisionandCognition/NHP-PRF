@@ -3560,6 +3560,7 @@ mdEcc = [median(lin_n.ecc(chan_ngain)) median(lin.ecc(chan_ngain)) ...
 iqrEcc = [iqr(lin_n.ecc(chan_ngain)) iqr(lin.ecc(chan_ngain)) ...
     iqr(lin_n.ecc(chan_pgain))  iqr(lin.ecc(chan_pgain)) ]./2;
 
+
 % plot([1 2],bb)
 % plot([1 2],mean(bb),'k','Linewidth',5)
 % errorbar([1 2],mean(bb),std(bb),...
@@ -3701,29 +3702,94 @@ fprintf(['SZ diff Wilcoxon z = ' ...
 sgtitle([ fb{fidx} ': pRFs P-LIN vs U-LIN']);
 
 
-%%
+%% Compare eccentricities between alpha and gamma prfs
 fextra=figure;
-subplot(2,2,1);hold on;
-plot([0 5],[0 5]);
-scatter(lin_n.ecc(chan_ngain),lin_nGAM1.ecc(chan_ngain));
-%set(gca,'xlim',[0 5],'ylim',[0 5]);
-subplot(2,2,2);hold on;
-plot([0 5],[0 5]);
-scatter(lin_n.ecc(chan_pgain),lin_nGAM1.ecc(chan_pgain));
-%set(gca,'xlim',[0 5],'ylim',[0 5]);
-subplot(2,2,3);hold on;
-plot([0 5],[0 5]);
-scatter(lin_n.ecc(chan_ngain),lin_nGAM2.ecc(chan_ngain));
-%set(gca,'xlim',[0 5],'ylim',[0 5]);
-subplot(2,2,4);hold on;
-plot([0 5],[0 5]);
-scatter(lin_n.ecc(chan_pgain),lin_nGAM2.ecc(chan_pgain));
-%set(gca,'xlim',[0 5],'ylim',[0 5]);
+dE=[];
 
-%%
-% distance
+subplot(2,2,1);hold on;
+plot([0 15],[0 15]);
+scatter(lin_n.ecc(chan_ngain),lin_nGAM1.ecc(chan_ngain));
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+xlabel('A- CHAN: Ecc LOW GAM');ylabel('A- CHAN: Ecc ALPHA');
+
+fprintf('Are Negative ALPHA pRF shifted relative to fixation from Low GAMMA?\n');
+[p,h,stats] = signrank(lin_n.ecc(chan_ngain),lin_nGAM1.ecc(chan_ngain));
+fprintf(['Median dEcc is ' ...
+    num2str(median(lin_nGAM1.ecc(chan_ngain)-lin_n.ecc(chan_ngain))) ...
+    ' IQR ' ...
+    num2str(iqr(lin_nGAM1.ecc(chan_ngain)-lin_n.ecc(chan_ngain))./2) ...
+    ' (POS --> towards fixation) \n']);
+fprintf(['p = ' num2str(p) '\n']);
+dE=[dE; ...
+    median(lin_nGAM1.ecc(chan_ngain)-lin_n.ecc(chan_ngain)) ...
+    iqr(lin_nGAM1.ecc(chan_ngain)-lin_n.ecc(chan_ngain))./2];
+
+
+subplot(2,2,2);hold on;
+plot([0 15],[0 15]);
+scatter(lin_n.ecc(chan_pgain),lin_nGAM1.ecc(chan_pgain));
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+xlabel('A+ CHAN: Ecc LOW GAM');ylabel('A+ CHAN: Ecc ALPHA');
+
+fprintf('Are Positive ALPHA pRF shifted relative to fixation from Low GAMMA?\n');
+[p,h,stats] = signrank(lin_n.ecc(chan_pgain),lin_nGAM1.ecc(chan_pgain));
+fprintf(['Median dEcc is ' ...
+    num2str(median(lin_nGAM1.ecc(chan_pgain)-lin_n.ecc(chan_pgain))) ...
+    ' IQR ' ...
+    num2str(iqr(lin_nGAM1.ecc(chan_pgain)-lin_n.ecc(chan_pgain))./2) ...
+    ' (POS --> towards fixation) \n']);
+fprintf(['p = ' num2str(p) '\n']);
+dE=[dE; ...
+    median(lin_nGAM1.ecc(chan_pgain)-lin_n.ecc(chan_pgain)) ...
+    iqr(lin_nGAM1.ecc(chan_pgain)-lin_n.ecc(chan_pgain))./2];
+
+subplot(2,2,3);hold on;
+plot([0 15],[0 15]);
+scatter(lin_n.ecc(chan_ngain),lin_nGAM2.ecc(chan_ngain));
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+xlabel('A- CHAN: Ecc HIGH GAM');ylabel('A- CHAN: Ecc ALPHA');
+
+fprintf('Are Negative ALPHA pRF shifted relative to fixation from High GAMMA?\n');
+[p,h,stats] = signrank(lin_n.ecc(chan_ngain),lin_nGAM2.ecc(chan_ngain));
+fprintf(['Median dEcc is ' ...
+    num2str(median(lin_nGAM2.ecc(chan_ngain)-lin_n.ecc(chan_ngain))) ...
+    ' IQR ' ...
+    num2str(iqr(lin_nGAM2.ecc(chan_ngain)-lin_n.ecc(chan_ngain))./2) ...
+    ' (POS --> towards fixation) \n']);
+fprintf(['p = ' num2str(p) '\n']);
+dE=[dE; ...
+    median(lin_nGAM2.ecc(chan_ngain)-lin_n.ecc(chan_ngain)) ...
+    iqr(lin_nGAM2.ecc(chan_ngain)-lin_n.ecc(chan_ngain))./2];
+
+subplot(2,2,4);hold on;
+plot([0 15],[0 15]);
+scatter(lin_n.ecc(chan_pgain),lin_nGAM2.ecc(chan_pgain));
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+xlabel('A+ CHAN: Ecc HIGH GAM');ylabel('A+ CHAN: Ecc ALPHA');
+
+fprintf('Are Positive ALPHA pRF shifted relative to fixation from High GAMMA?\n');
+[p,h,stats] = signrank(lin_n.ecc(chan_pgain),lin_nGAM2.ecc(chan_pgain));
+fprintf(['Median dEcc is ' ...
+    num2str(median(lin_nGAM2.ecc(chan_pgain)-lin_n.ecc(chan_pgain))) ...
+    ' IQR ' ...
+    num2str(iqr(lin_nGAM2.ecc(chan_pgain)-lin_n.ecc(chan_pgain))./2) ...
+    ' (POS --> towards fixation) \n']);
+fprintf(['p = ' num2str(p) '\n']);
+dE=[dE; ...
+    median(lin_nGAM2.ecc(chan_pgain)-lin_n.ecc(chan_pgain)) ...
+    iqr(lin_nGAM2.ecc(chan_pgain)-lin_n.ecc(chan_pgain))./2];
+
+bf=figure;
+hold on;
+bar(1:4, dE(:,1));
+errorbar(1:4, dE(:,1), dE(:,2), 'k','Linestyle', 'none');
+
+
+%% ALPHA vs GAMMA pRF distance
 lin_n = tLFP(...
     strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,'Alpha'),:);
+DoG = tMUA(...
+    strcmp(tMUA.Model,'dog_ephys_cv1'),:);
 
 roi=1; % only do this for V1 channels
 chan_sel = lin_n.Area==roi & lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
@@ -3752,21 +3818,30 @@ chan_gam2 = lin_n.Area==roi & lin_nGAM2.R2>R2th;
     std(sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
     (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2))./sqrt(sum(chan_pgain))]
 
+fprintf('=== ALPHA ===\n')
 
 % size
+fprintf('Size diff (a-lG)\n')
+fprintf('NGAIN\n')
 [mean(lin_n.rfs(chan_ngain)-lin_nGAM1.rfs(chan_ngain)) ...
     std(lin_n.rfs(chan_ngain)-lin_nGAM1.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+fprintf('PGAIN\n')
 [mean(lin_n.rfs(chan_pgain)-lin_nGAM1.rfs(chan_pgain)) ...
     std(lin_n.rfs(chan_pgain)-lin_nGAM1.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
 
 % normalized size
+fprintf('Norm Size diff (a/lG)\n')
+fprintf('NGAIN\n')
 [mean(lin_n.rfs(chan_ngain)./lin_nGAM1.rfs(chan_ngain)) ...
     std(lin_n.rfs(chan_ngain)./lin_nGAM1.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+fprintf('PGAIN\n')
 [mean(lin_n.rfs(chan_pgain)./lin_nGAM1.rfs(chan_pgain)) ...
     std(lin_n.rfs(chan_pgain)./lin_nGAM1.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
-
+fprintf('Norm Size diff (a/hG)\n')
+fprintf('NGAIN\n')
 [mean(lin_n.rfs(chan_ngain)./lin_nGAM2.rfs(chan_ngain)) ...
     std(lin_n.rfs(chan_ngain)./lin_nGAM2.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+fprintf('PGAIN\n')
 [mean(lin_n.rfs(chan_pgain)./lin_nGAM2.rfs(chan_pgain)) ...
     std(lin_n.rfs(chan_pgain)./lin_nGAM2.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
 
@@ -3777,15 +3852,37 @@ distp = sqrt((lin_n.X(chan_pgain)-lin_nGAM1.X(chan_pgain)).^2 + ...
     (lin_n.Y(chan_pgain)-lin_nGAM1.Y(chan_pgain)).^2);
 sz2n=lin_n.rfs(chan_ngain)+lin_nGAM1.rfs(chan_ngain);
 sz2p=lin_n.rfs(chan_pgain)+lin_nGAM1.rfs(chan_pgain);
-figure;hold on;
+
+
+figure;
+fprintf('DIST REL/Sz (dist/(s1+s2))\n')
+
+subplot(2,2,1);hold on;
 scatter(distn,sz2n);
 scatter(distp,sz2p);
 plot([0 20],[0 20]);
 set(gca,'xlim',[0 20],'ylim',[0 20]);
 legend({'negative', 'positive'});
 
-[mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))]
-[mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))]
+subplot(2,2,2);hold on;
+fprintf('lG NEG\n')
+fprintf('mean std median iqr\n')
+[mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))...
+    median(distn./sz2n) iqr(distn./sz2n)./2]
+histogram(distn./sz2n,100,'Normalization','probability')
+fprintf('lG POS\n')
+[mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))...
+    median(distp./sz2p) iqr(distp./sz2p)./2]
+histogram(distp./sz2p,100,'Normalization','probability')
+title('Low Gamma'); 
+
+BC=[median(distn./sz2n) median(distp./sz2p)];
+BCE=[iqr(distn./sz2n)/2 iqr(distp./sz2p)/2];
+
+[p,h,stats] = ranksum(distn./sz2n, distp./sz2p);
+fprintf('SEPARATION INDEX [Alpha-lGam] - Neg vs Pos channels\n');
+fprintf(['p = ' num2str(p) '\n']);
+
 
 distn = sqrt((lin_n.X(chan_ngain)-lin_nGAM2.X(chan_ngain)).^2 + ...
     (lin_n.Y(chan_ngain)-lin_nGAM2.Y(chan_ngain)).^2);
@@ -3793,19 +3890,39 @@ distp = sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
     (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2);
 sz2n=lin_n.rfs(chan_ngain)+lin_nGAM2.rfs(chan_ngain);
 sz2p=lin_n.rfs(chan_pgain)+lin_nGAM2.rfs(chan_pgain);
-figure;hold on;
+
+subplot(2,2,3);hold on;
 scatter(distn,sz2n);
 scatter(distp,sz2p);
 plot([0 20],[0 20]);
 set(gca,'xlim',[0 20],'ylim',[0 20]);
 legend({'negative', 'positive'});
-[mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))]
-[mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))]
 
+subplot(2,2,4);hold on;
+fprintf('hG NEG\n')
+fprintf('mean std median iqr\n')
+[mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))...
+    median(distn./sz2n) iqr(distn./sz2n)./2]
+histogram(distn./sz2n,100,'Normalization','probability')
+fprintf('hG POS\n')
+[mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))...
+    median(distp./sz2p) iqr(distp./sz2p)./2]
+histogram(distp./sz2p,100,'Normalization','probability')
+title('High Gamma'); 
 
+BC=[BC median(distn./sz2n) median(distp./sz2p)];
+BCE=[BCE iqr(distn./sz2n)/2 iqr(distp./sz2p)/2];
 
-%% Beta
-% distance
+[p,h,stats] = ranksum(distn./sz2n, distp./sz2p);
+fprintf('SEPARATION INDEX [Alpha-hGam] - Neg vs Pos channels\n');
+fprintf(['p = ' num2str(p) '\n']);
+
+figure; hold on;
+bar(1:4, BC);
+errorbar(1:4, BC, BCE, 'k', 'Linestyle','none')
+set(gca, 'xtick',1:4,'xticklabels',{'lG-','lG+','hG-','hG+'})
+
+%% Compare eccentricities between beta and gamma prfs
 lin_n = tLFP(...
     strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,'Beta'),:);
 
@@ -3819,6 +3936,106 @@ chan_ngain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain<0;
 chan_gam1 = lin_n.Area==roi & lin_nGAM1.R2>R2th;
 chan_gam2 = lin_n.Area==roi & lin_nGAM2.R2>R2th;
 
+chan_gam1 = lin_n.Area==roi & lin_nGAM1.R2>R2th;
+chan_gam2 = lin_n.Area==roi & lin_nGAM2.R2>R2th;
+
+fextra=figure;
+dE=[];
+
+subplot(2,2,1);hold on;
+plot([0 15],[0 15]);
+scatter(lin_n.ecc(chan_ngain),lin_nGAM1.ecc(chan_ngain));
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+xlabel('B- CHAN: Ecc LOW GAM');ylabel('B- CHAN: Ecc BETA');
+
+fprintf('Are Negative BETA pRF shifted relative to fixation from Low GAMMA?\n');
+[p,h,stats] = signrank(lin_n.ecc(chan_ngain),lin_nGAM1.ecc(chan_ngain));
+fprintf(['Median dEcc is ' ...
+    num2str(median(lin_nGAM1.ecc(chan_ngain)-lin_n.ecc(chan_ngain))) ...
+    ' IQR ' ...
+    num2str(iqr(lin_nGAM1.ecc(chan_ngain)-lin_n.ecc(chan_ngain))./2) ...
+    ' (POS --> towards fixation) \n']);
+fprintf(['p = ' num2str(p) '\n']);
+dE=[dE; ...
+    median(lin_nGAM1.ecc(chan_ngain)-lin_n.ecc(chan_ngain)) ...
+    iqr(lin_nGAM1.ecc(chan_ngain)-lin_n.ecc(chan_ngain))./2];
+
+
+subplot(2,2,2);hold on;
+plot([0 15],[0 15]);
+scatter(lin_n.ecc(chan_pgain),lin_nGAM1.ecc(chan_pgain));
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+xlabel('B+ CHAN: Ecc LOW GAM');ylabel('B+ CHAN: Ecc BETA');
+
+fprintf('Are Positive BETA pRF shifted relative to fixation from Low GAMMA?\n');
+[p,h,stats] = signrank(lin_n.ecc(chan_pgain),lin_nGAM1.ecc(chan_pgain));
+fprintf(['Median dEcc is ' ...
+    num2str(median(lin_nGAM1.ecc(chan_pgain)-lin_n.ecc(chan_pgain))) ...
+    ' IQR ' ...
+    num2str(iqr(lin_nGAM1.ecc(chan_pgain)-lin_n.ecc(chan_pgain))./2) ...
+    ' (POS --> towards fixation) \n']);
+fprintf(['p = ' num2str(p) '\n']);
+dE=[dE; ...
+    median(lin_nGAM1.ecc(chan_pgain)-lin_n.ecc(chan_pgain)) ...
+    iqr(lin_nGAM1.ecc(chan_pgain)-lin_n.ecc(chan_pgain))./2];
+
+subplot(2,2,3);hold on;
+plot([0 15],[0 15]);
+scatter(lin_n.ecc(chan_ngain),lin_nGAM2.ecc(chan_ngain));
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+xlabel('B- CHAN: Ecc HIGH GAM');ylabel('B- CHAN: Ecc BETA');
+
+fprintf('Are Negative BETA pRF shifted relative to fixation from High GAMMA?\n');
+[p,h,stats] = signrank(lin_n.ecc(chan_ngain),lin_nGAM2.ecc(chan_ngain));
+fprintf(['Median dEcc is ' ...
+    num2str(median(lin_nGAM2.ecc(chan_ngain)-lin_n.ecc(chan_ngain))) ...
+    ' IQR ' ...
+    num2str(iqr(lin_nGAM2.ecc(chan_ngain)-lin_n.ecc(chan_ngain))./2) ...
+    ' (POS --> towards fixation) \n']);
+fprintf(['p = ' num2str(p) '\n']);
+dE=[dE; ...
+    median(lin_nGAM2.ecc(chan_ngain)-lin_n.ecc(chan_ngain)) ...
+    iqr(lin_nGAM2.ecc(chan_ngain)-lin_n.ecc(chan_ngain))./2];
+
+subplot(2,2,4);hold on;
+plot([0 15],[0 15]);
+scatter(lin_n.ecc(chan_pgain),lin_nGAM2.ecc(chan_pgain));
+set(gca,'xlim',[0 15],'ylim',[0 15]);
+xlabel('B+ CHAN: Ecc HIGH GAM');ylabel('B+ CHAN: Ecc BETA');
+
+fprintf('Are Positive BETA pRF shifted relative to fixation from High GAMMA?\n');
+[p,h,stats] = signrank(lin_n.ecc(chan_pgain),lin_nGAM2.ecc(chan_pgain));
+fprintf(['Median dEcc is ' ...
+    num2str(median(lin_nGAM2.ecc(chan_pgain)-lin_n.ecc(chan_pgain))) ...
+    ' IQR ' ...
+    num2str(iqr(lin_nGAM2.ecc(chan_pgain)-lin_n.ecc(chan_pgain))./2) ...
+    ' (POS --> towards fixation) \n']);
+fprintf(['p = ' num2str(p) '\n']);
+dE=[dE; ...
+    median(lin_nGAM2.ecc(chan_pgain)-lin_n.ecc(chan_pgain)) ...
+    iqr(lin_nGAM2.ecc(chan_pgain)-lin_n.ecc(chan_pgain))./2];
+
+bf=figure;
+hold on;
+bar(1:4, dE(:,1));
+errorbar(1:4, dE(:,1), dE(:,2), 'k','Linestyle', 'none');
+
+%% Beta vs Gamma distance
+lin_n = tLFP(...
+    strcmp(tLFP.Model,'linear_ephys_cv1_neggain') & strcmp(tLFP.SigType,'Beta'),:);
+
+roi=1; % only do this for V1 channels
+chan_sel = lin_n.Area==roi & lin_n.R2>R2th & lin_n.R2>lin.R2+R2enh;
+chan_sel2 = lin_n.Area==roi & lin_n.R2>R2th;
+
+chan_pgain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain>0;
+chan_ngain = lin_n.Area==roi & lin_n.R2>R2th & lin_n.gain<0;
+
+chan_gam1 = lin_n.Area==roi & lin_nGAM1.R2>R2th;
+chan_gam2 = lin_n.Area==roi & lin_nGAM2.R2>R2th;
+
+chan_gam1 = lin_n.Area==roi & lin_nGAM1.R2>R2th;
+chan_gam2 = lin_n.Area==roi & lin_nGAM2.R2>R2th;
 [mean(sqrt((lin_n.X(chan_ngain)-lin_nGAM1.X(chan_ngain)).^2 + ...
     (lin_n.Y(chan_ngain)-lin_nGAM1.Y(chan_ngain)).^2)) ...
     std(sqrt((lin_n.X(chan_ngain)-lin_nGAM1.X(chan_ngain)).^2 + ...
@@ -3837,20 +4054,30 @@ chan_gam2 = lin_n.Area==roi & lin_nGAM2.R2>R2th;
     std(sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
     (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2))./sqrt(sum(chan_pgain))]
 
+fprintf('=== BETA ===\n')
+
 % size
+fprintf('Size diff (a-lG)\n')
+fprintf('NGAIN\n')
 [mean(lin_n.rfs(chan_ngain)-lin_nGAM1.rfs(chan_ngain)) ...
     std(lin_n.rfs(chan_ngain)-lin_nGAM1.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+fprintf('PGAIN\n')
 [mean(lin_n.rfs(chan_pgain)-lin_nGAM1.rfs(chan_pgain)) ...
     std(lin_n.rfs(chan_pgain)-lin_nGAM1.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
 
 % normalized size
+fprintf('Norm Size diff (a/lG)\n')
+fprintf('NGAIN\n')
 [mean(lin_n.rfs(chan_ngain)./lin_nGAM1.rfs(chan_ngain)) ...
     std(lin_n.rfs(chan_ngain)./lin_nGAM1.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+fprintf('PGAIN\n')
 [mean(lin_n.rfs(chan_pgain)./lin_nGAM1.rfs(chan_pgain)) ...
     std(lin_n.rfs(chan_pgain)./lin_nGAM1.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
-
+fprintf('Norm Size diff (a/hG)\n')
+fprintf('NGAIN\n')
 [mean(lin_n.rfs(chan_ngain)./lin_nGAM2.rfs(chan_ngain)) ...
     std(lin_n.rfs(chan_ngain)./lin_nGAM2.rfs(chan_ngain))./sqrt(sum(chan_ngain))]
+fprintf('PGAIN\n')
 [mean(lin_n.rfs(chan_pgain)./lin_nGAM2.rfs(chan_pgain)) ...
     std(lin_n.rfs(chan_pgain)./lin_nGAM2.rfs(chan_pgain))./sqrt(sum(chan_pgain))]
 
@@ -3861,21 +4088,34 @@ distp = sqrt((lin_n.X(chan_pgain)-lin_nGAM1.X(chan_pgain)).^2 + ...
     (lin_n.Y(chan_pgain)-lin_nGAM1.Y(chan_pgain)).^2);
 sz2n=lin_n.rfs(chan_ngain)+lin_nGAM1.rfs(chan_ngain);
 sz2p=lin_n.rfs(chan_pgain)+lin_nGAM1.rfs(chan_pgain);
-figure;hold on;
+
+
+
+
+figure;
+subplot(2,2,1);hold on;
 scatter(distn,sz2n);
 scatter(distp,sz2p);
 plot([0 20],[0 20]);
 set(gca,'xlim',[0 20],'ylim',[0 20]);
 legend({'negative', 'positive'});
 
-figure;hold on;
+fprintf('DIST REL/Sz (dist/(s1+s2))\n')
+
+subplot(2,2,2);hold on;
+fprintf('lG NEG\n')
+fprintf('mean std median iqr\n')
 [mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))...
     median(distn./sz2n) iqr(distn./sz2n)./2]
 histogram(distn./sz2n,100,'Normalization','probability')
+fprintf('lG POS\n')
 [mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))...
     median(distp./sz2p) iqr(distp./sz2p)./2]
 histogram(distp./sz2p,100,'Normalization','probability')
 title('Low Gamma'); 
+
+BC=[median(distn./sz2n) median(distp./sz2p)];
+BCE=[iqr(distn./sz2n)/2 iqr(distp./sz2p)/2];
 
 
 distn = sqrt((lin_n.X(chan_ngain)-lin_nGAM2.X(chan_ngain)).^2 + ...
@@ -3884,22 +4124,33 @@ distp = sqrt((lin_n.X(chan_pgain)-lin_nGAM2.X(chan_pgain)).^2 + ...
     (lin_n.Y(chan_pgain)-lin_nGAM2.Y(chan_pgain)).^2);
 sz2n=lin_n.rfs(chan_ngain)+lin_nGAM2.rfs(chan_ngain);
 sz2p=lin_n.rfs(chan_pgain)+lin_nGAM2.rfs(chan_pgain);
-figure;hold on;
+
+subplot(2,2,3);hold on;
 scatter(distn,sz2n);
 scatter(distp,sz2p);
 plot([0 20],[0 20]);
 set(gca,'xlim',[0 20],'ylim',[0 20]);
 legend({'negative', 'positive'});
 
-figure;hold on;
+subplot(2,2,4);hold on;
+fprintf('hG NEG\n')
+fprintf('mean std median iqr\n')
 [mean(distn./sz2n) std(distn./sz2n)./sqrt(sum(chan_ngain))...
     median(distn./sz2n) iqr(distn./sz2n)./2]
 histogram(distn./sz2n,100,'Normalization','probability')
+fprintf('hG POS\n')
 [mean(distp./sz2p) std(distp./sz2p)./sqrt(sum(chan_pgain))...
     median(distp./sz2p) iqr(distp./sz2p)./2]
 histogram(distp./sz2p,100,'Normalization','probability')
 title('High Gamma'); 
 
+BC=[BC median(distn./sz2n) median(distp./sz2p)];
+BCE=[BCE iqr(distn./sz2n)/2 iqr(distp./sz2p)/2];
+
+figure; hold on;
+bar(1:4, BC);
+errorbar(1:4, BC, BCE, 'k', 'Linestyle','none')
+set(gca, 'xtick',1:4,'xticklabels',{'lG-','lG+','hG-','hG+'})
 
 
 
